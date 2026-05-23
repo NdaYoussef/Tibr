@@ -3,4 +3,5 @@
   <Project Path="Tibr.Application/Tibr.Application.csproj" />
   <Project Path="Tibr.Domain/Tibr.Domain.csproj" />
   <Project Path="Tibr.Infrastructure/Tibr.Infrastructure.csproj" />
+  <Project Path="Tibr.MVC/Tibr.MVC.csproj" Id="7c1aac71-4e6f-4607-ad32-940f1c544ea1" />
 </Solution>
