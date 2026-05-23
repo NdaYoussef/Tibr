@@ -1,0 +1,20 @@
+## Visual Studio Tooling
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+## Build results
+[Dd]ebug/
+[Dd]ebugPublic/
+[Rr]elease/
+x64/
+x86/
+b囊in/
+obj/
+
+## Omit .NET Core tooling artifacts
+project.lock.json
+project.fragment.lock.json
+artifacts/

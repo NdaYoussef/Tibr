@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="Tibr.API/Tibr.API.csproj" />
+  <Project Path="Tibr.Application/Tibr.Application.csproj" />
+  <Project Path="Tibr.Domain/Tibr.Domain.csproj" />
+  <Project Path="Tibr.Infrastructure/Tibr.Infrastructure.csproj" />
+</Solution>
