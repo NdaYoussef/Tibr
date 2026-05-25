@@ -1,11 +1,12 @@
+﻿using System;
 using System.Collections.Generic;
-using Tibr.Domain.Common.Classes;
+using System.Text;
 
-namespace Tibr.Domain.Entities
+namespace Tibr.Application.Dtos.ProductDto
 {
-    public class Product : BaseEntity<long>
+    public class ProductDetailsDto
     {
-        public long CategoryId { get; set; }
+        public long Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public string MetalType { get; set; } = string.Empty;
         public decimal Purity { get; set; }
@@ -14,9 +15,6 @@ namespace Tibr.Domain.Entities
         public decimal SellPrice { get; set; }
         public string Status { get; set; } = string.Empty;
         public string ImageUrl { get; set; } = string.Empty;
-        public virtual Category Category { get; set; } = null!;
-        public virtual ICollection<Favorite> Favorites { get; set; } = [];
-        public virtual ICollection<CartItem> CartItems { get; set; } = [];
-        public virtual ICollection<OrderItem> OrderItems { get; set; } = [];
+        public string CategoryName { get; set; } = string.Empty;
     }
 }
