@@ -8,5 +8,15 @@
       "Microsoft.AspNetCore": "Warning"
     }
   },
+  "Paymob": {
+    "PublicKey": "egy_pk_test_...",
+    "SecretKey": "egy_sk_test_...",
+    "HmacSecret": "...",
+    "IntegrationId": "...",
+    "IframeId": "...",
+    "BaseUrl": "https://accept.paymob.com",
+    "SuccessRedirectUrl": "http://localhost:5151/payment/success",
+    "FailureRedirectUrl": "http://localhost:5151/payment/failed"
+  },
   "AllowedHosts": "*"
 }

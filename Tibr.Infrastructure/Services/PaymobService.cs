@@ -1,121 +1,115 @@
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Tibr.Application.Dtos.Paymob;
 using Tibr.Application.Services;
+using Tibr.Domain.Entities;
+using Tibr.Domain.IRepositories;
 using Tibr.Infrastructure.Config;
 
 namespace Tibr.Infrastructure.Services
 {
     public class PaymobService : IPaymobService
     {
+        // In-memory mapping: PaymobOrderId → OurOrderId
+        private static readonly ConcurrentDictionary<long, long> _paymobOrderMap = new();
+
         private readonly HttpClient _http;
         private readonly PaymobSettings _settings;
+        private readonly IGenericRepository<Order> _orderRepository;
+        private readonly IGenericRepository<Payment> _paymentRepository;
+        private readonly ILogger<PaymobService> _logger;
 
-        public PaymobService(HttpClient http, IOptions<PaymobSettings> settings)
+        public PaymobService(
+            HttpClient http,
+            IOptions<PaymobSettings> settings,
+            IGenericRepository<Order> orderRepository,
+            IGenericRepository<Payment> paymentRepository,
+            ILogger<PaymobService> logger
+        )
         {
             _http = http;
             _settings = settings.Value;
+            _orderRepository = orderRepository;
+            _paymentRepository = paymentRepository;
+            _logger = logger;
+
+            _http.DefaultRequestHeaders.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Token", _settings.SecretKey);
         }
 
         // ─────────────────────────────────────────
-        // STEP 1 — Get auth token
+        // PUBLIC: Single intention call → checkout URL
         // ─────────────────────────────────────────
-        private async Task<string> GetAuthTokenAsync()
-        {
-            var body = new { api_key = _settings.ApiKey };
-            var response = await PostJsonAsync($"{_settings.BaseUrl}/auth/tokens", body);
-
-            return response.GetProperty("token").GetString()
-                ?? throw new Exception("Paymob: failed to get auth token");
-        }
-
-        // ─────────────────────────────────────────
-        // STEP 2 — Create order
-        // ─────────────────────────────────────────
-        private async Task<long> CreateOrderAsync(string token, int amountCents, string currency)
+        public async Task<string> CreatePaymentUrlAsync(CreatePaymentRequest request)
         {
             var body = new
             {
-                auth_token = token,
-                delivery_needed = false,
-                amount_cents = amountCents,
-                currency,
+                amount = request.AmountCents,
+                currency = request.Currency,
+                payment_methods = new[] { int.Parse(_settings.IntegrationId) },
                 items = Array.Empty<object>(),
-            };
-
-            var response = await PostJsonAsync($"{_settings.BaseUrl}/ecommerce/orders", body);
-
-            return response.GetProperty("id").GetInt64();
-        }
-
-        // ─────────────────────────────────────────
-        // STEP 3 — Get payment key
-        // ─────────────────────────────────────────
-        private async Task<string> GetPaymentKeyAsync(
-            string token,
-            long orderId,
-            int amountCents,
-            string currency,
-            CreatePaymentRequest request
-        )
-        {
-            var body = new
-            {
-                auth_token = token,
-                amount_cents = amountCents,
-                expiration = 3600,
-                order_id = orderId,
                 billing_data = new
                 {
                     first_name = request.FirstName,
                     last_name = request.LastName,
                     email = request.Email,
                     phone_number = request.Phone,
-                    // These are required by Paymob but irrelevant for sandbox
+                    // Required by Paymob schema, not meaningful in sandbox
                     apartment = "NA",
                     floor = "NA",
                     street = "NA",
                     building = "NA",
-                    shipping_method = "NA",
                     postal_code = "NA",
                     city = "NA",
-                    country = "EG",
+                    country = "EGY",
                     state = "NA",
                 },
-                currency,
-                integration_id = int.Parse(_settings.IntegrationId),
+                customer = new
+                {
+                    first_name = request.FirstName,
+                    last_name = request.LastName,
+                    email = request.Email,
+                },
+                special_reference = request.OrderId.ToString(),
             };
 
-            var response = await PostJsonAsync(
-                $"{_settings.BaseUrl}/acceptance/payment_keys",
-                body
-            );
+            var response = await PostJsonAsync($"{_settings.BaseUrl}/v1/intention/", body);
 
-            return response.GetProperty("token").GetString()
-                ?? throw new Exception("Paymob: failed to get payment key");
+            // Save Paymob order ID → our Order ID mapping for the callback
+            if (response.TryGetProperty("intention_order_id", out var paymobOrderIdProp))
+            {
+                var paymobOrderId = paymobOrderIdProp.GetInt64();
+                _paymobOrderMap[paymobOrderId] = request.OrderId;
+                _logger.LogInformation(
+                    "Mapped PaymobOrderId={PaymobId} to OrderId={OrderId}",
+                    paymobOrderId,
+                    request.OrderId
+                );
+            }
+            else
+            {
+                _logger.LogWarning("Could not extract intention_order_id from intention response");
+            }
+
+            var clientSecret =
+                response.GetProperty("client_secret").GetString()
+                ?? throw new Exception("Paymob: missing client_secret in intention response");
+
+            // Unified checkout redirect URL
+            return $"https://accept.paymob.com/unifiedcheckout/?publicKey={_settings.PublicKey}&clientSecret={clientSecret}";
         }
 
-        public async Task<string> CreatePaymentUrlAsync(CreatePaymentRequest request)
-        {
-            var token = await GetAuthTokenAsync();
-            var orderId = await CreateOrderAsync(token, request.AmountCents, request.Currency);
-            var paymentKey = await GetPaymentKeyAsync(
-                token,
-                orderId,
-                request.AmountCents,
-                request.Currency,
-                request
-            );
-
-            return $"https://accept.paymob.com/api/acceptance/iframes/{_settings.IframeId}?payment_token={paymentKey}";
-        }
-
+        // ─────────────────────────────────────────
+        // PUBLIC: Verify HMAC callback
+        // ─────────────────────────────────────────
         public bool VerifyCallback(PaymobCallbackPayload payload, string receivedHmac)
         {
             var t = payload.Obj;
@@ -152,6 +146,85 @@ namespace Tibr.Infrastructure.Services
                 .ToLower();
 
             return computed == receivedHmac.ToLower();
+        }
+
+        // ─────────────────────────────────────────
+        // PUBLIC: Process successful callback
+        // ─────────────────────────────────────────
+        public async Task ProcessCallbackAsync(PaymobCallbackPayload payload)
+        {
+            var transaction = payload.Obj;
+            _logger.LogInformation(
+                "Paymob callback received: Success={Success}, SpecialRef={Ref}, TxId={TxId}",
+                transaction?.Success,
+                transaction?.Order?.SpecialReference,
+                transaction?.Id
+            );
+
+            if (transaction?.Success != true)
+                return;
+
+            // Try to look up our OrderId from the in-memory mapping using Paymob's order ID
+            long orderId = 0;
+            var paymobOrderId = transaction.Order?.Id;
+
+            if (
+                paymobOrderId.HasValue
+                && _paymobOrderMap.TryGetValue(paymobOrderId.Value, out var mappedId)
+            )
+            {
+                orderId = mappedId;
+                _logger.LogInformation(
+                    "Resolved OrderId={OrderId} from PaymobOrderId={PaymobId}",
+                    orderId,
+                    paymobOrderId.Value
+                );
+            }
+            else
+            {
+                // Fallback: try special_reference
+                var orderIdString = transaction.Order?.SpecialReference;
+                if (!long.TryParse(orderIdString, out orderId))
+                {
+                    _logger.LogWarning(
+                        "Paymob callback: no mapping for PaymobOrderId={PaymobId} and invalid special_reference={Ref}",
+                        paymobOrderId,
+                        orderIdString
+                    );
+                    return;
+                }
+            }
+
+            var order = await _orderRepository.GetByIdAsync(orderId);
+            if (order is null)
+            {
+                _logger.LogWarning("Paymob callback for non-existent OrderId={OrderId}", orderId);
+                return;
+            }
+
+            order.PaymentStatus = "Paid";
+            order.OrderStatus = "Processing";
+            await _orderRepository.UpdateAsync(order);
+
+            var payment = new Payment
+            {
+                Id = 0,
+                OrderId = orderId,
+                UserId = order.UserId,
+                Amount = transaction.AmountCents / 100m,
+                PaymentMethod = transaction.SourceData?.Type ?? "",
+                Status = "Completed",
+                PaidAt = DateTime.UtcNow,
+            };
+
+            await _paymentRepository.AddAsync(payment);
+
+            _logger.LogInformation(
+                "Payment recorded for OrderId={OrderId}, TxId={TxId}, Amount={Amount}",
+                orderId,
+                transaction.Id,
+                payment.Amount
+            );
         }
 
         // ─────────────────────────────────────────

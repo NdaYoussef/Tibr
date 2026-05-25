@@ -76,6 +76,9 @@ namespace Tibr.Application.Dtos.Paymob
     {
         [JsonPropertyName("id")]
         public long Id { get; set; }
+
+        [JsonPropertyName("special_reference")]
+        public string? SpecialReference { get; set; }
     }
 
     public class SourceData

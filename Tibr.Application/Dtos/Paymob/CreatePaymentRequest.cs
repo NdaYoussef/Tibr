@@ -10,6 +10,9 @@ namespace Tibr.Application.Dtos.Paymob
         /// <summary>Amount in the smallest currency unit (e.g. cents/piasters).</summary>
         public int AmountCents { get; set; }
 
+        /// <summary>The Order ID to pay for.</summary>
+        public long OrderId { get; set; }
+
         public string Currency { get; set; } = "EGP";
 
         // Billing data — Paymob requires these even for sandbox

@@ -18,5 +18,11 @@ namespace Tibr.Application.Services
         /// Returns true if the signature is valid and the transaction succeeded.
         /// </summary>
         bool VerifyCallback(PaymobCallbackPayload payload, string receivedHmac);
+
+        /// <summary>
+        /// Processes a successful Paymob callback: marks the order as paid
+        /// and creates a Payment record.
+        /// </summary>
+        Task ProcessCallbackAsync(PaymobCallbackPayload payload);
     }
 }

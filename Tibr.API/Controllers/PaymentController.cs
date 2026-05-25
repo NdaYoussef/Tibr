@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using Tibr.Application.Dtos.Paymob;
 using Tibr.Application.Services;
+using Tibr.Infrastructure.Config;
 
 namespace Tibr.API.Controllers
 {
@@ -14,11 +16,16 @@ namespace Tibr.API.Controllers
     {
         private readonly IPaymobService _paymob;
         private readonly ILogger<PaymentController> _logger;
+        private readonly PaymobSettings _settings;
 
-        public PaymentController(IPaymobService paymob, ILogger<PaymentController> logger)
+        public PaymentController(
+            IPaymobService paymob,
+            ILogger<PaymentController> logger,
+            IOptions<PaymobSettings> settings)
         {
             _paymob = paymob;
             _logger = logger;
+            _settings = settings.Value;
         }
 
         /// <summary>
@@ -37,7 +44,7 @@ namespace Tibr.API.Controllers
         /// The HMAC is passed as a query parameter: ?hmac=...
         /// </summary>
         [HttpPost("callback/processed")]
-        public IActionResult Callback(
+        public async Task<IActionResult> Callback(
             [FromBody] PaymobCallbackPayload payload,
             [FromQuery] string hmac
         )
@@ -48,29 +55,7 @@ namespace Tibr.API.Controllers
                 return Unauthorized("Invalid HMAC signature.");
             }
 
-            var transaction = payload.Obj;
-
-            if (transaction?.Success == true)
-            {
-                _logger.LogInformation(
-                    "Payment succeeded. TransactionId={TxId}, OrderId={OrderId}, Amount={Amount} {Currency}",
-                    transaction.Id,
-                    transaction.Order?.Id,
-                    transaction.AmountCents,
-                    transaction.Currency
-                );
-
-                // TODO: mark your order as paid in the database here
-            }
-            else
-            {
-                _logger.LogWarning(
-                    "Payment failed or pending. TransactionId={TxId}, Success={Success}, Pending={Pending}",
-                    transaction?.Id,
-                    transaction?.Success,
-                    transaction?.Pending
-                );
-            }
+            await _paymob.ProcessCallbackAsync(payload);
 
             // Paymob expects a 200 OK — always return 200 even on failure
             return Ok();
@@ -84,11 +69,10 @@ namespace Tibr.API.Controllers
         [HttpGet("callback/response")]
         public IActionResult ResponseCallback([FromQuery] bool success)
         {
-            // Just redirect user to your frontend success/failure page
             return Redirect(
                 success
-                    ? "https://yourapp.com/payment/success"
-                    : "https://yourapp.com/payment/failed"
+                    ? _settings.SuccessRedirectUrl
+                    : _settings.FailureRedirectUrl
             );
         }
     }
