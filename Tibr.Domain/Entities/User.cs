@@ -14,6 +14,8 @@ namespace Tibr.Domain.Entities
         public string Status { get; set; } = string.Empty;
         public bool OtpVerified { get; set; }
         public string KycStatus { get; set; } = string.Empty;
+        public string? OtpCode { get; set; }
+        public DateTime? OtpExpiry { get; set; }
 
         public virtual ICollection<KYCDocument> KYCDocuments { get; set; } = [];
         public virtual ICollection<Favorite> Favorites { get; set; } = [];

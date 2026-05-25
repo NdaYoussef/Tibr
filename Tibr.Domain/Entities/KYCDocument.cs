@@ -11,9 +11,9 @@ namespace Tibr.Domain.Entities
         public string DocumentBack { get; set; } = string.Empty;
         public string SelfieImage { get; set; } = string.Empty;
         public string Status { get; set; } = string.Empty;
-        public long ReviewedBy { get; set; }
+        public long? ReviewedBy { get; set; }
 
         public virtual User User { get; set; } = null!;
-        public virtual Admin ReviewedByAdmin { get; set; } = null!;
+        public virtual Admin? ReviewedByAdmin { get; set; } = null!;
     }
 }
