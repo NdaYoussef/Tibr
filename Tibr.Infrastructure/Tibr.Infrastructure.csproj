@@ -16,5 +16,6 @@
 
   <ItemGroup>
     <ProjectReference Include="../Tibr.Domain/Tibr.Domain.csproj" />
+    <ProjectReference Include="..\Tibr.Application\Tibr.Application.csproj" />
   </ItemGroup>
 </Project>

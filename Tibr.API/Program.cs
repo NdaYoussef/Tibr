@@ -1,5 +1,10 @@
 using Microsoft.EntityFrameworkCore;
+using Tibr.Application;
+using Tibr.Application.Services;
+using Tibr.Infrastructure;
+using Tibr.Infrastructure.Config;
 using Tibr.Infrastructure.Contexts;
+using Tibr.Infrastructure.Services;
 
 namespace Tibr.API
 {
@@ -13,11 +18,19 @@ namespace Tibr.API
 
             builder.Services.AddControllers();
 
-            // In Main, after AddControllers():
             var configuration = builder.Configuration;
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"))
             );
+
+            builder.Services.AddInfrastructureServices();
+            builder.Services.AddApplicationServices();
+
+            builder.Services.Configure<PaymobSettings>(
+                builder.Configuration.GetSection(PaymobSettings.SectionName)
+            );
+            builder.Services.AddHttpClient<IPaymobService, PaymobService>();
+
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
 
