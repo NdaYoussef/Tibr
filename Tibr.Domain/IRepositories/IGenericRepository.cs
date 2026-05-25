@@ -12,6 +12,7 @@ namespace Tibr.Domain.IRepositories
         public Task AddAsync(TEntity entity);
         public Task UpdateAsync(TEntity entity);
         public Task DeleteAsync(TEntity entity);
+        public Task<TEntity> GetById(TId id);
         public Task<int> SaveChangesAsync();
     }
 }
