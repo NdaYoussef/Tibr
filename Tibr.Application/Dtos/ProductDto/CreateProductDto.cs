@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Tibr.Domain.Enums;
 
 namespace Tibr.Application.Dtos.ProductDto
 {
@@ -8,7 +9,7 @@ namespace Tibr.Application.Dtos.ProductDto
     {
         public long CategoryId { get; set; }
         public string Name { get; set; } = string.Empty;
-        public string MetalType { get; set; } = string.Empty;
+        public MetalType MetalType { get; set; } 
         public decimal Purity { get; set; }
         public decimal Weight { get; set; }
         public decimal BuyPrice { get; set; }
