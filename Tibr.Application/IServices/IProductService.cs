@@ -18,7 +18,7 @@ namespace Tibr.Application.IServices
         // ADVANCED FILTERING & PAGINATION
         /// Get products with advanced filtering, sorting, and pagination
         /// Supports: Weight, Purity, Price Range, Popularity, Newest, Price Sorting
-        Task<Result<PaginatedResult<ProductSummaryDto>>> GetProductsWithFiltersAsync(ProductFilterParams filterParams);     
+        Task<Result<PaginatedResult<ProductSummaryDto>>> GetProductsWithFiltersAsync(ProductFilterParams filterParams);
 
         // CREATE, UPDATE, DELETE OPERATIONS
         Task<Result<ProductDetailsDto>> AddProductAsync(CreateProductDto dto);
