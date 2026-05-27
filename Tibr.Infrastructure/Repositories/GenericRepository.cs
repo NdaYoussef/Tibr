@@ -17,7 +17,7 @@ namespace Tibr.Infrastructure.Repositories
             _context = context;
             _dbSet = _context.Set<TEntity>();
         }
-        public async Task<IQueryable<TEntity>> GetAll() {
+        public IQueryable<TEntity> GetAll() {
             return _dbSet.Where(e => !e.IsDeleted);
 
         }
