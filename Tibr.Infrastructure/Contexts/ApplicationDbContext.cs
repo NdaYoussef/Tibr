@@ -189,8 +189,12 @@ namespace Tibr.Infrastructure.Contexts
 
             modelBuilder.Entity<Product>().Property(p => p.Purity).HasPrecision(10, 4);
             modelBuilder.Entity<Product>().Property(p => p.Stock).HasPrecision(18, 4);
-            modelBuilder.Entity<Product>().Property(p => p.MetalType).HasConversion<string>();
-            modelBuilder.Entity<Product>().Property(p => p.Status).HasConversion<string>();
+            modelBuilder.Entity<Product>().Property(p => p.MetalType)
+                .HasConversion<string>()
+                .HasMaxLength(20);
+            modelBuilder.Entity<Product>().Property(p => p.Status)
+                .HasConversion<string>()
+                .HasMaxLength(20);
         }
     }
 }
