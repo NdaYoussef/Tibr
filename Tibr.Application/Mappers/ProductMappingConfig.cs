@@ -14,18 +14,16 @@ namespace Tibr.Application.Mappers
             config.NewConfig<Product, ProductSummaryDto>()
                 .Map(dest => dest.Status, src => src.Status.ToString())
                 .Map(dest => dest.CreatedAt, src => src.CreatedAt)
-                .Map(dest => dest.PopularityScore, src =>
-                                           (src.Favorites != null ? src.Favorites.Count : 0) +
-                                           (src.OrderItems != null ? src.OrderItems.Count : 0)); 
+                .Ignore(dest => dest.PopularityScore);
 
             config.NewConfig<Product, ProductDetailsDto>()
-              .Map(dest => dest.CategoryName, src => src.Category != null
-                                                   ? src.Category.Name : string.Empty)
-              .Map(dest => dest.Status, src => src.Status.ToString());
+               .Map(dest => dest.MetalType, src => src.MetalType.ToString())
+               .Map(dest => dest.Status, src => src.Status.ToString())
+               .Map(dest => dest.CategoryName, src => src.Category != null
+                                                   ? src.Category.Name : string.Empty);
 
             config.NewConfig<CreateProductDto, Product>()
                 .Ignore(dest => dest.Id)             
-                .Ignore(dest => dest.ImageUrl)        
                 .Ignore(dest => dest.Status)         
                 .Ignore(dest => dest.Category)        
                 .Ignore(dest => dest.Favorites)      
@@ -35,9 +33,8 @@ namespace Tibr.Application.Mappers
                 .Ignore(dest => dest.CreatedAt);
 
             config.NewConfig<UpdateProductDto, Product>()
+                .Map(dest => dest.Status, src => src.Status)
                 .Ignore(dest => dest.Id)
-                .Ignore(dest => dest.ImageUrl)
-                .Ignore(dest => dest.Status)
                 .Ignore(dest => dest.Category)
                 .Ignore(dest => dest.Favorites)
                 .Ignore(dest => dest.CartItems)
