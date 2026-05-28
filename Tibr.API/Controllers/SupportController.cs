@@ -12,9 +12,6 @@ namespace Tibr.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetAll()
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             var supports = await supportService.GetAllSupportsAsync();
             if (!supports.IsSuccess)
                 return BadRequest(supports.ErrorMessage);
@@ -24,9 +21,6 @@ namespace Tibr.API.Controllers
         [HttpGet("{id}")]
         public async Task<IActionResult> GetById(long id)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
-
             var support = await supportService.GetSupportByIdAsync(id);
             if (!support.IsSuccess)
                 return NotFound(support.ErrorMessage);
@@ -36,8 +30,7 @@ namespace Tibr.API.Controllers
         [HttpPost]
         public async Task<IActionResult> Create([FromBody] CreateSupportRequestDto createSupportRequestDto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+           
             var result = await supportService.AddSupportAsync(createSupportRequestDto);
             if (!result.IsSuccess)
                 return BadRequest(result.ErrorMessage);
@@ -47,8 +40,7 @@ namespace Tibr.API.Controllers
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(long id, [FromBody] UpdateSupportDto updateSupportRequestDto)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
+           
             var result = await supportService.UpdateSupportAsync(updateSupportRequestDto);
             if (!result.IsSuccess)
                 return BadRequest(result.ErrorMessage);
@@ -58,8 +50,6 @@ namespace Tibr.API.Controllers
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(long id)
         {
-            if (!ModelState.IsValid)
-                return BadRequest(ModelState);
             var result = await supportService.DeleteSupportAsync(id);
             if (!result.IsSuccess)
                 return BadRequest(result.ErrorMessage);
