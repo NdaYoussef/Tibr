@@ -18,4 +18,8 @@
     <ProjectReference Include="..\Tibr.Domain\Tibr.Domain.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Tibr.Domain\Tibr.Domain.csproj" />
+  </ItemGroup>
+
 </Project>

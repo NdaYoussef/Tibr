@@ -5,7 +5,7 @@ using Tibr.Domain.Common.Classes;
 
 namespace Tibr.Domain.IRepositories
 {
-    public interface IGenericRepository<TEntity,TId> where TEntity : BaseEntity<TId>
+    public interface IGenericRepository<TEntity, TId> where TEntity : BaseEntity<TId>
 
     {
         public IQueryable<TEntity> GetAll();
@@ -14,5 +14,7 @@ namespace Tibr.Domain.IRepositories
         public Task UpdateAsync(TEntity entity);
         public Task DeleteAsync(TEntity entity);
         public Task<int> SaveChangesAsync();
+
     }
 }
+

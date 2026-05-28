@@ -10,7 +10,7 @@ namespace Tibr.Domain.Entities
         public string Status { get; set; } = string.Empty;
 
         public virtual ICollection<KYCDocument> ReviewedDocuments { get; set; } = [];
-        public virtual ICollection<TicketReply> TicketReplies { get; set; } = [];
+        public virtual ICollection<Ticket> TicketReplies { get; set; } = [];
         public virtual ICollection<AuditLog> AuditLogs { get; set; } = [];
     }
 }

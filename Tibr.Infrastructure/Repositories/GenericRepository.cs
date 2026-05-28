@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Security.Cryptography;
 using System.Text;
 using Tibr.Domain.Common.Classes;
 using Tibr.Domain.IRepositories;
@@ -9,6 +10,7 @@ using Tibr.Infrastructure.Contexts;
 namespace Tibr.Infrastructure.Repositories
 {
     public class GenericRepository<TEntity,TId> : IGenericRepository<TEntity,TId> where TEntity : BaseEntity<TId>
+
     {
         private readonly ApplicationDbContext _context;
         private readonly DbSet<TEntity> _dbSet;
@@ -17,7 +19,8 @@ namespace Tibr.Infrastructure.Repositories
             _context = context;
             _dbSet = _context.Set<TEntity>();
         }
-        public IQueryable<TEntity> GetAll() {
+        public IQueryable<TEntity> GetAll()
+        {
             return _dbSet.Where(e => !e.IsDeleted);
 
         }
@@ -44,3 +47,4 @@ namespace Tibr.Infrastructure.Repositories
         }
     }
 }
+
