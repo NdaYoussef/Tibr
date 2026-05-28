@@ -1,9 +1,14 @@
 ﻿using Mapster;
+using MapsterMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
+using Tibr.Application.Services.SuppoertServices;
+using Tibr.Application.Services.SupportServices;
+using Tibr.Domain.IRepositories;
 using Tibr.Infrastructure.Contexts;
+using Tibr.Infrastructure.Repositories;
 
 namespace Tibr.Infrastructure
 {
@@ -19,8 +24,11 @@ namespace Tibr.Infrastructure
             var config = TypeAdapterConfig.GlobalSettings;
             config.Scan(Assembly.GetExecutingAssembly());
             services.AddSingleton(config);
-            //services.AddScoped<IMapper, Mapper>();
+            services.AddScoped<IMapper, Mapper>();
 
+            //repos register
+            services.AddScoped<ISupportRepository, SupportRepository>();
+            services.AddScoped<ISupportService, SupportService>();
 
             return services;
 

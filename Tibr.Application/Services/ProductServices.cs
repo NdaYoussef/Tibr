@@ -32,10 +32,7 @@ namespace Tibr.Application.Services
             try
             {
 
-                var query = _productRepository.GetAll()
-                .Include(p => p.Category)
-                .Include(p => p.Favorites)
-                .Include(p => p.OrderItems)
+                var query = _productRepository.GetAllAsync()
                 .OrderByDescending(p => p.CreatedAt);
 
                 var totalCount = await query.CountAsync();
