@@ -12,7 +12,7 @@ using Tibr.Infrastructure.Contexts;
 namespace Tibr.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260528140048_ModifyProductEntityAndConfigurations")]
+    [Migration("20260528142630_ModifyProductEntityAndConfigurations")]
     partial class ModifyProductEntityAndConfigurations
     {
         /// <inheritdoc />
