@@ -17,7 +17,8 @@ namespace Tibr.Application.Mappers
                 .Map(dest => dest.MetalType, src => src.MetalType.ToString())
                 .Map(dest => dest.Status, src => src.Status.ToString())
                 .Map(dest => dest.CreatedAt, src => src.CreatedAt)
-                .Ignore(dest => dest.PopularityScore);
+                 .Map(dest => dest.PopularityScore, src =>
+                                   src.Favorites.Count() + src.OrderItems.Count());
 
             // ProductDetailsDto mapping
             config.NewConfig<Product, ProductDetailsDto>()

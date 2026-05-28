@@ -32,20 +32,18 @@ namespace Tibr.Application.Services
             try
             {
 
-                var query = _productRepository.GetAllAsync()
-                .OrderByDescending(p => p.CreatedAt).asque;
+                var query = _productRepository.GetAll()
+                    .Include(p => p.Category)
+                    .Include(p => p.Favorites)    
+                    .Include(p => p.OrderItems)   
+                    .OrderByDescending(p => p.CreatedAt);
 
                 var totalCount = await query.CountAsync();
-                var products = await query
+                var dtos = await query
                 .Skip(paginationParams.Skip)
                 .Take(paginationParams.PageSize)
+                .ProjectToType<ProductSummaryDto>()
                 .ToListAsync();
-
-                var dtos = products.Adapt<List<ProductSummaryDto>>();
-                for (int i = 0; i < products.Count; i++)
-                    dtos[i].PopularityScore =
-                        (products[i].Favorites?.Count ?? 0) +
-                        (products[i].OrderItems?.Count ?? 0);
 
                 var paginatedResult = new PaginatedResult<ProductSummaryDto>(
                     dtos,
@@ -90,79 +88,29 @@ namespace Tibr.Application.Services
             try
             {
                 // Choose query based on whether popularity sort is needed
-                var query = filterParams.SortBy == "popularity"
-                    ? _productRepository.GetAll()
-                                        .Include(p => p.Category)
-                                        .Include(p => p.Favorites)
-                                        .Include(p => p.OrderItems)
-                                        .AsQueryable()
-                    : _productRepository.GetAll().Include(p => p.Category);
+                var needsPopularity = filterParams.SortBy == "popularity";
+                IQueryable<Product> query = _productRepository.GetAll()
+                    .Include(p => p.Category);
 
-                // Apply status filter
-                if (filterParams.Status.HasValue)
-                    query = query.Where(p => p.Status == filterParams.Status.Value);
-                else
-                    query = query.Where(p => p.Status == ProductStatus.Active);
 
-                // Apply search keyword filter (Name or MetalType)
-                if (!string.IsNullOrWhiteSpace(filterParams.SearchKeyword))
+                // Only include these if needed for popularity sort
+                if (needsPopularity)
                 {
-                    var keyword = filterParams.SearchKeyword.ToLower();
-                    query = query.Where(p =>
-                        p.Name.ToLower().Contains(keyword) ||
-                        p.MetalType.ToString().ToLower().Contains(keyword));
+                    query = query
+                        .Include(p => p.Favorites)
+                        .Include(p => p.OrderItems);
                 }
 
-                // Apply category filter
-                if (filterParams.CategoryId.HasValue)
-                    query = query.Where(p => p.CategoryId == filterParams.CategoryId.Value);
-
-                if (!string.IsNullOrWhiteSpace(filterParams.CategoryName))
-                    query = query.Where(p => p.Category.Name == filterParams.CategoryName);
-
-                // Apply metal type filter
-                if (!string.IsNullOrWhiteSpace(filterParams.MetalType))
-                {
-                    if (Enum.TryParse<MetalType>(filterParams.MetalType, ignoreCase: true, out var metalType))
-                        query = query.Where(p => p.MetalType == metalType);
-                }
-
-                // Apply weight range filter
-                if (filterParams.MinWeight.HasValue)
-                    query = query.Where(p => p.Weight >= filterParams.MinWeight.Value);
-                if (filterParams.MaxWeight.HasValue)
-                    query = query.Where(p => p.Weight <= filterParams.MaxWeight.Value);
-
-                // Apply purity range filter
-                if (filterParams.MinPurity.HasValue)
-                    query = query.Where(p => p.Purity >= filterParams.MinPurity.Value);
-                if (filterParams.MaxPurity.HasValue)
-                    query = query.Where(p => p.Purity <= filterParams.MaxPurity.Value);
-
-                // Apply price range filter (using SellPrice)
-                if (filterParams.MinPrice.HasValue)
-                    query = query.Where(p => p.SellPrice >= filterParams.MinPrice.Value);
-                if (filterParams.MaxPrice.HasValue)
-                    query = query.Where(p => p.SellPrice <= filterParams.MaxPrice.Value);
-
-                // Apply stock filter
-                if (!filterParams.IncludeOutOfStock)
-                    query = query.Where(p => p.Stock > 0);
-
-                // SORTING
+                query = ApplyFilters(query, filterParams);
                 query = ApplySorting(query, filterParams.SortBy);
 
                 var totalCount = await query.CountAsync();
-                var products = await query
+                var dtos = await query
                                  .Skip(filterParams.Skip)
                                  .Take(filterParams.PageSize)
+                                  .ProjectToType<ProductSummaryDto>()
                                  .ToListAsync();
 
-                var dtos = products.Adapt<List<ProductSummaryDto>>();
-                for (int i = 0; i < products.Count; i++)
-                    dtos[i].PopularityScore =
-                        (products[i].Favorites?.Count ?? 0) +
-                        (products[i].OrderItems?.Count ?? 0);
 
                 var paginatedResult = new PaginatedResult<ProductSummaryDto>(
                     dtos,
@@ -295,7 +243,54 @@ namespace Tibr.Application.Services
             }
         }
 
-        // HELPER METHODS - SORTING
+        // HELPER METHODS 
+        /// Apply Filters t
+        private IQueryable<Product> ApplyFilters(
+           IQueryable<Product> query, ProductFilterParams filterParams)
+        {
+            query = filterParams.Status.HasValue
+                ? query.Where(p => p.Status == filterParams.Status.Value)
+                : query.Where(p => p.Status == ProductStatus.Active);
+
+            if (!string.IsNullOrWhiteSpace(filterParams.SearchKeyword))
+            {
+                var keyword = filterParams.SearchKeyword.ToLower();
+                query = query.Where(p =>
+                    p.Name.ToLower().Contains(keyword) ||
+                    p.MetalType.ToString().ToLower().Contains(keyword));
+            }
+
+            if (filterParams.CategoryId.HasValue)
+                query = query.Where(p => p.CategoryId == filterParams.CategoryId.Value);
+
+            if (!string.IsNullOrWhiteSpace(filterParams.CategoryName))
+                query = query.Where(p => p.Category.Name == filterParams.CategoryName);
+
+            if (!string.IsNullOrWhiteSpace(filterParams.MetalType))
+                if (Enum.TryParse<MetalType>(filterParams.MetalType,
+                    ignoreCase: true, out var metalType))
+                    query = query.Where(p => p.MetalType == metalType);
+
+            if (filterParams.MinWeight.HasValue)
+                query = query.Where(p => p.Weight >= filterParams.MinWeight.Value);
+            if (filterParams.MaxWeight.HasValue)
+                query = query.Where(p => p.Weight <= filterParams.MaxWeight.Value);
+
+            if (filterParams.MinPurity.HasValue)
+                query = query.Where(p => p.Purity >= filterParams.MinPurity.Value);
+            if (filterParams.MaxPurity.HasValue)
+                query = query.Where(p => p.Purity <= filterParams.MaxPurity.Value);
+
+            if (filterParams.MinPrice.HasValue)
+                query = query.Where(p => p.SellPrice >= filterParams.MinPrice.Value);
+            if (filterParams.MaxPrice.HasValue)
+                query = query.Where(p => p.SellPrice <= filterParams.MaxPrice.Value);
+
+            if (!filterParams.IncludeOutOfStock)
+                query = query.Where(p => p.Stock > 0);
+
+            return query;
+        }
         /// Apply sorting to the query based on sortBy parameter
         private IQueryable<Product> ApplySorting(IQueryable<Product> query, string sortBy)
         {
