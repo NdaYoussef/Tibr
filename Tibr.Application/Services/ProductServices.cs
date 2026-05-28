@@ -33,7 +33,7 @@ namespace Tibr.Application.Services
             {
 
                 var query = _productRepository.GetAllAsync()
-                .OrderByDescending(p => p.CreatedAt);
+                .OrderByDescending(p => p.CreatedAt).asque;
 
                 var totalCount = await query.CountAsync();
                 var products = await query

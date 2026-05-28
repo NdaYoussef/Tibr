@@ -7,5 +7,6 @@ namespace Tibr.Domain.IRepositories
 {
     public interface IProductRepository : IGenericRepository<Product,long>
     {
+         IQueryable<Product> GetAll();
     }
 }
