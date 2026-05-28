@@ -6,4 +6,9 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Tibr.Application\Tibr.Application.csproj" />
+    <ProjectReference Include="..\Tibr.Domain\Tibr.Domain.csproj" />
+  </ItemGroup>
+
 </Project>

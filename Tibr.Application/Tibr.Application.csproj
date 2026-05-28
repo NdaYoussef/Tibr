@@ -13,4 +13,8 @@
     <Folder Include="Services\" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Tibr.Domain\Tibr.Domain.csproj" />
+  </ItemGroup>
+
 </Project>
