@@ -5,7 +5,7 @@ using Tibr.Application.Dtos.ProductDto;
 using Tibr.Domain.Enums;
 using Tibr.Domain.ResultPattern;
 
-namespace Tibr.Application.IServices
+namespace Tibr.Application.Services.ProductServices
 {
     public interface IProductService
     {

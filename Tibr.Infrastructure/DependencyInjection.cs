@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
+using Tibr.Application.Services.ProductServices;
 using Tibr.Application.Services.SuppoertServices;
 using Tibr.Application.Services.SupportServices;
 using Tibr.Domain.IRepositories;
@@ -29,6 +30,10 @@ namespace Tibr.Infrastructure
             //repos register
             services.AddScoped<ISupportRepository, SupportRepository>();
             services.AddScoped<ISupportService, SupportService>();
+
+            services.AddScoped<IProductRepository, ProductRepository>();
+            services.AddScoped<IProductService, ProductService>();
+
 
             return services;
 

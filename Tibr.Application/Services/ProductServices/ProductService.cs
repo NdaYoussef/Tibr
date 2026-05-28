@@ -7,13 +7,12 @@ using System.Text;
 using System.Threading.Tasks;
 using Tibr.Application.Dtos.Common;
 using Tibr.Application.Dtos.ProductDto;
-using Tibr.Application.IServices;
 using Tibr.Domain.Entities;
 using Tibr.Domain.Enums;
 using Tibr.Domain.IRepositories;
 using Tibr.Domain.ResultPattern;
 
-namespace Tibr.Application.Services
+namespace Tibr.Application.Services.ProductServices
 {
     public class ProductService : IProductService
     {
