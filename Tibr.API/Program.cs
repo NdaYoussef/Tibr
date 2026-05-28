@@ -1,3 +1,5 @@
+using Microsoft.EntityFrameworkCore;
+using Tibr.Infrastructure.Contexts;
 
 namespace Tibr.API
 {
@@ -10,6 +12,10 @@ namespace Tibr.API
             // Add services to the container.
 
             builder.Services.AddControllers();
+
+            // In Main, after AddControllers():
+            var configuration = builder.Configuration;
+           
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
 
@@ -24,7 +30,6 @@ namespace Tibr.API
             app.UseHttpsRedirection();
 
             app.UseAuthorization();
-
 
             app.MapControllers();
 
