@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Tibr.Infrastructure.Contexts;
+using Tibr.Infrastructure;
 
 namespace Tibr.API
 {
@@ -18,7 +19,7 @@ namespace Tibr.API
            
             // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
             builder.Services.AddOpenApi();
-
+            builder.Services.AddInfrastructure(builder.Configuration);
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
