@@ -1,4 +1,7 @@
+using AutoMapper;
 using Microsoft.EntityFrameworkCore;
+using Tibr.Application.Mappers;
+using Tibr.Application.Services;
 using Tibr.Infrastructure.Contexts;
 
 namespace Tibr.API
@@ -12,6 +15,20 @@ namespace Tibr.API
             // Add services to the container.
 
             builder.Services.AddControllers();
+
+            builder.Services.AddAutoMapper(cfg => cfg.AddMaps(typeof(CartProfile).Assembly));
+
+            builder.Services.AddScoped<ICartService, CartService>();
+
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAll", policy =>
+                {
+                    policy.AllowAnyOrigin()
+                          .AllowAnyMethod()
+                          .AllowAnyHeader();
+                });
+            });
 
             // In Main, after AddControllers():
             var configuration = builder.Configuration;
@@ -30,6 +47,8 @@ namespace Tibr.API
             }
 
             app.UseHttpsRedirection();
+
+            app.UseCors("AllowAll");
 
             app.UseAuthorization();
 
