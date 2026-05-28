@@ -9,7 +9,7 @@ namespace Tibr.Application.Dtos.SupportDtos
     {
 
         [Required]
-        public long UserId { get; set; }
+        public long? UserId { get; set; }
 
         [Required]
         [StringLength(200, ErrorMessage = "Subject cannot exceed 200 characters.")]
