@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
+using System.Linq.Expressions;
 using System.Security.Cryptography;
 using System.Text;
 using Tibr.Domain.Common.Classes;
@@ -18,10 +19,9 @@ namespace Tibr.Infrastructure.Repositories
             _context = context;
             _dbSet = _context.Set<TEntity>();
         }
-        public IQueryable<TEntity> GetAll()
+        public async Task<IEnumerable<TEntity>> GetAllAsync()
         {
-            return _dbSet.Where(e => !e.IsDeleted);
-
+            return await _context.Set<TEntity>().AsNoTracking().Where(t => !t.IsDeleted).ToListAsync();
         }
         public async Task<TEntity?> GetById(TId id)
         {
@@ -44,6 +44,10 @@ namespace Tibr.Infrastructure.Repositories
         {
             return await _context.SaveChangesAsync();
         }
+
+        public IQueryable<TEntity> GetAll(Expression<Func<TEntity, bool>> predicate)
+        
+            => _dbSet.Where(predicate).AsNoTracking();
     }
-}
+    }
 
