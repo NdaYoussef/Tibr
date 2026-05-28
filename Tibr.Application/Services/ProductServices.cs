@@ -1,4 +1,5 @@
 ﻿using Mapster;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -31,12 +32,17 @@ namespace Tibr.Application.Services
             try
             {
 
-                var query = _productRepository.GetProductsWithPopularityQuery()
+                var query = _productRepository.GetAll()
+                .Include(p => p.Category)
+                .Include(p => p.Favorites)
+                .Include(p => p.OrderItems)
                 .OrderByDescending(p => p.CreatedAt);
 
-                var totalCount = await _productRepository.CountAsync(query);
-                var products = await _productRepository.GetPagedProductsAsync(
-                    query, paginationParams.Skip, paginationParams.PageSize);
+                var totalCount = await query.CountAsync();
+                var products = await query
+                .Skip(paginationParams.Skip)
+                .Take(paginationParams.PageSize)
+                .ToListAsync();
 
                 var dtos = products.Adapt<List<ProductSummaryDto>>();
                 for (int i = 0; i < products.Count; i++)
@@ -63,7 +69,9 @@ namespace Tibr.Application.Services
         {
             try
             {
-                var product = await _productRepository.GetProductByIdAsync(id);
+                var product = await _productRepository.GetAll()
+                .Include(p => p.Category)   
+                .FirstOrDefaultAsync(p => p.Id == id); 
 
                 if (product == null || product.IsDeleted)
                     return Result<ProductDetailsDto>.Failure("Product not found");
@@ -86,8 +94,12 @@ namespace Tibr.Application.Services
             {
                 // Choose query based on whether popularity sort is needed
                 var query = filterParams.SortBy == "popularity"
-                    ? _productRepository.GetProductsWithPopularityQuery()
-                    : _productRepository.GetProductsQuery();
+                    ? _productRepository.GetAll()
+                                        .Include(p => p.Category)
+                                        .Include(p => p.Favorites)
+                                        .Include(p => p.OrderItems)
+                                        .AsQueryable()
+                    : _productRepository.GetAll().Include(p => p.Category);
 
                 // Apply status filter
                 if (filterParams.Status.HasValue)
@@ -143,9 +155,11 @@ namespace Tibr.Application.Services
                 // SORTING
                 query = ApplySorting(query, filterParams.SortBy);
 
-                var totalCount = await _productRepository.CountAsync(query);
-                var products = await _productRepository.GetPagedProductsAsync(
-                    query, filterParams.Skip, filterParams.PageSize);
+                var totalCount = await query.CountAsync();
+                var products = await query
+                                 .Skip(filterParams.Skip)
+                                 .Take(filterParams.PageSize)
+                                 .ToListAsync();
 
                 var dtos = products.Adapt<List<ProductSummaryDto>>();
                 for (int i = 0; i < products.Count; i++)
@@ -193,7 +207,9 @@ namespace Tibr.Application.Services
         {
             try
             {
-                var product = await _productRepository.GetProductByIdAsync(id);
+                var product = await _productRepository.GetAll()
+                                                 .Include(p => p.Category)
+                                                 .FirstOrDefaultAsync(p => p.Id == id);
 
                 if (product == null || product.IsDeleted)
                     return Result<ProductDetailsDto>.Failure("Product not found");
