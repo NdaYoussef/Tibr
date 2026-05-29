@@ -16,7 +16,10 @@ namespace Tibr.Infrastructure.Repositories
         {
             _context = context;
         }
-
+        public IQueryable<Category> GetAll()
+        {
+           return _context.Categories.Where(e => !e.IsDeleted).AsNoTracking();
+        }
         public async Task<bool> GetByNameAsync(string name)
         {
             return await _context.Categories
