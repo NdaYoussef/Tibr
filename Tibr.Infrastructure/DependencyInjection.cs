@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
+using Tibr.Application.Services.CategoryServices;
 using Tibr.Application.Services.ProductServices;
 using Tibr.Application.Services.SuppoertServices;
 using Tibr.Application.Services.SupportServices;
@@ -34,6 +35,8 @@ namespace Tibr.Infrastructure
             services.AddScoped<IProductRepository, ProductRepository>();
             services.AddScoped<IProductService, ProductService>();
 
+            services.AddScoped<ICategoryRepository, CategoryRepository>();
+            services.AddScoped<ICategoryService, CategoryService>();
 
             return services;
 
