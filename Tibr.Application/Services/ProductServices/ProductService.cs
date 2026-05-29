@@ -137,7 +137,11 @@ namespace Tibr.Application.Services.ProductServices
                 await _productRepository.AddAsync(product);
                 await _productRepository.SaveChangesAsync();
 
-                var resultDto = product.Adapt<ProductDetailsDto>();
+                var productWithCategory = await _productRepository.GetAll()
+                                           .Include(p => p.Category)
+                                           .FirstOrDefaultAsync(p => p.Id == product.Id);
+
+                var resultDto = productWithCategory!.Adapt<ProductDetailsDto>();
                 return Result<ProductDetailsDto>.Success(resultDto);
             }
             catch (Exception ex)
@@ -167,7 +171,11 @@ namespace Tibr.Application.Services.ProductServices
                 await _productRepository.UpdateAsync(product);
                 await _productRepository.SaveChangesAsync();
 
-                var resultDto = product.Adapt<ProductDetailsDto>();
+                var updatedProduct = await _productRepository.GetAll()
+                                               .Include(p => p.Category)
+                                               .FirstOrDefaultAsync(p => p.Id == id);
+
+                var resultDto = updatedProduct!.Adapt<ProductDetailsDto>();
                 return Result<ProductDetailsDto>.Success(resultDto);
             }
             catch (Exception ex)
