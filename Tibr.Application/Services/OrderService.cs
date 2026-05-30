@@ -9,15 +9,15 @@ namespace Tibr.Application.Services
 {
     public class OrderService : IOrderService
     {
-        private readonly IGenericRepository<Order> _orderRepository;
-        private readonly IGenericRepository<OrderItem> _orderItemRepository;
-        private readonly IGenericRepository<Product> _productRepository;
+        private readonly IGenericRepository<Order, long> _orderRepository;
+        private readonly IGenericRepository<OrderItem, long> _orderItemRepository;
+        private readonly IGenericRepository<Product, long> _productRepository;
         private readonly IOrderQueryService _orderQueryService;
 
         public OrderService(
-            IGenericRepository<Order> orderRepository,
-            IGenericRepository<OrderItem> orderItemRepository,
-            IGenericRepository<Product> productRepository,
+            IGenericRepository<Order, long> orderRepository,
+            IGenericRepository<OrderItem, long> orderItemRepository,
+            IGenericRepository<Product, long> productRepository,
             IOrderQueryService orderQueryService
         )
         {
@@ -66,7 +66,8 @@ namespace Tibr.Application.Services
                 TotalAmount = 0,
             };
 
-            order = await _orderRepository.AddAsync(order);
+            await _orderRepository.AddAsync(order);
+            await _orderRepository.SaveChangesAsync();
 
             decimal totalAmount = 0;
 
@@ -93,6 +94,7 @@ namespace Tibr.Application.Services
 
             order.TotalAmount = totalAmount;
             await _orderRepository.UpdateAsync(order);
+            await _orderRepository.SaveChangesAsync();
 
             var createdOrder = await _orderQueryService.GetByIdWithDetailsAsync(order.Id);
 
@@ -112,6 +114,7 @@ namespace Tibr.Application.Services
                 order.OrderStatus = updateDto.OrderStatus;
 
             await _orderRepository.UpdateAsync(order);
+            await _orderRepository.SaveChangesAsync();
 
             var updatedOrder = await _orderQueryService.GetByIdWithDetailsAsync(id);
 
@@ -125,6 +128,7 @@ namespace Tibr.Application.Services
                 return Result.Failure($"Order with ID {id} not found.");
 
             await _orderRepository.DeleteAsync(order);
+            await _orderRepository.SaveChangesAsync();
             return Result.Success();
         }
     }

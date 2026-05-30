@@ -23,15 +23,15 @@ namespace Tibr.Infrastructure.Services
 
         private readonly HttpClient _http;
         private readonly PaymobSettings _settings;
-        private readonly IGenericRepository<Order> _orderRepository;
-        private readonly IGenericRepository<Payment> _paymentRepository;
+        private readonly IGenericRepository<Order, long> _orderRepository;
+        private readonly IGenericRepository<Payment, long> _paymentRepository;
         private readonly ILogger<PaymobService> _logger;
 
         public PaymobService(
             HttpClient http,
             IOptions<PaymobSettings> settings,
-            IGenericRepository<Order> orderRepository,
-            IGenericRepository<Payment> paymentRepository,
+            IGenericRepository<Order, long> orderRepository,
+            IGenericRepository<Payment, long> paymentRepository,
             ILogger<PaymobService> logger
         )
         {
@@ -218,6 +218,8 @@ namespace Tibr.Infrastructure.Services
             };
 
             await _paymentRepository.AddAsync(payment);
+
+            await _orderRepository.SaveChangesAsync();
 
             _logger.LogInformation(
                 "Payment recorded for OrderId={OrderId}, TxId={TxId}, Amount={Amount}",
