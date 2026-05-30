@@ -57,7 +57,10 @@ TemporaryDependencyNodeTargetIdentifier=net10.0
 /warnaserror+:NU1605,SYSLIB0011
 
 [sourceFiles]
-Controllers/WeatherForecastController.cs
+Controllers/
+ OrdersController.cs
+ PaymentController.cs
+ WeatherForecastController.cs
 obj/Debug/net10.0/
  .NETCoreApp,Version=v10.0.AssemblyAttributes.cs
  Tibr.API.AssemblyInfo.cs
@@ -67,6 +70,7 @@ WeatherForecast.cs
 
 [metadataReferences]
 ../
+ Tibr.Application/obj/Debug/net10.0/ref/Tibr.Application.dll
  Tibr.Domain/obj/Debug/net10.0/ref/Tibr.Domain.dll
  Tibr.Infrastructure/obj/Debug/net10.0/ref/Tibr.Infrastructure.dll
 <DOTNET>/packs/Microsoft.AspNetCore.App.Ref/10.0.7/ref/net10.0/
@@ -381,6 +385,12 @@ WeatherForecast.cs
 <NUGET>/
  azure.core/1.47.1/lib/net8.0/Azure.Core.dll
  azure.identity/1.14.2/lib/net8.0/Azure.Identity.dll
+ fluentvalidation.aspnetcore/11.3.1/lib/net6.0/FluentValidation.AspNetCore.dll
+ fluentvalidation.dependencyinjectionextensions/11.11.0/lib/netstandard2.1/FluentValidation.DependencyInjectionExtensions.dll
+ fluentvalidation/11.11.0/lib/net8.0/FluentValidation.dll
+ mapster.core/10.0.7/lib/netstandard2.0/Mapster.Core.dll
+ mapster.dependencyinjection/10.0.7/lib/net10.0/Mapster.DependencyInjection.dll
+ mapster/10.0.7/lib/net10.0/Mapster.dll
  microsoft.aspnetcore.openapi/10.0.7/lib/net10.0/Microsoft.AspNetCore.OpenApi.dll
  microsoft.bcl.asyncinterfaces/8.0.0/lib/netstandard2.1/Microsoft.Bcl.AsyncInterfaces.dll
  microsoft.bcl.cryptography/9.0.4/lib/net9.0/Microsoft.Bcl.Cryptography.dll
