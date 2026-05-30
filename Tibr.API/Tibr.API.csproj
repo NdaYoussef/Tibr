@@ -24,6 +24,7 @@
 
   <ItemGroup>
     <ProjectReference Include="../Tibr.Infrastructure/Tibr.Infrastructure.csproj" />
+    <ProjectReference Include="../Tibr.Application/Tibr.Application.csproj" />
   </ItemGroup>
 
   <ItemGroup>
