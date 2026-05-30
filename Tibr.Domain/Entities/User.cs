@@ -21,6 +21,6 @@ namespace Tibr.Domain.Entities
         public virtual ICollection<Order> Orders { get; set; } = [];
         public virtual ICollection<Payment> Payments { get; set; } = [];
         public virtual ICollection<Notification> Notifications { get; set; } = [];
-        public virtual ICollection<SupportTicket> SupportTickets { get; set; } = [];
+        public virtual ICollection<Support> SupportTickets { get; set; } = [];
     }
 }

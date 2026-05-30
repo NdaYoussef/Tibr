@@ -1,18 +1,37 @@
-﻿using Microsoft.Extensions.DependencyInjection;
-using Tibr.Application.InfrastructureContracts;
+﻿using Mapster;
+using MapsterMapper;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.DependencyInjection;
+using System.Reflection;
+using Tibr.Application.Services.SuppoertServices;
+using Tibr.Application.Services.SupportServices;
 using Tibr.Domain.IRepositories;
-using Tibr.Infrastructure.Queries;
+using Tibr.Infrastructure.Contexts;
 using Tibr.Infrastructure.Repositories;
 
 namespace Tibr.Infrastructure
 {
-    public static class DependencyInjection
+    public static class DependecyInjection
     {
-        public static IServiceCollection AddInfrastructureServices(this IServiceCollection services)
+        public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
         {
-            services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
-            services.AddScoped<IOrderQueryService, OrderQueryService>();
+            services.AddDbContext<ApplicationDbContext>(options =>
+                options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"))
+            );
+
+            // Mapster
+            var config = TypeAdapterConfig.GlobalSettings;
+            config.Scan(Assembly.GetExecutingAssembly());
+            services.AddSingleton(config);
+            services.AddScoped<IMapper, Mapper>();
+
+            //repos register
+            services.AddScoped<ISupportRepository, SupportRepository>();
+            services.AddScoped<ISupportService, SupportService>();
+
             return services;
+
         }
     }
 }

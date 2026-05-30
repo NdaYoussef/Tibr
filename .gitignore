@@ -19,8 +19,5 @@ project.lock.json
 project.fragment.lock.json
 artifacts/
 
-appsettings.Development.json
-appsettings.json
-
-.plans/
-opencode.json
+# appsettings.Development.json
+# appsettings.json

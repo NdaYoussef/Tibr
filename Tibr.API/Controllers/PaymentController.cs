@@ -1,7 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Tibr.Application.Dtos.Paymob;
@@ -72,8 +68,11 @@ namespace Tibr.API.Controllers
         [HttpGet("callback/response")]
         public ActionResult ResponseCallback([FromQuery] bool success)
         {
-            _logger.LogInformation("Paymob response callback: QueryString={Query}, Success={Success}",
-                Request.QueryString, success);
+            _logger.LogInformation(
+                "Paymob response callback: QueryString={Query}, Success={Success}",
+                Request.QueryString,
+                success
+            );
 
             var orderId = Request.Query["merchant_order_id"];
             var status = success ? "success" : "failed";

@@ -1,18 +1,20 @@
-﻿using System.Linq.Expressions;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq.Expressions;
+using System.Text;
 using Tibr.Domain.Common.Classes;
 
 namespace Tibr.Domain.IRepositories
 {
-    public interface IGenericRepository<TEntity>
-        where TEntity : BaseEntity<long>
+    public interface IGenericRepository<TEntity, TId> where TEntity : BaseEntity<TId>
     {
-        Task<TEntity?> GetByIdAsync(long id);
         Task<IEnumerable<TEntity>> GetAllAsync();
-        Task<IEnumerable<TEntity>> FindAsync(Expression<Func<TEntity, bool>> predicate);
-        Task<TEntity> AddAsync(TEntity entity);
+        Task<TEntity?> GetById(TId id);
+         Task AddAsync(TEntity entity);
         Task UpdateAsync(TEntity entity);
         Task DeleteAsync(TEntity entity);
-        Task<bool> ExistsAsync(long id);
         Task<int> SaveChangesAsync();
+         IQueryable<TEntity> GetAll(Expression<Func<TEntity, bool>> predicate);
     }
-}
+    }
+
