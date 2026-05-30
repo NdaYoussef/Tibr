@@ -5,7 +5,7 @@ using Tibr.Domain.Entities;
 using Tibr.Domain.IRepositories;
 using Tibr.Domain.ResultPattern;
 
-namespace Tibr.Application.Services
+namespace Tibr.Application.Services.OrderServices
 {
     public class OrderService : IOrderService
     {

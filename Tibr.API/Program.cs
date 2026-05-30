@@ -1,5 +1,5 @@
 using Tibr.Application;
-using Tibr.Application.Services;
+using Tibr.Application.Services.PaymentServices;
 using Tibr.Infrastructure;
 using Tibr.Infrastructure.Config;
 using Tibr.Infrastructure.Services;

@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Tibr.Application.Dtos.Paymob;
-using Tibr.Application.Services;
+using Tibr.Application.Services.PaymentServices;
 using Tibr.Infrastructure.Config;
 
 namespace Tibr.API.Controllers

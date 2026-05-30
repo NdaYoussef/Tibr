@@ -4,7 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Tibr.Application.Dtos.Paymob;
 
-namespace Tibr.Application.Services
+namespace Tibr.Application.Services.PaymentServices
 {
     public interface IPaymobService
     {

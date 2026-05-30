@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Tibr.Application.Dtos.Paymob;
-using Tibr.Application.Services;
+using Tibr.Application.Services.PaymentServices;
 using Tibr.Domain.Entities;
 using Tibr.Domain.IRepositories;
 using Tibr.Infrastructure.Config;

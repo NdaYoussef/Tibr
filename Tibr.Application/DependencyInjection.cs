@@ -1,7 +1,7 @@
 using FluentValidation.AspNetCore;
 using Mapster;
 using Microsoft.Extensions.DependencyInjection;
-using Tibr.Application.Services;
+using Tibr.Application.Services.OrderServices;
 
 namespace Tibr.Application
 {

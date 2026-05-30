@@ -1,7 +1,7 @@
 using Tibr.Application.Dtos;
 using Tibr.Domain.ResultPattern;
 
-namespace Tibr.Application.Services
+namespace Tibr.Application.Services.OrderServices
 {
     public interface IOrderService
     {
