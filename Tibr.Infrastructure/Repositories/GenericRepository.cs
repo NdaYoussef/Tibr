@@ -52,7 +52,7 @@ namespace Tibr.Infrastructure.Repositories
 
         public async Task<int> SaveChangesAsync()
         {
-            return await _context.SaveChangesAsync();
+           return await _context.SaveChangesAsync();
         }
 
         public IQueryable<TEntity> GetAll(Expression<Func<TEntity, bool>> predicate)
