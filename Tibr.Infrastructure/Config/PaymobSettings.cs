@@ -10,7 +10,6 @@ namespace Tibr.Infrastructure.Config
         public string IntegrationId { get; set; } = string.Empty;
         public string IframeId { get; set; } = string.Empty;
         public string BaseUrl { get; set; } = "https://accept.paymob.com";
-        public string SuccessRedirectUrl { get; set; } = "https://yourapp.com/payment/success";
-        public string FailureRedirectUrl { get; set; } = "https://yourapp.com/payment/failed";
+        public string FrontendBaseUrl { get; set; } = "http://localhost:4200";
     }
 }

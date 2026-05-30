@@ -18,7 +18,8 @@ namespace Tibr.Application.Services
             IGenericRepository<Order> orderRepository,
             IGenericRepository<OrderItem> orderItemRepository,
             IGenericRepository<Product> productRepository,
-            IOrderQueryService orderQueryService)
+            IOrderQueryService orderQueryService
+        )
         {
             _orderRepository = orderRepository;
             _orderItemRepository = orderItemRepository;
@@ -62,7 +63,7 @@ namespace Tibr.Application.Services
                 OrderNumber = $"ORD-{Guid.NewGuid()}",
                 OrderStatus = "Pending",
                 PaymentStatus = "Unpaid",
-                TotalAmount = 0
+                TotalAmount = 0,
             };
 
             order = await _orderRepository.AddAsync(order);
@@ -73,7 +74,9 @@ namespace Tibr.Application.Services
             {
                 var product = await _productRepository.GetByIdAsync(itemDto.ProductId);
                 if (product is null)
-                    return Result<OrderDto>.Failure($"Product with ID {itemDto.ProductId} not found.");
+                    return Result<OrderDto>.Failure(
+                        $"Product with ID {itemDto.ProductId} not found."
+                    );
 
                 var orderItem = new OrderItem
                 {
@@ -81,7 +84,7 @@ namespace Tibr.Application.Services
                     OrderId = order.Id,
                     ProductId = itemDto.ProductId,
                     Quantity = itemDto.Quantity,
-                    Price = product.SellPrice
+                    Price = product.SellPrice,
                 };
 
                 await _orderItemRepository.AddAsync(orderItem);

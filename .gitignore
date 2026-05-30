@@ -23,3 +23,4 @@ appsettings.Development.json
 appsettings.json
 
 .plans/
+opencode.json

@@ -21,7 +21,8 @@ namespace Tibr.API.Controllers
         public PaymentController(
             IPaymobService paymob,
             ILogger<PaymentController> logger,
-            IOptions<PaymobSettings> settings)
+            IOptions<PaymobSettings> settings
+        )
         {
             _paymob = paymob;
             _logger = logger;
@@ -33,10 +34,12 @@ namespace Tibr.API.Controllers
         /// The client should redirect the user to this URL.
         /// </summary>
         [HttpPost("initiate")]
-        public async Task<IActionResult> Initiate([FromBody] CreatePaymentRequest request)
+        public async Task<ActionResult<PaymentInitiateResponse>> Initiate(
+            [FromBody] CreatePaymentRequest request
+        )
         {
             var url = await _paymob.CreatePaymentUrlAsync(request);
-            return Ok(new { paymentUrl = url });
+            return Ok(new PaymentInitiateResponse(url));
         }
 
         /// <summary>
@@ -44,7 +47,7 @@ namespace Tibr.API.Controllers
         /// The HMAC is passed as a query parameter: ?hmac=...
         /// </summary>
         [HttpPost("callback/processed")]
-        public async Task<IActionResult> Callback(
+        public async Task<ActionResult> Callback(
             [FromBody] PaymobCallbackPayload payload,
             [FromQuery] string hmac
         )
@@ -67,13 +70,19 @@ namespace Tibr.API.Controllers
         /// Do NOT use this as source of truth for payment status; use the processed callback instead.
         /// </summary>
         [HttpGet("callback/response")]
-        public IActionResult ResponseCallback([FromQuery] bool success)
+        public ActionResult ResponseCallback([FromQuery] bool success)
         {
-            return Redirect(
-                success
-                    ? _settings.SuccessRedirectUrl
-                    : _settings.FailureRedirectUrl
-            );
+            _logger.LogInformation("Paymob response callback: QueryString={Query}, Success={Success}",
+                Request.QueryString, success);
+
+            var orderId = Request.Query["merchant_order_id"];
+            var status = success ? "success" : "failed";
+
+            var redirectUrl = string.IsNullOrEmpty(orderId)
+                ? $"{_settings.FrontendBaseUrl}/orders?payment={status}"
+                : $"{_settings.FrontendBaseUrl}/orders/{orderId}?payment={status}";
+
+            return Redirect(redirectUrl);
         }
     }
 }

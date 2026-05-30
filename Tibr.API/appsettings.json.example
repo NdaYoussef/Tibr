@@ -15,8 +15,7 @@
     "IntegrationId": "...",
     "IframeId": "...",
     "BaseUrl": "https://accept.paymob.com",
-    "SuccessRedirectUrl": "http://localhost:5151/payment/success",
-    "FailureRedirectUrl": "http://localhost:5151/payment/failed"
+    "FrontendBaseUrl": "http://localhost:4200"
   },
   "AllowedHosts": "*"
 }

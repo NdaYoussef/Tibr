@@ -16,8 +16,8 @@ namespace Tibr.Infrastructure.Queries
 
         public async Task<Order?> GetByIdWithDetailsAsync(long id)
         {
-            return await _context.Orders
-                .Where(o => !o.IsDeleted && o.Id == id)
+            return await _context
+                .Orders.Where(o => !o.IsDeleted && o.Id == id)
                 .Include(o => o.User)
                 .Include(o => o.OrderItems)
                     .ThenInclude(oi => oi.Product)
@@ -26,8 +26,8 @@ namespace Tibr.Infrastructure.Queries
 
         public async Task<IEnumerable<Order>> GetAllWithDetailsAsync()
         {
-            return await _context.Orders
-                .Where(o => !o.IsDeleted)
+            return await _context
+                .Orders.Where(o => !o.IsDeleted)
                 .Include(o => o.User)
                 .Include(o => o.OrderItems)
                     .ThenInclude(oi => oi.Product)
@@ -36,8 +36,8 @@ namespace Tibr.Infrastructure.Queries
 
         public async Task<IEnumerable<Order>> GetByUserIdWithDetailsAsync(long userId)
         {
-            return await _context.Orders
-                .Where(o => !o.IsDeleted && o.UserId == userId)
+            return await _context
+                .Orders.Where(o => !o.IsDeleted && o.UserId == userId)
                 .Include(o => o.User)
                 .Include(o => o.OrderItems)
                     .ThenInclude(oi => oi.Product)

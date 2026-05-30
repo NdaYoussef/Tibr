@@ -21,7 +21,7 @@ namespace Tibr.API.Controllers
         /// <summary>Retrieves all orders.</summary>
         /// <returns>A list of all orders.</returns>
         [HttpGet]
-        public async Task<IActionResult> GetAll()
+        public async Task<ActionResult<IEnumerable<OrderDto>>> GetAll()
         {
             var result = await _orderService.GetAllAsync();
             return Ok(result.Data);
@@ -31,7 +31,7 @@ namespace Tibr.API.Controllers
         /// <param name="id">The order ID.</param>
         /// <returns>The order if found; otherwise 404.</returns>
         [HttpGet("{id:long}")]
-        public async Task<IActionResult> GetById(long id)
+        public async Task<ActionResult<OrderDto>> GetById(long id)
         {
             var result = await _orderService.GetByIdAsync(id);
             if (result.IsFailure)
@@ -43,7 +43,7 @@ namespace Tibr.API.Controllers
         /// <param name="userId">The user ID.</param>
         /// <returns>A list of orders belonging to the user.</returns>
         [HttpGet("user/{userId:long}")]
-        public async Task<IActionResult> GetByUserId(long userId)
+        public async Task<ActionResult<IEnumerable<OrderDto>>> GetByUserId(long userId)
         {
             var result = await _orderService.GetByUserIdAsync(userId);
             return Ok(result.Data);
@@ -53,7 +53,7 @@ namespace Tibr.API.Controllers
         /// <param name="dto">The order creation details.</param>
         /// <returns>The created order with 201 status.</returns>
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] CreateOrderDto dto)
+        public async Task<ActionResult<OrderDto>> Create([FromBody] CreateOrderDto dto)
         {
             var result = await _orderService.CreateAsync(dto);
             if (result.IsFailure)
@@ -66,7 +66,7 @@ namespace Tibr.API.Controllers
         /// <param name="dto">The updated status values.</param>
         /// <returns>The updated order if found; otherwise 404.</returns>
         [HttpPut("{id:long}")]
-        public async Task<IActionResult> Update(long id, [FromBody] UpdateOrderDto dto)
+        public async Task<ActionResult<OrderDto>> Update(long id, [FromBody] UpdateOrderDto dto)
         {
             var result = await _orderService.UpdateAsync(id, dto);
             if (result.IsFailure)
@@ -78,7 +78,7 @@ namespace Tibr.API.Controllers
         /// <param name="id">The order ID.</param>
         /// <returns>204 No Content if successful; 404 if not found.</returns>
         [HttpDelete("{id:long}")]
-        public async Task<IActionResult> Delete(long id)
+        public async Task<ActionResult> Delete(long id)
         {
             var result = await _orderService.DeleteAsync(id);
             if (result.IsFailure)
