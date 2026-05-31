@@ -1,8 +1,5 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Identity.Data;
 using Microsoft.AspNetCore.Mvc;
-using System.Security.Claims;
 using Tibr.Application.Dtos;
 using MediatR;
 using Tibr.Application.Services.Auth;
@@ -18,6 +15,7 @@ namespace Tibr.API.Controllers
         public AuthController(IMediator mediator) => _mediator = mediator;
 
         [HttpPost("register")]
+        [AllowAnonymous]
         public async Task<IActionResult> Register([FromBody] RegisterRequestData model)
         {
             var result = await _mediator.Send(new RegisterCommand(model));
@@ -34,6 +32,7 @@ namespace Tibr.API.Controllers
         }
 
         [HttpPost("login")]
+        [AllowAnonymous]
         public async Task<IActionResult> Login([FromBody] LoginRequestData model)
         {
             var result = await _mediator.Send(new LoginCommand(model));
@@ -42,6 +41,7 @@ namespace Tibr.API.Controllers
         }
 
         [HttpPost("forgot-password")]
+        [AllowAnonymous]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequestData model)
         {
             var result = await _mediator.Send(new ForgotPasswordCommand(model));
@@ -49,6 +49,7 @@ namespace Tibr.API.Controllers
         }
 
         [HttpPost("reset-password")]
+        [AllowAnonymous]
         public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordRequestData model)
         {
             var result = await _mediator.Send(new ResetPasswordCommand(model));
@@ -57,6 +58,7 @@ namespace Tibr.API.Controllers
         }
 
         [HttpPost("submit-kyc")]
+        [AllowAnonymous]
         public async Task<IActionResult> SubmitKyc(
             [FromForm] long userId,
             [FromForm] string documentType,

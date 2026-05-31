@@ -3,7 +3,6 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Tibr.Application.Interfaces;
-using Tibr.Application.Services;
 using Tibr.Application.Services.Email;
 using Tibr.Infrastructure.Contexts;
 using Tibr.Application;
@@ -19,7 +18,15 @@ namespace Tibr.API
         public static void Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
-
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAll", policy =>
+                {
+                    policy.AllowAnyOrigin()
+                          .AllowAnyHeader()
+                          .AllowAnyMethod();
+                });
+            });
             builder.Services.AddControllers();
 
             var configuration = builder.Configuration;
