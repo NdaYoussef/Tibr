@@ -4,9 +4,13 @@ using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Tibr.Application.Interfaces;
 using Tibr.Application.Services;
-
 using Tibr.Application.Services.Email;
 using Tibr.Infrastructure.Contexts;
+using Tibr.Application;
+using Tibr.Application.Services.PaymentServices;
+using Tibr.Infrastructure;
+using Tibr.Infrastructure.Config;
+using Tibr.Infrastructure.Services;
 
 namespace Tibr.API
 {
@@ -19,6 +23,7 @@ namespace Tibr.API
             builder.Services.AddControllers();
 
             var configuration = builder.Configuration;
+
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"))
             );
@@ -48,6 +53,14 @@ namespace Tibr.API
 
             builder.Services.AddOpenApi();
 
+            builder.Services.AddInfrastructure(builder.Configuration);
+            builder.Services.AddApplicationServices();
+
+            builder.Services.Configure<PaymobSettings>(
+                configuration.GetSection(PaymobSettings.SectionName)
+            );
+            builder.Services.AddHttpClient<IPaymobService, PaymobService>();
+
             var app = builder.Build();
 
             if (app.Environment.IsDevelopment())
@@ -61,9 +74,7 @@ namespace Tibr.API
 
             app.UseAuthentication();
             app.UseAuthorization();
-
             app.MapControllers();
-
             app.Run();
         }
     }

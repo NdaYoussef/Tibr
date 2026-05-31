@@ -35,8 +35,8 @@ namespace Tibr.Infrastructure.Contexts
         public DbSet<Payment> Payments { get; set; }
 
         // Support Ticket entities
-        public DbSet<SupportTicket> SupportTickets { get; set; }
-        public DbSet<TicketReply> TicketReplies { get; set; }
+        public DbSet<Support> SupportTickets { get; set; }
+        public DbSet<Ticket> TicketReplies { get; set; }
 
         // Audit Log entity
         public DbSet<AuditLog> AuditLogs { get; set; }
@@ -145,21 +145,21 @@ namespace Tibr.Infrastructure.Contexts
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder
-                .Entity<SupportTicket>()
+                .Entity<Support>()
                 .HasOne(st => st.User)
                 .WithMany(u => u.SupportTickets)
                 .HasForeignKey(st => st.UserId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder
-                .Entity<TicketReply>()
-                .HasOne(tr => tr.Ticket)
-                .WithMany(st => st.TicketReplies)
+                .Entity<Ticket>()
+                .HasOne(tr => tr.Support)
+                .WithMany(st => st.Tickets)
                 .HasForeignKey(tr => tr.TicketId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder
-                .Entity<TicketReply>()
+                .Entity<Ticket>()
                 .HasOne(tr => tr.Admin)
                 .WithMany(a => a.TicketReplies)
                 .HasForeignKey(tr => tr.AdminId)
@@ -188,6 +188,13 @@ namespace Tibr.Infrastructure.Contexts
             modelBuilder.Entity<Product>().Property(p => p.Weight).HasPrecision(18, 3);
 
             modelBuilder.Entity<Product>().Property(p => p.Purity).HasPrecision(10, 4);
+            modelBuilder.Entity<Product>().Property(p => p.Stock).HasPrecision(18, 4);
+            modelBuilder.Entity<Product>().Property(p => p.MetalType)
+                .HasConversion<string>()
+                .HasMaxLength(20);
+            modelBuilder.Entity<Product>().Property(p => p.Status)
+                .HasConversion<string>()
+                .HasMaxLength(20);
         }
     }
 }

@@ -2,9 +2,11 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace Tibr.Domain.Entities
+namespace Tibr.Domain.Enums
 {
-    public class ApplicationUser
+    public enum MetalType
     {
+        Gold,
+        Silver
     }
 }
