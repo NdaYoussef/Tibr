@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Tibr.Infrastructure.Contexts;
 
@@ -11,9 +12,11 @@ using Tibr.Infrastructure.Contexts;
 namespace Tibr.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260525162009_initCreated")]
+    partial class initCreated
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -248,7 +251,7 @@ namespace Tibr.Infrastructure.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<long?>("ReviewedBy")
+                    b.Property<long>("ReviewedBy")
                         .HasColumnType("bigint");
 
                     b.Property<string>("SelfieImage")
@@ -459,16 +462,12 @@ namespace Tibr.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("ImageUrl")
-                        .HasColumnType("nvarchar(max)");
-
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
                     b.Property<string>("MetalType")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Name")
                         .IsRequired()
@@ -484,12 +483,7 @@ namespace Tibr.Infrastructure.Migrations
 
                     b.Property<string>("Status")
                         .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<decimal>("Stock")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
@@ -505,7 +499,7 @@ namespace Tibr.Infrastructure.Migrations
                     b.ToTable("Products");
                 });
 
-            modelBuilder.Entity("Tibr.Domain.Entities.Support", b =>
+            modelBuilder.Entity("Tibr.Domain.Entities.SupportTicket", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -540,7 +534,7 @@ namespace Tibr.Infrastructure.Migrations
                     b.ToTable("SupportTickets");
                 });
 
-            modelBuilder.Entity("Tibr.Domain.Entities.Ticket", b =>
+            modelBuilder.Entity("Tibr.Domain.Entities.TicketReply", b =>
                 {
                     b.Property<long>("Id")
                         .ValueGeneratedOnAdd()
@@ -700,7 +694,8 @@ namespace Tibr.Infrastructure.Migrations
                     b.HasOne("Tibr.Domain.Entities.Admin", "ReviewedByAdmin")
                         .WithMany("ReviewedDocuments")
                         .HasForeignKey("ReviewedBy")
-                        .OnDelete(DeleteBehavior.Restrict);
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
 
                     b.HasOne("Tibr.Domain.Entities.User", "User")
                         .WithMany("KYCDocuments")
@@ -784,7 +779,7 @@ namespace Tibr.Infrastructure.Migrations
                     b.Navigation("Category");
                 });
 
-            modelBuilder.Entity("Tibr.Domain.Entities.Support", b =>
+            modelBuilder.Entity("Tibr.Domain.Entities.SupportTicket", b =>
                 {
                     b.HasOne("Tibr.Domain.Entities.User", "User")
                         .WithMany("SupportTickets")
@@ -795,7 +790,7 @@ namespace Tibr.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Tibr.Domain.Entities.Ticket", b =>
+            modelBuilder.Entity("Tibr.Domain.Entities.TicketReply", b =>
                 {
                     b.HasOne("Tibr.Domain.Entities.Admin", "Admin")
                         .WithMany("TicketReplies")
@@ -803,15 +798,15 @@ namespace Tibr.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Tibr.Domain.Entities.Support", "Support")
-                        .WithMany("Tickets")
+                    b.HasOne("Tibr.Domain.Entities.SupportTicket", "Ticket")
+                        .WithMany("TicketReplies")
                         .HasForeignKey("TicketId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Admin");
 
-                    b.Navigation("Support");
+                    b.Navigation("Ticket");
                 });
 
             modelBuilder.Entity("Tibr.Domain.Entities.Admin", b =>
@@ -849,9 +844,9 @@ namespace Tibr.Infrastructure.Migrations
                     b.Navigation("OrderItems");
                 });
 
-            modelBuilder.Entity("Tibr.Domain.Entities.Support", b =>
+            modelBuilder.Entity("Tibr.Domain.Entities.SupportTicket", b =>
                 {
-                    b.Navigation("Tickets");
+                    b.Navigation("TicketReplies");
                 });
 
             modelBuilder.Entity("Tibr.Domain.Entities.User", b =>
