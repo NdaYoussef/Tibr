@@ -1,7 +1,7 @@
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Tibr.Application.Dtos;
-using Tibr.Application.Services;
+using Tibr.Application.Services.CartServices;
 
 namespace Tibr.API.Controllers
 {
