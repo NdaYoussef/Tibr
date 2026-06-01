@@ -1,5 +1,4 @@
-﻿
-using Tibr.Domain.Common.Classes;
+﻿using Tibr.Domain.Common.Classes;
 using Tibr.Domain.Enums;
 
 namespace Tibr.Domain.Entities
@@ -14,7 +13,6 @@ namespace Tibr.Domain.Entities
 
         public decimal ReservedBalance { get; set; }
 
-        public ICollection<WalletTransaction> Transactions { get; set; }
-            = new List<WalletTransaction>();
+        public ICollection<WalletTransaction> Transactions { get; set; } = [];
     }
 }

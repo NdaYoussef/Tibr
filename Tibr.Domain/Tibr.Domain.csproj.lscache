@@ -60,23 +60,59 @@ Common/
  Classes/BaseEntity.cs
  Interfaces/IBaseEntity.cs
 Entities/
+ Address.cs
  Admin.cs
- ApplicationUser.cs
+ Alert.cs
+ AssetPrice.cs
  AuditLog.cs
  Cart.cs
  CartItem.cs
  Category.cs
+ DeliveryRequest.cs
+ Deposit.cs
  Favorite.cs
  KYCDocument.cs
  Notification.cs
  Order.cs
+ OrderCondition.cs
  OrderItem.cs
+ OrdersInvestment.cs
  Payment.cs
  Product.cs
- SupportTicket.cs
- TicketReply.cs
+ Reservation.cs
+ Support.cs
+ Ticket.cs
+ Trade.cs
+ Transaction.cs
  User.cs
-IRepositories/IGenericRepository.cs
+ Wallet.cs
+ WalletTransaction.cs
+Enums/
+ AlertType.cs
+ AssetType.cs
+ ConditionOperator.cs
+ ConditionType.cs
+ DeliveryStatus.cs
+ DepositStatus.cs
+ ExecutionMode.cs
+ ExecutionType.cs
+ MetalType.cs
+ OrderStatus.cs
+ OrderType.cs
+ PaymentMethod.cs
+ ProductStatus.cs
+ ReferenceType.cs
+ ReservationStatus.cs
+ TradeSide.cs
+ TransactionStatus.cs
+ TransactionType.cs
+ WalletTransactionType.cs
+ WalletType.cs
+IRepositories/
+ ICategoryRepository.cs
+ IGenericRepository.cs
+ IProductRepository.cs
+ ISupportRepository.cs
 obj/Debug/net10.0/
  .NETCoreApp,Version=v10.0.AssemblyAttributes.cs
  Tibr.Domain.AssemblyInfo.cs
@@ -84,7 +120,7 @@ obj/Debug/net10.0/
 ResultPattern/Result.cs
 
 [metadataReferences]
-<DOTNET>/packs/Microsoft.NETCore.App.Ref/10.0.7/ref/net10.0/
+<DOTNET>/packs/Microsoft.NETCore.App.Ref/10.0.8/ref/net10.0/
  Microsoft.CSharp.dll
  Microsoft.VisualBasic.Core.dll
  Microsoft.VisualBasic.dll
@@ -254,17 +290,17 @@ ResultPattern/Result.cs
  WindowsBase.dll
 
 [analyzerReferences]
-<DOTNET>/packs/Microsoft.NETCore.App.Ref/10.0.7/analyzers/dotnet/cs/
+<DOTNET>/packs/Microsoft.NETCore.App.Ref/10.0.8/analyzers/dotnet/cs/
  Microsoft.Interop.ComInterfaceGenerator.dll
  Microsoft.Interop.JavaScript.JSImportGenerator.dll
  Microsoft.Interop.LibraryImportGenerator.dll
  Microsoft.Interop.SourceGeneration.dll
  System.Text.Json.SourceGeneration.dll
  System.Text.RegularExpressions.Generator.dll
-<DOTNET>/sdk/10.0.107/Sdks/Microsoft.NET.Sdk/analyzers/
+<DOTNET>/sdk/10.0.108/Sdks/Microsoft.NET.Sdk/analyzers/
  Microsoft.CodeAnalysis.CSharp.NetAnalyzers.dll
  Microsoft.CodeAnalysis.NetAnalyzers.dll
 
 [analyzerConfigFiles]
-<DOTNET>/sdk/10.0.107/Sdks/Microsoft.NET.Sdk/analyzers/build/config/analysislevel_10_default.globalconfig
+<DOTNET>/sdk/10.0.108/Sdks/Microsoft.NET.Sdk/analyzers/build/config/analysislevel_10_default.globalconfig
 obj/Debug/net10.0/Tibr.Domain.GeneratedMSBuildEditorConfig.editorconfig

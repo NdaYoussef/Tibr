@@ -1,5 +1,4 @@
-﻿
-using Tibr.Domain.Common.Classes;
+﻿using Tibr.Domain.Common.Classes;
 using Tibr.Domain.Enums;
 
 namespace Tibr.Domain.Entities

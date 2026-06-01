@@ -10,6 +10,6 @@ namespace Tibr.Domain.Entities
         public string Status { get; set; } = string.Empty;
 
         public virtual User User { get; set; } = null!;
-        public virtual ICollection<Ticket> Tickets{ get; set; } = [];
+        public virtual ICollection<Ticket> Tickets { get; set; } = [];
     }
 }

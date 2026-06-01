@@ -58,27 +58,69 @@ TemporaryDependencyNodeTargetIdentifier=net10.0
 [sourceFiles]
 DependencyInjection.cs
 Dtos/
+ AuthModels.cs
+ CategoryDto/
+  CategoryDto.cs
+  CreateCategoryDto.cs
+  UpdateCategoryDto.cs
+ Common/
+  PaginatedResult.cs
+  PaginationParams.cs
  OrderDtos.cs
  Paymob/
   CreatePaymentRequest.cs
+  PaymentInitiateResponse.cs
   PaymobCallbackPayload.cs
+ ProductDto/
+  CreateProductDto.cs
+  ProductDetailsDto.cs
+  ProductFilterParams.cs
+  ProductSummaryDto.cs
+  UpdateProductDto.cs
+ SupportDtos/
+  CreateSupportRequestDto.cs
+  SupportResponse.cs
+  UpdateSupportDto.cs
  Validators/
   CreateOrderDtoValidator.cs
   UpdateOrderDtoValidator.cs
 InfrastructureContracts/IOrderQueryService.cs
-Mappers/OrderMappingConfig.cs
+Interfaces/IEmailService.cs
+Mappers/
+ CategoryMappingConfig.cs
+ OrderMappingConfig.cs
+ ProductMappingConfig.cs
+ SupportMappingConfig.cs
 obj/Debug/net10.0/
  .NETCoreApp,Version=v10.0.AssemblyAttributes.cs
  Tibr.Application.AssemblyInfo.cs
  Tibr.Application.GlobalUsings.g.cs
+Services/Auth/
+ ForgotPasswordCommand.cs
+ LoginCommand.cs
+ RegisterCommand.cs
+ ResetPasswordCommand.cs
+ VerifyEmailCommand.cs
+Services/CategoryServices/
+ CategoryService.cs
+ ICategoryService.cs
 Services/
- IOrderService.cs
- IPaymobService.cs
- OrderService.cs
+ Email/EmailService.cs
+ Kyc/SubmitKycCommand.cs
+ OrderServices/
+  IOrderService.cs
+  OrderService.cs
+ PaymentServices/IPaymobService.cs
+ ProductServices/
+  IProductService.cs
+  ProductService.cs
+ SupportServices/
+  ISupportService.cs
+  SupportService.cs
 
 [metadataReferences]
 ../Tibr.Domain/obj/Debug/net10.0/ref/Tibr.Domain.dll
-<DOTNET>/packs/Microsoft.AspNetCore.App.Ref/10.0.7/ref/net10.0/
+<DOTNET>/packs/Microsoft.AspNetCore.App.Ref/10.0.8/ref/net10.0/
  Microsoft.AspNetCore.Antiforgery.dll
  Microsoft.AspNetCore.Authentication.Abstractions.dll
  Microsoft.AspNetCore.Authentication.BearerToken.dll
@@ -219,7 +261,7 @@ Services/
  System.Formats.Cbor.dll
  System.Security.Cryptography.Xml.dll
  System.Threading.RateLimiting.dll
-<DOTNET>/packs/Microsoft.NETCore.App.Ref/10.0.7/ref/net10.0/
+<DOTNET>/packs/Microsoft.NETCore.App.Ref/10.0.8/ref/net10.0/
  Microsoft.CSharp.dll
  Microsoft.VisualBasic.Core.dll
  Microsoft.VisualBasic.dll
@@ -388,15 +430,29 @@ Services/
  System.Xml.XPath.XDocument.dll
  WindowsBase.dll
 <NUGET>/
+ bcrypt.net-next/4.2.0/lib/net10.0/BCrypt-Net-Next.dll
+ bouncycastle.cryptography/2.6.2/lib/net6.0/BouncyCastle.Cryptography.dll
  fluentvalidation.aspnetcore/11.3.1/lib/net6.0/FluentValidation.AspNetCore.dll
  fluentvalidation.dependencyinjectionextensions/11.11.0/lib/netstandard2.1/FluentValidation.DependencyInjectionExtensions.dll
  fluentvalidation/11.11.0/lib/net8.0/FluentValidation.dll
+ mailkit/4.16.0/lib/net10.0/MailKit.dll
  mapster.core/10.0.7/lib/netstandard2.0/Mapster.Core.dll
  mapster.dependencyinjection/10.0.7/lib/net10.0/Mapster.DependencyInjection.dll
  mapster/10.0.7/lib/net10.0/Mapster.dll
+ mediatr.contracts/2.0.1/lib/netstandard2.0/MediatR.Contracts.dll
+ mediatr/14.1.0/lib/net10.0/MediatR.dll
+ microsoft.entityframeworkcore.abstractions/10.0.8/lib/net10.0/Microsoft.EntityFrameworkCore.Abstractions.dll
+ microsoft.entityframeworkcore/10.0.8/lib/net10.0/Microsoft.EntityFrameworkCore.dll
+ microsoft.identitymodel.abstractions/8.18.0/lib/net10.0/Microsoft.IdentityModel.Abstractions.dll
+ microsoft.identitymodel.jsonwebtokens/8.18.0/lib/net10.0/Microsoft.IdentityModel.JsonWebTokens.dll
+ microsoft.identitymodel.logging/8.18.0/lib/net10.0/Microsoft.IdentityModel.Logging.dll
+ microsoft.identitymodel.tokens/8.18.0/lib/net10.0/Microsoft.IdentityModel.Tokens.dll
+ mimekit/4.16.0/lib/net10.0/MimeKit.dll
+ system.identitymodel.tokens.jwt/8.18.0/lib/net10.0/System.IdentityModel.Tokens.Jwt.dll
+ system.security.cryptography.pkcs/10.0.0/lib/net10.0/System.Security.Cryptography.Pkcs.dll
 
 [analyzerReferences]
-<DOTNET>/packs/Microsoft.AspNetCore.App.Ref/10.0.7/analyzers/dotnet/cs/
+<DOTNET>/packs/Microsoft.AspNetCore.App.Ref/10.0.8/analyzers/dotnet/cs/
  Microsoft.AspNetCore.App.Analyzers.dll
  Microsoft.AspNetCore.App.CodeFixes.dll
  Microsoft.AspNetCore.App.SourceGenerators.dll
@@ -404,17 +460,18 @@ Services/
  Microsoft.Extensions.Logging.Generators.dll
  Microsoft.Extensions.Options.SourceGeneration.dll
  Microsoft.Extensions.Validation.ValidationsGenerator.dll
-<DOTNET>/packs/Microsoft.NETCore.App.Ref/10.0.7/analyzers/dotnet/cs/
+<DOTNET>/packs/Microsoft.NETCore.App.Ref/10.0.8/analyzers/dotnet/cs/
  Microsoft.Interop.ComInterfaceGenerator.dll
  Microsoft.Interop.JavaScript.JSImportGenerator.dll
  Microsoft.Interop.LibraryImportGenerator.dll
  Microsoft.Interop.SourceGeneration.dll
  System.Text.Json.SourceGeneration.dll
  System.Text.RegularExpressions.Generator.dll
-<DOTNET>/sdk/10.0.107/Sdks/Microsoft.NET.Sdk/analyzers/
+<DOTNET>/sdk/10.0.108/Sdks/Microsoft.NET.Sdk/analyzers/
  Microsoft.CodeAnalysis.CSharp.NetAnalyzers.dll
  Microsoft.CodeAnalysis.NetAnalyzers.dll
+<NUGET>/microsoft.entityframeworkcore.analyzers/10.0.8/analyzers/dotnet/cs/Microsoft.EntityFrameworkCore.Analyzers.dll
 
 [analyzerConfigFiles]
-<DOTNET>/sdk/10.0.107/Sdks/Microsoft.NET.Sdk/analyzers/build/config/analysislevel_10_default.globalconfig
+<DOTNET>/sdk/10.0.108/Sdks/Microsoft.NET.Sdk/analyzers/build/config/analysislevel_10_default.globalconfig
 obj/Debug/net10.0/Tibr.Application.GeneratedMSBuildEditorConfig.editorconfig

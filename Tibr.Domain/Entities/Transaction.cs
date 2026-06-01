@@ -1,5 +1,4 @@
-﻿
-using System.Transactions;
+﻿using System.Transactions;
 using Tibr.Domain.Common.Classes;
 using Tibr.Domain.Enums;
 
@@ -17,6 +16,6 @@ namespace Tibr.Domain.Entities
 
         public decimal Amount { get; set; }
 
-        public TransactionStatus Status { get; set; }
+        public TransactionStatusEnum Status { get; set; }
     }
 }

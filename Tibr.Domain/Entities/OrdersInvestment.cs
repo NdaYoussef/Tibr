@@ -29,10 +29,8 @@ namespace Tibr.Domain.Entities
 
         public DateTime? ExpiryDate { get; set; }
 
-        public ICollection<OrderCondition> Conditions { get; set; }
-            = new List<OrderCondition>();
+        public ICollection<OrderCondition> Conditions { get; set; } = [];
 
-        public ICollection<Trade> Trades { get; set; }
-            = new List<Trade>();
+        public ICollection<Trade> Trades { get; set; } = [];
     }
 }
