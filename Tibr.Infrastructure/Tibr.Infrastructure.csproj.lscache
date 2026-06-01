@@ -61,22 +61,32 @@ Configurations/ApplicationUserConfigurations.cs
 Contexts/ApplicationDbContext.cs
 DependencyInjection.cs
 Migrations/
- 20260524154013_InitialCreate.cs
- 20260524154013_InitialCreate.Designer.cs
+ 20260525162009_initCreated.cs
+ 20260525162009_initCreated.Designer.cs
+ 20260525184228_MakeReviewedByNullable.cs
+ 20260525184228_MakeReviewedByNullable.Designer.cs
+ 20260528124439_initial.cs
+ 20260528124439_initial.Designer.cs
+ 20260528142630_ModifyProductEntityAndConfigurations.cs
+ 20260528142630_ModifyProductEntityAndConfigurations.Designer.cs
  ApplicationDbContextModelSnapshot.cs
 obj/Debug/net10.0/
  .NETCoreApp,Version=v10.0.AssemblyAttributes.cs
  Tibr.Infrastructure.AssemblyInfo.cs
  Tibr.Infrastructure.GlobalUsings.g.cs
 Queries/OrderQueryService.cs
-Repositories/GenericRepository.cs
+Repositories/
+ CategoryRepository.cs
+ GenericRepository.cs
+ ProductRepository.cs
+ SupportRepository.cs
 Services/PaymobService.cs
 
 [metadataReferences]
 ../
  Tibr.Application/obj/Debug/net10.0/ref/Tibr.Application.dll
  Tibr.Domain/obj/Debug/net10.0/ref/Tibr.Domain.dll
-<DOTNET>/packs/Microsoft.AspNetCore.App.Ref/10.0.7/ref/net10.0/
+<DOTNET>/packs/Microsoft.AspNetCore.App.Ref/10.0.8/ref/net10.0/
  Microsoft.AspNetCore.Antiforgery.dll
  Microsoft.AspNetCore.Authentication.Abstractions.dll
  Microsoft.AspNetCore.Authentication.BearerToken.dll
@@ -164,6 +174,9 @@ Services/PaymobService.cs
  Microsoft.AspNetCore.StaticFiles.dll
  Microsoft.AspNetCore.WebSockets.dll
  Microsoft.AspNetCore.WebUtilities.dll
+ Microsoft.Extensions.Caching.Abstractions.dll
+ Microsoft.Extensions.Caching.Memory.dll
+ Microsoft.Extensions.Configuration.Abstractions.dll
  Microsoft.Extensions.Configuration.Binder.dll
  Microsoft.Extensions.Configuration.CommandLine.dll
  Microsoft.Extensions.Configuration.dll
@@ -174,6 +187,8 @@ Services/PaymobService.cs
  Microsoft.Extensions.Configuration.KeyPerFile.dll
  Microsoft.Extensions.Configuration.UserSecrets.dll
  Microsoft.Extensions.Configuration.Xml.dll
+ Microsoft.Extensions.DependencyInjection.Abstractions.dll
+ Microsoft.Extensions.DependencyInjection.dll
  Microsoft.Extensions.Diagnostics.Abstractions.dll
  Microsoft.Extensions.Diagnostics.dll
  Microsoft.Extensions.Diagnostics.HealthChecks.Abstractions.dll
@@ -191,15 +206,19 @@ Services/PaymobService.cs
  Microsoft.Extensions.Identity.Stores.dll
  Microsoft.Extensions.Localization.Abstractions.dll
  Microsoft.Extensions.Localization.dll
+ Microsoft.Extensions.Logging.Abstractions.dll
  Microsoft.Extensions.Logging.Configuration.dll
  Microsoft.Extensions.Logging.Console.dll
  Microsoft.Extensions.Logging.Debug.dll
+ Microsoft.Extensions.Logging.dll
  Microsoft.Extensions.Logging.EventLog.dll
  Microsoft.Extensions.Logging.EventSource.dll
  Microsoft.Extensions.Logging.TraceSource.dll
  Microsoft.Extensions.ObjectPool.dll
  Microsoft.Extensions.Options.ConfigurationExtensions.dll
  Microsoft.Extensions.Options.DataAnnotations.dll
+ Microsoft.Extensions.Options.dll
+ Microsoft.Extensions.Primitives.dll
  Microsoft.Extensions.Validation.dll
  Microsoft.Extensions.WebEncoders.dll
  Microsoft.JSInterop.dll
@@ -208,7 +227,7 @@ Services/PaymobService.cs
  System.Formats.Cbor.dll
  System.Security.Cryptography.Xml.dll
  System.Threading.RateLimiting.dll
-<DOTNET>/packs/Microsoft.NETCore.App.Ref/10.0.7/ref/net10.0/
+<DOTNET>/packs/Microsoft.NETCore.App.Ref/10.0.8/ref/net10.0/
  Microsoft.CSharp.dll
  Microsoft.VisualBasic.Core.dll
  Microsoft.VisualBasic.dll
@@ -379,12 +398,18 @@ Services/PaymobService.cs
 <NUGET>/
  azure.core/1.47.1/lib/net8.0/Azure.Core.dll
  azure.identity/1.14.2/lib/net8.0/Azure.Identity.dll
+ bcrypt.net-next/4.2.0/lib/net10.0/BCrypt-Net-Next.dll
+ bouncycastle.cryptography/2.6.2/lib/net6.0/BouncyCastle.Cryptography.dll
  fluentvalidation.aspnetcore/11.3.1/lib/net6.0/FluentValidation.AspNetCore.dll
  fluentvalidation.dependencyinjectionextensions/11.11.0/lib/netstandard2.1/FluentValidation.DependencyInjectionExtensions.dll
  fluentvalidation/11.11.0/lib/net8.0/FluentValidation.dll
+ mailkit/4.16.0/lib/net10.0/MailKit.dll
  mapster.core/10.0.7/lib/netstandard2.0/Mapster.Core.dll
  mapster.dependencyinjection/10.0.7/lib/net10.0/Mapster.DependencyInjection.dll
  mapster/10.0.7/lib/net10.0/Mapster.dll
+ mediatr.contracts/2.0.1/lib/netstandard2.0/MediatR.Contracts.dll
+ mediatr/14.1.0/lib/net10.0/MediatR.dll
+ microsoft.aspnetcore.identity.entityframeworkcore/10.0.8/lib/net10.0/Microsoft.AspNetCore.Identity.EntityFrameworkCore.dll
  microsoft.bcl.asyncinterfaces/8.0.0/lib/netstandard2.1/Microsoft.Bcl.AsyncInterfaces.dll
  microsoft.bcl.cryptography/9.0.4/lib/net9.0/Microsoft.Bcl.Cryptography.dll
  microsoft.data.sqlclient/6.1.1/ref/net9.0/Microsoft.Data.SqlClient.dll
@@ -392,45 +417,39 @@ Services/PaymobService.cs
  microsoft.entityframeworkcore.relational/10.0.8/lib/net10.0/Microsoft.EntityFrameworkCore.Relational.dll
  microsoft.entityframeworkcore.sqlserver/10.0.8/lib/net10.0/Microsoft.EntityFrameworkCore.SqlServer.dll
  microsoft.entityframeworkcore/10.0.8/lib/net10.0/Microsoft.EntityFrameworkCore.dll
- microsoft.extensions.caching.abstractions/10.0.8/lib/net10.0/Microsoft.Extensions.Caching.Abstractions.dll
- microsoft.extensions.caching.memory/10.0.8/lib/net10.0/Microsoft.Extensions.Caching.Memory.dll
- microsoft.extensions.configuration.abstractions/10.0.8/lib/net10.0/Microsoft.Extensions.Configuration.Abstractions.dll
- microsoft.extensions.dependencyinjection.abstractions/10.0.8/lib/net10.0/Microsoft.Extensions.DependencyInjection.Abstractions.dll
- microsoft.extensions.dependencyinjection/10.0.8/lib/net10.0/Microsoft.Extensions.DependencyInjection.dll
- microsoft.extensions.logging.abstractions/10.0.8/lib/net10.0/Microsoft.Extensions.Logging.Abstractions.dll
- microsoft.extensions.logging/10.0.8/lib/net10.0/Microsoft.Extensions.Logging.dll
- microsoft.extensions.options/10.0.8/lib/net10.0/Microsoft.Extensions.Options.dll
- microsoft.extensions.primitives/10.0.8/lib/net10.0/Microsoft.Extensions.Primitives.dll
  microsoft.identity.client.extensions.msal/4.73.1/lib/net8.0/Microsoft.Identity.Client.Extensions.Msal.dll
  microsoft.identity.client/4.73.1/lib/net8.0/Microsoft.Identity.Client.dll
- microsoft.identitymodel.abstractions/7.7.1/lib/net8.0/Microsoft.IdentityModel.Abstractions.dll
- microsoft.identitymodel.jsonwebtokens/7.7.1/lib/net8.0/Microsoft.IdentityModel.JsonWebTokens.dll
- microsoft.identitymodel.logging/7.7.1/lib/net8.0/Microsoft.IdentityModel.Logging.dll
+ microsoft.identitymodel.abstractions/8.18.0/lib/net10.0/Microsoft.IdentityModel.Abstractions.dll
+ microsoft.identitymodel.jsonwebtokens/8.18.0/lib/net10.0/Microsoft.IdentityModel.JsonWebTokens.dll
+ microsoft.identitymodel.logging/8.18.0/lib/net10.0/Microsoft.IdentityModel.Logging.dll
  microsoft.identitymodel.protocols.openidconnect/7.7.1/lib/net8.0/Microsoft.IdentityModel.Protocols.OpenIdConnect.dll
  microsoft.identitymodel.protocols/7.7.1/lib/net8.0/Microsoft.IdentityModel.Protocols.dll
- microsoft.identitymodel.tokens/7.7.1/lib/net8.0/Microsoft.IdentityModel.Tokens.dll
+ microsoft.identitymodel.tokens/8.18.0/lib/net10.0/Microsoft.IdentityModel.Tokens.dll
  microsoft.sqlserver.server/1.0.0/lib/netstandard2.0/Microsoft.SqlServer.Server.dll
+ mimekit/4.16.0/lib/net10.0/MimeKit.dll
  system.clientmodel/1.5.1/lib/net8.0/System.ClientModel.dll
- system.identitymodel.tokens.jwt/7.7.1/lib/net8.0/System.IdentityModel.Tokens.Jwt.dll
+ system.identitymodel.tokens.jwt/8.18.0/lib/net10.0/System.IdentityModel.Tokens.Jwt.dll
  system.memory.data/8.0.1/lib/net8.0/System.Memory.Data.dll
- system.security.cryptography.pkcs/9.0.4/lib/net9.0/System.Security.Cryptography.Pkcs.dll
+ system.security.cryptography.pkcs/10.0.0/lib/net10.0/System.Security.Cryptography.Pkcs.dll
  system.security.cryptography.protecteddata/9.0.4/lib/net9.0/System.Security.Cryptography.ProtectedData.dll
 
 [analyzerReferences]
-<DOTNET>/packs/Microsoft.AspNetCore.App.Ref/10.0.7/analyzers/dotnet/cs/
+<DOTNET>/packs/Microsoft.AspNetCore.App.Ref/10.0.8/analyzers/dotnet/cs/
  Microsoft.AspNetCore.App.Analyzers.dll
  Microsoft.AspNetCore.App.CodeFixes.dll
  Microsoft.AspNetCore.App.SourceGenerators.dll
  Microsoft.AspNetCore.Components.Analyzers.dll
+ Microsoft.Extensions.Logging.Generators.dll
+ Microsoft.Extensions.Options.SourceGeneration.dll
  Microsoft.Extensions.Validation.ValidationsGenerator.dll
-<DOTNET>/packs/Microsoft.NETCore.App.Ref/10.0.7/analyzers/dotnet/cs/
+<DOTNET>/packs/Microsoft.NETCore.App.Ref/10.0.8/analyzers/dotnet/cs/
  Microsoft.Interop.ComInterfaceGenerator.dll
  Microsoft.Interop.JavaScript.JSImportGenerator.dll
  Microsoft.Interop.LibraryImportGenerator.dll
  Microsoft.Interop.SourceGeneration.dll
  System.Text.Json.SourceGeneration.dll
  System.Text.RegularExpressions.Generator.dll
-<DOTNET>/sdk/10.0.107/Sdks/Microsoft.NET.Sdk/analyzers/
+<DOTNET>/sdk/10.0.108/Sdks/Microsoft.NET.Sdk/analyzers/
  Microsoft.CodeAnalysis.CSharp.NetAnalyzers.dll
  Microsoft.CodeAnalysis.NetAnalyzers.dll
 <NUGET>/microsoft.codeanalysis.analyzers/3.11.0/analyzers/dotnet/cs/
@@ -438,10 +457,8 @@ Services/PaymobService.cs
  Microsoft.CodeAnalysis.CSharp.Analyzers.dll
 <NUGET>/
  microsoft.entityframeworkcore.analyzers/10.0.8/analyzers/dotnet/cs/Microsoft.EntityFrameworkCore.Analyzers.dll
- microsoft.extensions.logging.abstractions/10.0.8/analyzers/dotnet/roslyn4.4/cs/Microsoft.Extensions.Logging.Generators.dll
- microsoft.extensions.options/10.0.8/analyzers/dotnet/roslyn4.4/cs/Microsoft.Extensions.Options.SourceGeneration.dll
  system.clientmodel/1.5.1/analyzers/dotnet/cs/System.ClientModel.SourceGeneration.dll
 
 [analyzerConfigFiles]
-<DOTNET>/sdk/10.0.107/Sdks/Microsoft.NET.Sdk/analyzers/build/config/analysislevel_10_default.globalconfig
+<DOTNET>/sdk/10.0.108/Sdks/Microsoft.NET.Sdk/analyzers/build/config/analysislevel_10_default.globalconfig
 obj/Debug/net10.0/Tibr.Infrastructure.GeneratedMSBuildEditorConfig.editorconfig
