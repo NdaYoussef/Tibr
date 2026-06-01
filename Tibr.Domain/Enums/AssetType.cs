@@ -4,7 +4,9 @@ using System.Text;
 
 namespace Tibr.Domain.Enums
 {
-    internal class AssetType
+    public enum AssetType
     {
+        Gold = 1,
+        Silver = 2
     }
 }

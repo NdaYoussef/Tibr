@@ -4,7 +4,10 @@ using System.Text;
 
 namespace Tibr.Domain.Enums
 {
-    internal class DepositStatus
+    public enum DepositStatus
     {
+        Pending = 1,
+        Completed = 2,
+        Failed = 3
     }
 }

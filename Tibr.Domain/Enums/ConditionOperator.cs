@@ -4,7 +4,12 @@ using System.Text;
 
 namespace Tibr.Domain.Enums
 {
-    internal class ConditionOperator
+    public enum ConditionOperator
     {
+        GreaterThan = 1,
+        GreaterThanOrEqual = 2,
+        LessThan = 3,
+        LessThanOrEqual = 4,
+        Equal = 5
     }
 }

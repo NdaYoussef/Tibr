@@ -4,7 +4,9 @@ using System.Text;
 
 namespace Tibr.Domain.Enums
 {
-    internal class AlertType
+    public enum AlertType
     {
+        PriceReached = 1,
+        NearTarget = 2
     }
 }

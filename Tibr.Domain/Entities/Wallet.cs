@@ -1,10 +1,20 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿
+using Tibr.Domain.Common.Classes;
+using Tibr.Domain.Enums;
 
 namespace Tibr.Domain.Entities
 {
-    internal class Wallet
+    public class Wallet : BaseEntity<long>
     {
+        public Guid UserId { get; set; }
+
+        public WalletType WalletType { get; set; }
+
+        public decimal Balance { get; set; }
+
+        public decimal ReservedBalance { get; set; }
+
+        public ICollection<WalletTransaction> Transactions { get; set; }
+            = new List<WalletTransaction>();
     }
 }

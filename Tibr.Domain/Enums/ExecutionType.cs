@@ -4,7 +4,10 @@ using System.Text;
 
 namespace Tibr.Domain.Enums
 {
-    internal class ExecutionType
+    public enum ExecutionType
     {
+        AlertOnly = 1,
+        AutoExecute = 2,
+        AlertAndExecute = 3
     }
 }

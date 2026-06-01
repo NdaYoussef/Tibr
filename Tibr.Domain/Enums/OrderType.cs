@@ -4,7 +4,9 @@ using System.Text;
 
 namespace Tibr.Domain.Enums
 {
-    internal class OrderType
+    public enum OrderType
     {
+        Buy = 1,
+        Sell = 2
     }
 }

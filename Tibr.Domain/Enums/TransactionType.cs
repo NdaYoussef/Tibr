@@ -4,7 +4,9 @@ using System.Text;
 
 namespace Tibr.Domain.Enums
 {
-    internal class TransactionType
+    public enum TransactionType
     {
+        Buy = 1,
+        Sell = 2
     }
 }

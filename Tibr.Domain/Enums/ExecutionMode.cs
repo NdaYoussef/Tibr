@@ -4,7 +4,9 @@ using System.Text;
 
 namespace Tibr.Domain.Enums
 {
-    internal class ExecutionMode
+    public enum ExecutionMode
     {
+        Direct = 1,
+        Strategy = 2
     }
 }

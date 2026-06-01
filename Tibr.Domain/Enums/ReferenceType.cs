@@ -4,7 +4,10 @@ using System.Text;
 
 namespace Tibr.Domain.Enums
 {
-    internal class ReferenceType
+    public enum ReferenceType
     {
+        OrderInvestment = 1,
+        Trade = 2,
+        Deposit = 3
     }
-}
+} 

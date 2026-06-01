@@ -4,7 +4,12 @@ using System.Text;
 
 namespace Tibr.Domain.Enums
 {
-    internal class OrderStatus
+    public enum OrderStatus
     {
+        Pending = 1,
+        Triggered = 2,
+        Executed = 3,
+        Cancelled = 4,
+        Failed = 5
     }
 }

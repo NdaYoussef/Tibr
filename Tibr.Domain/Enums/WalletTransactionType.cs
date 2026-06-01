@@ -4,7 +4,11 @@ using System.Text;
 
 namespace Tibr.Domain.Enums
 {
-    internal class WalletTransactionType
+    public enum WalletTransactionType
     {
+        Credit = 1,
+        Debit = 2,
+        Reserve = 3,
+        Release = 4
     }
 }

@@ -4,7 +4,8 @@ using System.Text;
 
 namespace Tibr.Domain.Enums
 {
-    internal class ConditionType
+    public enum ConditionType
     {
+        PriceTarget = 1
     }
 }

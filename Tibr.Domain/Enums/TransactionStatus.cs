@@ -4,7 +4,9 @@ using System.Text;
 
 namespace Tibr.Domain.Enums
 {
-    internal class TransactionStatus
+    public enum TransactionStatus
     {
+        Success = 1,
+        Failed = 2
     }
 }
