@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Tibr.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class initCreated : Migration
+    public partial class SyncModel : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -103,12 +103,14 @@ namespace Tibr.Infrastructure.Migrations
                         .Annotation("SqlServer:Identity", "1, 1"),
                     CategoryId = table.Column<long>(type: "bigint", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    MetalType = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    MetalType = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
                     Purity = table.Column<decimal>(type: "decimal(10,4)", precision: 10, scale: 4, nullable: false),
                     Weight = table.Column<decimal>(type: "decimal(18,3)", precision: 18, scale: 3, nullable: false),
                     BuyPrice = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
                     SellPrice = table.Column<decimal>(type: "decimal(18,2)", precision: 18, scale: 2, nullable: false),
-                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Status = table.Column<string>(type: "nvarchar(20)", maxLength: 20, nullable: false),
+                    Stock = table.Column<decimal>(type: "decimal(18,4)", precision: 18, scale: 4, nullable: false),
+                    ImageUrl = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false)
@@ -159,7 +161,7 @@ namespace Tibr.Infrastructure.Migrations
                     DocumentBack = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     SelfieImage = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    ReviewedBy = table.Column<long>(type: "bigint", nullable: false),
+                    ReviewedBy = table.Column<long>(type: "bigint", nullable: true),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false)
@@ -233,23 +235,23 @@ namespace Tibr.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "SupportTickets",
+                name: "Supports",
                 columns: table => new
                 {
                     Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
                     UserId = table.Column<long>(type: "bigint", nullable: false),
                     Subject = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    Status = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Status = table.Column<int>(type: "int", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
                     IsDeleted = table.Column<bool>(type: "bit", nullable: false)
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_SupportTickets", x => x.Id);
+                    table.PrimaryKey("PK_Supports", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_SupportTickets_Users_UserId",
+                        name: "FK_Supports_Users_UserId",
                         column: x => x.UserId,
                         principalTable: "Users",
                         principalColumn: "Id",
@@ -381,13 +383,13 @@ namespace Tibr.Infrastructure.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "TicketReplies",
+                name: "Tickets",
                 columns: table => new
                 {
                     Id = table.Column<long>(type: "bigint", nullable: false)
                         .Annotation("SqlServer:Identity", "1, 1"),
-                    TicketId = table.Column<long>(type: "bigint", nullable: false),
                     AdminId = table.Column<long>(type: "bigint", nullable: false),
+                    SupportId = table.Column<long>(type: "bigint", nullable: false),
                     Message = table.Column<string>(type: "nvarchar(max)", nullable: false),
                     CreatedAt = table.Column<DateTime>(type: "datetime2", nullable: false),
                     UpdatedAt = table.Column<DateTime>(type: "datetime2", nullable: true),
@@ -395,17 +397,17 @@ namespace Tibr.Infrastructure.Migrations
                 },
                 constraints: table =>
                 {
-                    table.PrimaryKey("PK_TicketReplies", x => x.Id);
+                    table.PrimaryKey("PK_Tickets", x => x.Id);
                     table.ForeignKey(
-                        name: "FK_TicketReplies_Admins_AdminId",
+                        name: "FK_Tickets_Admins_AdminId",
                         column: x => x.AdminId,
                         principalTable: "Admins",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                     table.ForeignKey(
-                        name: "FK_TicketReplies_SupportTickets_TicketId",
-                        column: x => x.TicketId,
-                        principalTable: "SupportTickets",
+                        name: "FK_Tickets_Supports_SupportId",
+                        column: x => x.SupportId,
+                        principalTable: "Supports",
                         principalColumn: "Id",
                         onDelete: ReferentialAction.Cascade);
                 });
@@ -486,19 +488,19 @@ namespace Tibr.Infrastructure.Migrations
                 column: "CategoryId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_SupportTickets_UserId",
-                table: "SupportTickets",
+                name: "IX_Supports_UserId",
+                table: "Supports",
                 column: "UserId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_TicketReplies_AdminId",
-                table: "TicketReplies",
+                name: "IX_Tickets_AdminId",
+                table: "Tickets",
                 column: "AdminId");
 
             migrationBuilder.CreateIndex(
-                name: "IX_TicketReplies_TicketId",
-                table: "TicketReplies",
-                column: "TicketId");
+                name: "IX_Tickets_SupportId",
+                table: "Tickets",
+                column: "SupportId");
         }
 
         /// <inheritdoc />
@@ -526,7 +528,7 @@ namespace Tibr.Infrastructure.Migrations
                 name: "Payments");
 
             migrationBuilder.DropTable(
-                name: "TicketReplies");
+                name: "Tickets");
 
             migrationBuilder.DropTable(
                 name: "Carts");
@@ -541,7 +543,7 @@ namespace Tibr.Infrastructure.Migrations
                 name: "Admins");
 
             migrationBuilder.DropTable(
-                name: "SupportTickets");
+                name: "Supports");
 
             migrationBuilder.DropTable(
                 name: "Categories");

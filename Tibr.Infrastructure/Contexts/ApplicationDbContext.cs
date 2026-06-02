@@ -35,8 +35,8 @@ namespace Tibr.Infrastructure.Contexts
         public DbSet<Payment> Payments { get; set; }
 
         // Support Ticket entities
-        public DbSet<Support> SupportTickets { get; set; }
-        public DbSet<Ticket> TicketReplies { get; set; }
+        public DbSet<Support> Supports{ get; set; }
+        public DbSet<Ticket> Tickets { get; set; }
 
         // Audit Log entity
         public DbSet<AuditLog> AuditLogs { get; set; }
@@ -155,7 +155,7 @@ namespace Tibr.Infrastructure.Contexts
                 .Entity<Ticket>()
                 .HasOne(tr => tr.Support)
                 .WithMany(st => st.Tickets)
-                .HasForeignKey(tr => tr.TicketId)
+                .HasForeignKey(tr => tr.SupportId)
                 .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder

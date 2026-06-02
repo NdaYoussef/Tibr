@@ -519,9 +519,8 @@ namespace Tibr.Infrastructure.Migrations
                     b.Property<bool>("IsDeleted")
                         .HasColumnType("bit");
 
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
 
                     b.Property<string>("Subject")
                         .IsRequired()
@@ -537,7 +536,7 @@ namespace Tibr.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("SupportTickets");
+                    b.ToTable("Supports");
                 });
 
             modelBuilder.Entity("Tibr.Domain.Entities.Ticket", b =>
@@ -561,7 +560,7 @@ namespace Tibr.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<long>("TicketId")
+                    b.Property<long>("SupportId")
                         .HasColumnType("bigint");
 
                     b.Property<DateTime?>("UpdatedAt")
@@ -571,9 +570,9 @@ namespace Tibr.Infrastructure.Migrations
 
                     b.HasIndex("AdminId");
 
-                    b.HasIndex("TicketId");
+                    b.HasIndex("SupportId");
 
-                    b.ToTable("TicketReplies");
+                    b.ToTable("Tickets");
                 });
 
             modelBuilder.Entity("Tibr.Domain.Entities.User", b =>
@@ -805,7 +804,7 @@ namespace Tibr.Infrastructure.Migrations
 
                     b.HasOne("Tibr.Domain.Entities.Support", "Support")
                         .WithMany("Tickets")
-                        .HasForeignKey("TicketId")
+                        .HasForeignKey("SupportId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
