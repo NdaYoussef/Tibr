@@ -8,7 +8,7 @@ namespace Tibr.Domain.Entities
 {
     public class Deposit : BaseEntity<long>
     {
-        public Guid UserId { get; set; }
+        public long UserId { get; set; }
 
         public decimal Amount { get; set; }
 

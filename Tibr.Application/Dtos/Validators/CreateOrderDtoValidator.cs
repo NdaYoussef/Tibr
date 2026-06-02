@@ -8,8 +8,8 @@ namespace Tibr.Application.Dtos.Validators
         public CreateOrderDtoValidator()
         {
             RuleFor(x => x.UserId)
-                .GreaterThan(0)
-                .WithMessage("UserId is required and must be greater than 0.");
+                .NotEmpty()
+                .WithMessage("UserId is required.");
 
             RuleFor(x => x.Items)
                 .NotEmpty()
@@ -18,7 +18,7 @@ namespace Tibr.Application.Dtos.Validators
             RuleForEach(x => x.Items).ChildRules(item =>
             {
                 item.RuleFor(i => i.ProductId)
-                    .GreaterThan(0)
+                    .NotEmpty()
                     .WithMessage("ProductId is required for each item.");
 
                 item.RuleFor(i => i.Quantity)

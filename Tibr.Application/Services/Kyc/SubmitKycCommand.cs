@@ -27,9 +27,9 @@ namespace Tibr.Application.Services.Kyc
             var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "kyc_documents");
             if (!Directory.Exists(uploadsFolder)) Directory.CreateDirectory(uploadsFolder);
 
-            var frontFileName = Guid.NewGuid() + Path.GetExtension(request.DocumentFrontFile.FileName);
-            var backFileName = Guid.NewGuid() + Path.GetExtension(request.DocumentBackFile.FileName);
-            var selfieFileName = Guid.NewGuid() + Path.GetExtension(request.SelfieImageFile.FileName);
+            var frontFileName = Path.GetExtension(request.DocumentFrontFile.FileName);
+            var backFileName = Path.GetExtension(request.DocumentBackFile.FileName);
+            var selfieFileName = Path.GetExtension(request.SelfieImageFile.FileName);
 
             var frontPath = Path.Combine(uploadsFolder, frontFileName);
             var backPath = Path.Combine(uploadsFolder, backFileName);

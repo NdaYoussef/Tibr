@@ -44,7 +44,7 @@ namespace Tibr.Application.Services.CategoryServices
             {
                 var category = await _categoryRepository.GetAll()
                                      .Include(c => c.Products.Where(p => !p.IsDeleted))
-                                     .FirstOrDefaultAsync(c => c.Id == id && !c.IsDeleted); 
+                                     .FirstOrDefaultAsync(c => c.Id == id && !c.IsDeleted);
 
                 if (category is null)
                     return Result<CategoryDto>.Failure("Category not found");

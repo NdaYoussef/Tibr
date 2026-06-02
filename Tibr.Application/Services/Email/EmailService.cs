@@ -32,13 +32,13 @@ namespace Tibr.Application.Services.Email
             try
             {
                 await smtp.ConnectAsync(
-                    _configuration["EmailSettings:SmtpServer"],
+                    _configuration["EmailSettings:Host"],
                     int.Parse(_configuration["EmailSettings:Port"]!),
                     SecureSocketOptions.StartTls);
 
                 await smtp.AuthenticateAsync(
                     _configuration["EmailSettings:SenderEmail"],
-                    _configuration["EmailSettings:AppPassword"]);
+                    _configuration["EmailSettings:Password"]);
 
                 await smtp.SendAsync(email);
             }

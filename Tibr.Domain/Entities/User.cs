@@ -24,5 +24,10 @@ namespace Tibr.Domain.Entities
         public virtual ICollection<Payment> Payments { get; set; } = [];
         public virtual ICollection<Notification> Notifications { get; set; } = [];
         public virtual ICollection<Support> SupportTickets { get; set; } = [];
+        public ICollection<Wallet> Wallets { get; set; } = new List<Wallet>();
+        public ICollection<Deposit> Deposits { get; set; } = new List<Deposit>();
+        public ICollection<OrdersInvestment> InvestmentOrders { get; set; } = new List<OrdersInvestment>();
+        public ICollection<DeliveryRequest> DeliveryRequests { get; set; } = new List<DeliveryRequest>();
+        public ICollection<Address> Addresses { get; set; } = new List<Address>();
     }
 }

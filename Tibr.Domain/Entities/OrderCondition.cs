@@ -8,7 +8,7 @@ namespace Tibr.Domain.Entities
 {
     public class OrderCondition : BaseEntity<long>
     {
-        public Guid OrderId { get; set; }
+        public long OrderId { get; set; }
 
         public OrdersInvestment Order { get; set; } = default!;
 

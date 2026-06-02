@@ -4,7 +4,7 @@ namespace Tibr.Domain.Entities
 {
     public class Address : BaseEntity<long>
     {
-        public Guid UserId { get; set; }
+        public long UserId { get; set; }
 
         public string City { get; set; } = string.Empty;
 

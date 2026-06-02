@@ -8,9 +8,9 @@ namespace Tibr.Domain.Entities
 {
     public class Alert : BaseEntity<long>
     {
-        public Guid UserId { get; set; }
+        public long UserId { get; set; }
 
-        public Guid OrderId { get; set; }
+        public long OrderId { get; set; }
 
         public OrdersInvestment Order { get; set; } = default!;
 

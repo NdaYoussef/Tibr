@@ -5,7 +5,7 @@ namespace Tibr.Domain.Entities
 {
     public class WalletTransaction : BaseEntity<long>
     {
-        public Guid WalletId { get; set; }
+        public long WalletId { get; set; }
 
         public Wallet Wallet { get; set; } = default!;
 
@@ -15,6 +15,6 @@ namespace Tibr.Domain.Entities
 
         public ReferenceType ReferenceType { get; set; }
 
-        public Guid ReferenceId { get; set; }
+        public long ReferenceId { get; set; }
     }
 }

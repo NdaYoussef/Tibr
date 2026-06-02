@@ -9,7 +9,7 @@ namespace Tibr.Domain.Entities
 {
     public class OrdersInvestment : BaseEntity<long>
     {
-        public Guid UserId { get; set; }
+        public long UserId { get; set; }
 
         public AssetType AssetType { get; set; }
 

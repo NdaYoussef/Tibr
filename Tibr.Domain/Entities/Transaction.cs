@@ -6,9 +6,9 @@ namespace Tibr.Domain.Entities
 {
     public class Transaction : BaseEntity<long>
     {
-        public Guid UserId { get; set; }
+        public long UserId { get; set; }
 
-        public Guid TradeId { get; set; }
+        public long TradeId { get; set; }
 
         public Trade Trade { get; set; } = default!;
 

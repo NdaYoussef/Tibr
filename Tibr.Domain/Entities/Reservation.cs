@@ -5,13 +5,13 @@ namespace Tibr.Domain.Entities
 {
     public class Reservation : BaseEntity<long>
     {
-        public Guid UserId { get; set; }
+        public long UserId { get; set; }
 
-        public Guid WalletId { get; set; }
+        public long WalletId { get; set; }
 
         public Wallet Wallet { get; set; } = default!;
 
-        public Guid OrderId { get; set; }
+        public long OrderId { get; set; }
 
         public OrdersInvestment Order { get; set; } = default!;
 

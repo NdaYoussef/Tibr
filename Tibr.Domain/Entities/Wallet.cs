@@ -5,7 +5,7 @@ namespace Tibr.Domain.Entities
 {
     public class Wallet : BaseEntity<long>
     {
-        public Guid UserId { get; set; }
+        public long UserId { get; set; }
 
         public WalletType WalletType { get; set; }
 
