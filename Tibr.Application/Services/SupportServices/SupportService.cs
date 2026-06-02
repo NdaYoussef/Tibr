@@ -1,5 +1,6 @@
 ﻿using Mapster;
 using MapsterMapper;
+using Microsoft.EntityFrameworkCore;
 using System;
 using System.Collections.Generic;
 using System.Text;
@@ -22,7 +23,7 @@ namespace Tibr.Application.Services.SuppoertServices
             _supportRepository = supportRepository;
             _mapper = mapper;
         }
-        public async Task<Result<string>> AddSupportAsync(CreateSupportRequestDto createSupportRequestDto0)
+        public async Task<Result<string>> AddSupportAsync(CreateSupportDto createSupportRequestDto0)
         {
             var support = _mapper.Map<Support>(createSupportRequestDto0);
             await _supportRepository.AddAsync(support);
@@ -62,16 +63,18 @@ namespace Tibr.Application.Services.SuppoertServices
 
             return Result<List<SupportResponse>>.Success(supportResponses);
         }
-
+       
         public async Task<Result<SupportResponse>> GetSupportByIdAsync(long id)
         {
-            var support = await _supportRepository.GetById(id);
-            if(support == null)
+            var support = await _supportRepository.GetSupportWithTicketsAsync(id);
+
+            if (support == null)
             {
                 return Result<SupportResponse>.Failure("Support request not found.");
             }
 
             var supportResponse = support.Adapt<SupportResponse>();
+
             return Result<SupportResponse>.Success(supportResponse);
         }
 

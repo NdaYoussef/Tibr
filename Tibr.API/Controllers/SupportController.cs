@@ -28,7 +28,7 @@ namespace Tibr.API.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> Create([FromBody] CreateSupportRequestDto createSupportRequestDto)
+        public async Task<IActionResult> Create([FromBody] CreateSupportDto createSupportRequestDto)
         {
            
             var result = await supportService.AddSupportAsync(createSupportRequestDto);

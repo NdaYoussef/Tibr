@@ -7,9 +7,16 @@ namespace Tibr.Domain.Entities
     {
         public long UserId { get; set; }
         public string Subject { get; set; } = string.Empty;
-        public string Status { get; set; } = string.Empty;
+        public SupportStatus Status { get; set; } = SupportStatus.Open;
 
-        public virtual User User { get; set; } = null!;
-        public virtual ICollection<Ticket> Tickets{ get; set; } = [];
+        public  User User { get; set; } = null!;
+        public  ICollection<Ticket> Tickets{ get; set; } = [];
+        public enum SupportStatus
+        {
+            Open =1,
+            Pending,
+            Resolved,
+            Closed
+        }
     }
 }
