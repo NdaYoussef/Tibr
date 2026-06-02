@@ -7,5 +7,7 @@ namespace Tibr.Domain.IRepositories
 {
     public interface ISupportRepository : IGenericRepository<Support,long>
     {
+        Task<Support?> GetSupportWithTicketsAsync(long id);
+        
     }
 }
