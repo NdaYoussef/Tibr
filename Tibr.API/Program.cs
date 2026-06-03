@@ -76,14 +76,9 @@ namespace Tibr.API
             }
 
             app.UseStaticFiles();
-<<<<<<< HEAD
-            app.UseHttpsRedirection();
-            app.UseCors("AllowAll");
 
-=======
             app.UseCors("AllowAll");
             app.UseHttpsRedirection();
->>>>>>> 43f76da2272ce1bdee1d9f0af7cd725e68dcce7a
             app.UseAuthentication();
             app.UseAuthorization();
 
