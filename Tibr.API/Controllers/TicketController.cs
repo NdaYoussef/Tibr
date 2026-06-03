@@ -11,7 +11,7 @@ namespace Tibr.API.Controllers
     public class TicketController(ITicketService _ticketService) : ControllerBase
     {
         [HttpPost("admin-reply")]
-        // [Authorize(Roles = "Admin")] // يفضل حمايتها إذا كنت بتستخدم Authentication
+        // [Authorize(Roles = "Admin")] 
         public async Task<IActionResult> AdminReply([FromBody] CreateTicketDto dto)
         {
             var adminIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

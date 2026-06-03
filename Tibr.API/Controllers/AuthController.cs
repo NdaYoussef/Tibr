@@ -8,7 +8,9 @@ using Tibr.Application.Services.Kyc;
 namespace Tibr.API.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    //[Route("api/[controller]")]
+    [Route("api")]
+
     public class AuthController : ControllerBase
     {
         private readonly IMediator _mediator;
@@ -33,7 +35,7 @@ namespace Tibr.API.Controllers
 
         [HttpPost("login")]
         [AllowAnonymous]
-        public async Task<IActionResult> Login([FromBody] LoginRequestData model)
+        public async Task<IActionResult>  Login([FromBody] LoginRequestData model)
         {
             var result = await _mediator.Send(new LoginCommand(model));
             if (!result.IsSuccess) return Unauthorized(result);

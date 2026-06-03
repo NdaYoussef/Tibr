@@ -7,5 +7,6 @@ namespace Tibr.Domain.IRepositories
 {
     public interface ITicketRepository : IGenericRepository<Ticket,long>
     {
+        //ticket specific methods
     }
 }

@@ -18,9 +18,11 @@ namespace Tibr.Application.Services.Email
         public async Task SendEmailAsync(string toEmail, string subject, string body)
         {
             var email = new MimeMessage();
-            email.From.Add(new MailboxAddress(
+            email.From.Add(new MailboxAddress
+                (
                 _configuration["EmailSettings:SenderName"],
-                _configuration["EmailSettings:SenderEmail"]));
+                _configuration["EmailSettings:SenderEmail"]!
+                ));
 
             email.To.Add(MailboxAddress.Parse(toEmail));
             email.Subject = subject;
@@ -29,15 +31,19 @@ namespace Tibr.Application.Services.Email
 
             using var smtp = new SmtpClient();
             try
-            {
-                await smtp.ConnectAsync(
-                    _configuration["EmailSettings:Host"],
-                    int.Parse(_configuration["EmailSettings:Port"]!),
+            { 
+                await smtp.ConnectAsync
+                    (
+                    _configuration["EmailSettings:Host"]!,
+                    int.Parse(_configuration["EmailSettings:Port"]!
+                    ),
                     SecureSocketOptions.StartTls);
 
-                await smtp.AuthenticateAsync(
-                    _configuration["EmailSettings:SenderEmail"],
-                    _configuration["EmailSettings:Password"]);
+                await smtp.AuthenticateAsync
+                    (
+                    _configuration["EmailSettings:SenderEmail"]!,
+                    _configuration["EmailSettings:Password"]!
+                    );
 
                 await smtp.SendAsync(email);
             }
