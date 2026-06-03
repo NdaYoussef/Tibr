@@ -8,7 +8,8 @@ using Tibr.Application.Services.Kyc;
 namespace Tibr.API.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    //[Route("api/[controller]")]
+    [Route("api")]
     public class AuthController : ControllerBase
     {
         private readonly IMediator _mediator;

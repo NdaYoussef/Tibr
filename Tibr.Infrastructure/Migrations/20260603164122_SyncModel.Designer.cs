@@ -12,7 +12,7 @@ using Tibr.Infrastructure.Contexts;
 namespace Tibr.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260602183034_SyncModel")]
+    [Migration("20260603164122_SyncModel")]
     partial class SyncModel
     {
         /// <inheritdoc />
