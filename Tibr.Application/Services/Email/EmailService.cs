@@ -27,12 +27,15 @@ namespace Tibr.Application.Services.Email
             email.To.Add(MailboxAddress.Parse(toEmail));
             email.Subject = subject;
 
-            // إعداد محتوى الرسالة يدعم تنسيق HTML لتظهر بشكل فاخر ومناسب لهوية المنصة
             email.Body = new TextPart(MimeKit.Text.TextFormat.Html) { Text = body };
 
             using var smtp = new SmtpClient();
             try
+<<<<<<< HEAD
+            { 
+=======
             {
+>>>>>>> 43f76da2272ce1bdee1d9f0af7cd725e68dcce7a
                 await smtp.ConnectAsync
                     (
                     _configuration["EmailSettings:Host"]!,

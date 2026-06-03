@@ -197,4 +197,5 @@ namespace Tibr.Infrastructure.Contexts
                 .HasMaxLength(20);
         }
     }
+
 }
