@@ -7,12 +7,36 @@ namespace Tibr.API.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class FavoriteController(IFavoriteService _favoriteService) : ControllerBase
+    public class FavoriteController : ControllerBase
     {
+        private readonly IFavoriteService _favoriteService;
+
+        public FavoriteController(IFavoriteService favoriteService)
+        {
+            _favoriteService = favoriteService;
+        }
+        [HttpGet("check/{productId:long}")]
+        public async Task<IActionResult> IsFavorite(long productId)
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out long currentUserId))
+            {
+                return Unauthorized(new { message = "Unauthorized: Missing user ID." });
+            }
+
+            var result = await _favoriteService.IsFavoriteAsync(currentUserId, productId);
+
+            return Ok(result);
+        }
 
         [HttpPost("toggle/{productId:long}")]
         public async Task<IActionResult> ToggleFavorite(long productId)
         {
+            foreach (var claim in User.Claims)
+            {
+                Console.WriteLine($"{claim.Type} = {claim.Value}");
+            }
             var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out long currentUserId))
             {

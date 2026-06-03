@@ -20,16 +20,21 @@ namespace Tibr.Application.Services.CategoryServices
                 ?? throw new ArgumentNullException(nameof(categoryRepository));
         }
 
+        // get product counter by category id
         public async Task<Result<IEnumerable<CategoryDto>>> GetAllCategoriesAsync()
         {
             try
             {
-                var dtos = await _categoryRepository.GetAll()
-                    .Include(c => c.Products.Where(p => !p.IsDeleted))
-                    .ProjectToType<CategoryDto>()
+                var categories = await _categoryRepository.GetAll()
+                    .Select(c => new CategoryDto
+                    {
+                        Id = c.Id,
+                        Name = c.Name,
+                        ProductCount = c.Products.Count(p => !p.IsDeleted)
+                    })
                     .ToListAsync();
 
-                return Result<IEnumerable<CategoryDto>>.Success(dtos);
+                return Result<IEnumerable<CategoryDto>>.Success(categories);
             }
             catch (Exception ex)
             {

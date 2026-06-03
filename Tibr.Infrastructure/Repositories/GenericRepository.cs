@@ -49,6 +49,11 @@ namespace Tibr.Infrastructure.Repositories
             entity.IsDeleted = true;
             _dbSet.Update(entity);
         }
+        public async Task UpdateIsDeleteAsync(TEntity entity)
+        {
+            entity.IsDeleted = false;
+            _dbSet.Update(entity);
+        }
 
         public async Task<int> SaveChangesAsync()
         {

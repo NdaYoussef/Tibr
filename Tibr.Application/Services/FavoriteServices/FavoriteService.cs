@@ -15,7 +15,15 @@ namespace Tibr.Application.Services.FavoriteServices
         {
             _favoriteRepository = favoriteRepository;
         }
+        public async Task<bool> IsFavoriteAsync(long userId, long productId)
+        {
+            Console.WriteLine($"Checking if product {productId} is a favorite for user {userId}.");
+            var favorite = await _favoriteRepository.GetByUniqueKeysAsync(userId, productId);
 
+            var isFavorite = favorite.IsDeleted == false;
+
+            return isFavorite;
+        }
         public async Task<Result<string>> ToggleFavoriteAsync(long userId, long productId)
         {
            
@@ -23,14 +31,25 @@ namespace Tibr.Application.Services.FavoriteServices
 
             if (existingFavorite != null)
             {
-               
-                await _favoriteRepository.DeleteAsync(existingFavorite);
-                var removeResult = await _favoriteRepository.SaveChangesAsync();
+                if (existingFavorite.IsDeleted == false)
+                {
+                    await _favoriteRepository.DeleteAsync(existingFavorite);
+                    var removeResult = await _favoriteRepository.SaveChangesAsync();
 
-                if (removeResult <= 0)
-                    return Result<string>.Failure("Failed to remove from favorites.");
+                    if (removeResult <= 0)
+                        return Result<string>.Failure("Failed to remove from favorites.");
 
-                return Result<string>.Success("Removed from favorites successfully.");
+                    return Result<string>.Success("Removed from favorites successfully.");
+                }
+                else
+                {
+                    existingFavorite.IsDeleted = false;
+                    _favoriteRepository.UpdateIsDeleteAsync(existingFavorite);
+                    var restoreResult = await _favoriteRepository.SaveChangesAsync();
+                    if (restoreResult <= 0)
+                        return Result<string>.Failure("Failed to restore to favorites.");
+                    return Result<string>.Success("Restored to favorites successfully.");
+                }
             }
 
             var favorite = new Favorite
@@ -48,19 +67,19 @@ namespace Tibr.Application.Services.FavoriteServices
             return Result<string>.Success("Added to favorites successfully.");
         }
 
-        public async Task<Result<IEnumerable<FavoriteProductResponse>>> GetUserFavoritesAsync(long userId)
+        public async Task<IEnumerable<FavoriteProductResponse>> GetUserFavoritesAsync(long userId)
         {
             var favorites = await _favoriteRepository.GetUserFavoritesWithProductsAsync(userId);
 
-            var response = favorites.Select(f => new FavoriteProductResponse
+            var response = favorites.Where(f => f.UserId == userId && !f.IsDeleted).Select(f => new FavoriteProductResponse
             {
                 ProductId = f.ProductId,
                 ProductName = f.Product?.Name ?? "Unknown Product",
-                Price = f.Product?.BuyPrice ?? 0,                    
-                ImageUrl = f.Product?.ImageUrl
+                Price = f.Product?.BuyPrice ?? 0,
+                ImageUrl = f.Product?.ImageUrl ?? "Unknown Image"
             });
 
-            return Result<IEnumerable<FavoriteProductResponse>>.Success(response);
+            return response;
         }
     }
 }
