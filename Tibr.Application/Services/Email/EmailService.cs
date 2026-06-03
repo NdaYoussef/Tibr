@@ -18,9 +18,11 @@ namespace Tibr.Application.Services.Email
         public async Task SendEmailAsync(string toEmail, string subject, string body)
         {
             var email = new MimeMessage();
-            email.From.Add(new MailboxAddress(
+            email.From.Add(new MailboxAddress
+                (
                 _configuration["EmailSettings:SenderName"],
-                _configuration["EmailSettings:SenderEmail"]!));
+                _configuration["EmailSettings:SenderEmail"]!
+                ));
 
             email.To.Add(MailboxAddress.Parse(toEmail));
             email.Subject = subject;
