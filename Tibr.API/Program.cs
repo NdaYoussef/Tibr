@@ -1,18 +1,15 @@
-using AutoMapper;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
 using Tibr.Application.Interfaces;
 using Tibr.Application.Services.Email;
-using Tibr.Application.Mappers;
 using Tibr.Infrastructure.Contexts;
 using Tibr.Application;
 using Tibr.Application.Services.PaymentServices;
 using Tibr.Infrastructure;
 using Tibr.Infrastructure.Config;
 using Tibr.Infrastructure.Services;
-using Tibr.Application.Services.CartServices;
 
 namespace Tibr.API
 {
@@ -32,8 +29,6 @@ namespace Tibr.API
             });
             builder.Services.AddControllers();
 
-            builder.Services.AddAutoMapper(cfg => cfg.AddMaps(typeof(CartProfile).Assembly));
-            builder.Services.AddScoped<ICartService, CartService>();
             var configuration = builder.Configuration;
 
             builder.Services.AddDbContext<ApplicationDbContext>(options =>
@@ -46,21 +41,16 @@ namespace Tibr.API
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
                 options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            }).AddJwtBearer(options =>
+            })
+            .AddJwtBearer(options =>
             {
-                var jwtSecret = configuration["JWT:Secret"];
-                if (string.IsNullOrEmpty(jwtSecret))
-                {
-                    throw new InvalidOperationException("JWT Secret Key is missing from appsettings.json!");
-                }
-
                 options.TokenValidationParameters = new TokenValidationParameters
                 {
                     ValidateIssuer = true,
                     ValidateAudience = true,
                     ValidAudience = configuration["JWT:ValidAudience"],
                     ValidIssuer = configuration["JWT:ValidIssuer"],
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtSecret)),
+                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:Secret"]!)),
                     ValidateLifetime = true
                 };
             });
@@ -86,12 +76,11 @@ namespace Tibr.API
             }
 
             app.UseStaticFiles();
-
-            app.UseHttpsRedirection();
-
             app.UseCors("AllowAll");
+            app.UseHttpsRedirection();
             app.UseAuthentication();
             app.UseAuthorization();
+
             app.MapControllers();
             app.Run();
         }
