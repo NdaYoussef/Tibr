@@ -15,7 +15,7 @@ namespace Tibr.Application.Dtos.ProductDto
         public decimal BuyPrice { get; set; }
         public decimal SellPrice { get; set; }
         public ProductStatus Status { get; set; } 
-        public decimal Stock { get; set; }
+        public long Stock { get; set; }
         public string? ImageUrl { get; set; }
     }
 }

@@ -13,7 +13,7 @@ namespace Tibr.Application.Dtos.ProductDto
         public decimal BuyPrice { get; set; }
         public decimal SellPrice { get; set; }
         public string Status { get; set; } = string.Empty;
-        public decimal Stock { get; set; }
+        public long Stock { get; set; }
         public string ImageUrl { get; set; } = string.Empty;
         public int PopularityScore { get; set; }                  
         public DateTime CreatedAt { get; set; }

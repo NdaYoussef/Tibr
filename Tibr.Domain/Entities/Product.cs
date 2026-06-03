@@ -14,7 +14,7 @@ namespace Tibr.Domain.Entities
         public decimal BuyPrice { get; set; }
         public decimal SellPrice { get; set; }
         public ProductStatus Status { get; set; } = ProductStatus.Active;
-        public decimal Stock { get; set; } = 0;
+        public long Stock { get; set; } = 0;
         public string? ImageUrl { get; set; } = string.Empty;
         public virtual Category Category { get; set; } = null!;
         public virtual ICollection<Favorite> Favorites { get; set; } = [];
