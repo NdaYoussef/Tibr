@@ -16,6 +16,7 @@ namespace Tibr.Infrastructure.Repositories
             _context = context;
         }
 
+        // This method retrieves a Support entity along with its related Tickets and User information based on the provided ID.
         public async Task<Support?> GetSupportWithTicketsAsync(long id)
         {
             return await _context.Supports
