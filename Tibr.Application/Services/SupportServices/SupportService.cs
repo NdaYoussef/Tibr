@@ -55,6 +55,7 @@ namespace Tibr.Application.Services.SuppoertServices
             return Result<string>.Success("Support request deleted successfully.");
         }
 
+
         public async Task<Result<List<SupportResponse>>> GetAllSupportsAsync()
         {
             var supportsEntities = await _supportRepository.GetAllAsync();
@@ -78,17 +79,25 @@ namespace Tibr.Application.Services.SuppoertServices
             return Result<SupportResponse>.Success(supportResponse);
         }
 
-        public async Task<Result<string>> UpdateSupportAsync(UpdateSupportDto updateSupportDto)
+        public async Task<Result<string>> UpdateSupportAsync(long id, UpdateSupportDto updateSupportDto)
         {
-            if(updateSupportDto == null)
+            if (updateSupportDto == null)
             {
                 return Result<string>.Failure("Invalid support request data.");
             }
-            var support = _mapper.Map<Support>(updateSupportDto);
-            
-            await _supportRepository.UpdateAsync(support);
-            
+
+           
+            var existingSupport = await _supportRepository.GetByIdAsync(id); 
+            if (existingSupport == null)
+            {
+                return Result<string>.Failure("Support request not found.");
+            }
+            existingSupport.Status = updateSupportDto.Status;
+
+           
+            await _supportRepository.UpdateAsync(existingSupport);
             var result = await _supportRepository.SaveChangesAsync();
+
             if (result <= 0)
             {
                 return Result<string>.Failure("Failed to update support request.");
@@ -96,5 +105,6 @@ namespace Tibr.Application.Services.SuppoertServices
 
             return Result<string>.Success("Support request updated successfully.");
         }
+
     }
 }
