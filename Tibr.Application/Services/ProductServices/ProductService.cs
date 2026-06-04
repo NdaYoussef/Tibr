@@ -177,17 +177,17 @@ namespace Tibr.Application.Services.ProductServices
         }
 
         /// Update product stock
-        public async Task<Result> UpdateStockAsync(long id, decimal newStock)
+        public async Task<Result<string>> UpdateStockAsync(long id, long newStock)
         {
             try
             {
                 var product = await _productRepository.GetById(id);
 
                 if (product == null || product.IsDeleted)
-                    return Result.Failure("Product not found");
+                    return Result<string>.Failure("Product not found");
 
                 if (newStock < 0)
-                    return Result.Failure("Stock cannot be negative");
+                    return Result<string>.Failure("Stock cannot be negative");
 
                 product.Stock = newStock;
                 product.UpdatedAt = DateTime.UtcNow;
@@ -195,11 +195,12 @@ namespace Tibr.Application.Services.ProductServices
                 await _productRepository.UpdateAsync(product);
                 await _productRepository.SaveChangesAsync();
 
-                return Result.Success();
+               
+                return Result<string>.Success($"Stock updated successfully to {newStock} units.");
             }
             catch (Exception ex)
             {
-                return Result.Failure($"Error updating stock: {ex.Message}");
+                return Result<string>.Failure($"Error updating stock: {ex.Message}");
             }
         }
 
@@ -222,23 +223,23 @@ namespace Tibr.Application.Services.ProductServices
         }
 
         /// Delete a product (soft delete)
-        public async Task<Result> DeleteProductAsync(long id)
+        public async Task<Result<string>> DeleteProductAsync(long id)
         {
             try
             {
                 var product = await _productRepository.GetById(id);
 
                 if (product == null || product.IsDeleted)
-                    return Result.Failure("Product not found");
+                    return Result<string>.Failure("Product not found");
 
                 await _productRepository.DeleteAsync(product);
                 await _productRepository.SaveChangesAsync();
 
-                return Result.Success();
+                return Result<string>.Success("Product deleted successfully.");
             }
             catch (Exception ex)
             {
-                return Result.Failure($"Error deleting product: {ex.Message}");
+                return Result<string>.Failure($"Error deleting product: {ex.Message}");
             }
         }
 

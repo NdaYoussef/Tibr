@@ -20,16 +20,21 @@ namespace Tibr.Application.Services.CategoryServices
                 ?? throw new ArgumentNullException(nameof(categoryRepository));
         }
 
+        // get product counter by category id
         public async Task<Result<IEnumerable<CategoryDto>>> GetAllCategoriesAsync()
         {
             try
             {
-                var dtos = await _categoryRepository.GetAll()
-                    .Include(c => c.Products.Where(p => !p.IsDeleted))
-                    .ProjectToType<CategoryDto>()
+                var categories = await _categoryRepository.GetAll()
+                    .Select(c => new CategoryDto
+                    {
+                        Id = c.Id,
+                        Name = c.Name,
+                        ProductCount = c.Products.Count(p => !p.IsDeleted)
+                    })
                     .ToListAsync();
 
-                return Result<IEnumerable<CategoryDto>>.Success(dtos);
+                return Result<IEnumerable<CategoryDto>>.Success(categories);
             }
             catch (Exception ex)
             {
@@ -112,23 +117,23 @@ namespace Tibr.Application.Services.CategoryServices
             }
         }
 
-        public async Task<Result> DeleteCategoryAsync(long id)
+        public async Task<Result<string>> DeleteCategoryAsync(long id)
         {
             try
             {
                 var category = await _categoryRepository.GetById(id);
 
                 if (category == null || category.IsDeleted)
-                    return Result.Failure("Category not found");
+                    return Result<string>.Failure("Category not found");
 
                 await _categoryRepository.DeleteAsync(category);
                 await _categoryRepository.SaveChangesAsync();
 
-                return Result.Success();
+                return Result<string>.Success("Category Deleted Successfully");
             }
             catch (Exception ex)
             {
-                return Result.Failure($"Error deleting category: {ex.Message}");
+                return Result<string>.Failure($"Error deleting category: {ex.Message}");
             }
         }
     }

@@ -14,6 +14,7 @@ namespace Tibr.Domain.IRepositories
         Task AddAsync(TEntity entity);
         Task UpdateAsync(TEntity entity);
         Task DeleteAsync(TEntity entity);
+        Task UpdateIsDeleteAsync(TEntity entity);
         Task<int> SaveChangesAsync();
         IQueryable<TEntity> GetAll(Expression<Func<TEntity, bool>> predicate);
     }

@@ -25,13 +25,13 @@ namespace Tibr.Application.Services.ProductServices
         Task<Result<ProductDetailsDto>> UpdateProductAsync(long id, UpdateProductDto dto);
 
         /// Update product stock
-        Task<Result> UpdateStockAsync(long id, decimal newStock);
+        Task<Result<string>> UpdateStockAsync(long id, long newStock);
 
         /// Check available stock for a product
         Task<Result<decimal>> CheckStockAsync(long id);
 
         /// Delete a product
-        Task<Result> DeleteProductAsync(long id);
+        Task<Result<string>> DeleteProductAsync(long id);
     }
 }
                     

@@ -1,12 +1,14 @@
-﻿using Mapster;
+using Mapster;
 using MapsterMapper;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
-using Tibr.Application.Services.CategoryServices;
-using Tibr.Application.Services.ProductServices;
 using Tibr.Application.InfrastructureContracts;
+using Tibr.Application.Services.CartServices;
+using Tibr.Application.Services.CategoryServices;
+using Tibr.Application.Services.FavoriteServices;
+using Tibr.Application.Services.ProductServices;
 using Tibr.Application.Services.SuppoertServices;
 using Tibr.Application.Services.SupportServices;
 using Tibr.Domain.IRepositories;
@@ -43,8 +45,14 @@ namespace Tibr.Infrastructure
             services.AddScoped<IProductRepository, ProductRepository>();
             services.AddScoped<IProductService, ProductService>();
 
+            services.AddScoped<IFavoriteRepository, FavoriteRepository>();
+            services.AddScoped<IFavoriteService, FavoriteService>();
+
             services.AddScoped<ICategoryRepository, CategoryRepository>();
             services.AddScoped<ICategoryService, CategoryService>();
+
+            services.AddScoped<ICartRepository, CartRepository>();
+            services.AddScoped<ICartService, CartService>();
 
             return services;
         }

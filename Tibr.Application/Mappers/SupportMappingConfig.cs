@@ -11,9 +11,18 @@ namespace Tibr.Application.Mappers
     {
         public void Register(TypeAdapterConfig config)
         {
-            config.NewConfig<CreateSupportRequestDto, Support>();
+            config.NewConfig<Support, SupportResponse>()
+
+                  .Map(dest => dest.Status, src => src.Status.ToString())
+                  .Map(dest => dest.UserFullName, src => src.User != null ? src.User.FirstName : "Unknown User");
+
+            config.NewConfig<CreateSupportDto, Support>()
+
+                .Map(dest => dest.Status, src => Support.SupportStatus.Open);
+
             config.NewConfig<UpdateSupportDto, Support>();
-            config.NewConfig<SupportResponse, Support>(); 
+              
+
         }
     }
 }
