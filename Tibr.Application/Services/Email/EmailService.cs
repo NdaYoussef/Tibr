@@ -32,20 +32,23 @@ namespace Tibr.Application.Services.Email
             using var smtp = new SmtpClient();
             try
             { 
-                await smtp.ConnectAsync
-                    (
-                    _configuration["EmailSettings:Host"]!,
-                    int.Parse(_configuration["EmailSettings:Port"]!
-                    ),
-                    SecureSocketOptions.StartTls);
+                {
 
-                await smtp.AuthenticateAsync
-                    (
-                    _configuration["EmailSettings:SenderEmail"]!,
-                    _configuration["EmailSettings:Password"]!
-                    );
+                    await smtp.ConnectAsync
+                        (
+                        _configuration["EmailSettings:Host"]!,
+                        int.Parse(_configuration["EmailSettings:Port"]!
+                        ),
+                        SecureSocketOptions.StartTls);
 
-                await smtp.SendAsync(email);
+                    await smtp.AuthenticateAsync
+                        (
+                        _configuration["EmailSettings:SenderEmail"]!,
+                        _configuration["EmailSettings:Password"]!
+                        );
+
+                    await smtp.SendAsync(email);
+                }
             }
             finally
             {

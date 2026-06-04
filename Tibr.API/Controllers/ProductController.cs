@@ -113,7 +113,7 @@ namespace Tibr.API.Controllers
         // Admin updates stock only — no need to send full product
         [HttpPatch("{id}/stock")]
         // [Authorize(Roles = "Admin")]
-        public async Task<IActionResult> UpdateStock(long id, [FromBody] decimal newStock)
+        public async Task<IActionResult> UpdateStock(long id, [FromBody] long newStock)
         {
             var result = await _productService.UpdateStockAsync(id, newStock);
 

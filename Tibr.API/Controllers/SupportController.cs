@@ -38,10 +38,10 @@ namespace Tibr.API.Controllers
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> Update(long id, [FromBody] UpdateSupportDto updateSupportRequestDto)
+        public async Task<IActionResult> Update(long id, [FromQuery] UpdateSupportDto updateSupportRequestDto)
         {
            
-            var result = await supportService.UpdateSupportAsync(updateSupportRequestDto);
+            var result = await supportService.UpdateSupportAsync(id, updateSupportRequestDto);
             if (!result.IsSuccess)
                 return BadRequest(result.ErrorMessage);
             return Ok(result);
