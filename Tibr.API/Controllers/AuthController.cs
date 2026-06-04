@@ -8,8 +8,7 @@ using Tibr.Application.Services.Kyc;
 namespace Tibr.API.Controllers
 {
     [ApiController]
-    //[Route("api/[controller]")]
-    [Route("api")]
+    [Route("api/[controller]")]
 
     public class AuthController : ControllerBase
     {

@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 using Tibr.Application.InfrastructureContracts;
+using Tibr.Application.Services.CartServices;
 using Tibr.Application.Services.CategoryServices;
 using Tibr.Application.Services.FavoriteServices;
 using Tibr.Application.Services.ProductServices;
@@ -51,6 +52,7 @@ namespace Tibr.Infrastructure
             services.AddScoped<ICategoryService, CategoryService>();
 
             services.AddScoped<ICartRepository, CartRepository>();
+            services.AddScoped<ICartService, CartService>();
 
             return services;
         }

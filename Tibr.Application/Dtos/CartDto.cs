@@ -9,5 +9,6 @@ namespace Tibr.Application.Dtos
         public long UserId { get; set; }
         public List<CartItemDto> CartItems { get; set; } = [];
         public decimal TotalAmount => CartItems.Sum(item => item.TotalPrice);
+
     }
 }
