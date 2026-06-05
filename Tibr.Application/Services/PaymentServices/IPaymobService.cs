@@ -24,5 +24,11 @@ namespace Tibr.Application.Services.PaymentServices
         /// and creates a Payment record.
         /// </summary>
         Task ProcessCallbackAsync(PaymobCallbackPayload payload);
+
+        /// <summary>
+        /// Creates a Paymob intention for a deposit (no OrderId).
+        /// Uses a separate in-memory map for callback resolution.
+        /// </summary>
+        Task<string> CreateDepositIntentionAsync(string specialReference, int amountCents, string currency, string firstName, string lastName, string email, string phone);
     }
 }

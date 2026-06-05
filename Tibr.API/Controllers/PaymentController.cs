@@ -1,6 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Tibr.Application.Dtos.Paymob;
+using Tibr.Application.Services.DepositServices;
 using Tibr.Application.Services.PaymentServices;
 using Tibr.Infrastructure.Config;
 
@@ -11,16 +12,19 @@ namespace Tibr.API.Controllers
     public class PaymentController : ControllerBase
     {
         private readonly IPaymobService _paymob;
+        private readonly IDepositService _depositService;
         private readonly ILogger<PaymentController> _logger;
         private readonly PaymobSettings _settings;
 
         public PaymentController(
             IPaymobService paymob,
+            IDepositService depositService,
             ILogger<PaymentController> logger,
             IOptions<PaymobSettings> settings
         )
         {
             _paymob = paymob;
+            _depositService = depositService;
             _logger = logger;
             _settings = settings.Value;
         }
@@ -54,9 +58,17 @@ namespace Tibr.API.Controllers
                 return Unauthorized("Invalid HMAC signature.");
             }
 
+            var specialRef = payload.Obj?.Order?.SpecialReference;
+
+            if (specialRef?.StartsWith("deposit-") == true)
+            {
+                var success = payload.Obj?.Success ?? false;
+                await _depositService.HandleCallbackAsync(specialRef, success);
+                return Ok();
+            }
+
             await _paymob.ProcessCallbackAsync(payload);
 
-            // Paymob expects a 200 OK — always return 200 even on failure
             return Ok();
         }
 

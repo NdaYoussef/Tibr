@@ -15,5 +15,7 @@ namespace Tibr.Domain.Entities
         public string Building { get; set; } = string.Empty;
 
         public string? PostalCode { get; set; }
+
+        public bool IsDefault { get; set; }
     }
 }

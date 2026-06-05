@@ -8,6 +8,7 @@ namespace Tibr.Domain.Enums
     {
         OrderInvestment = 1,
         Trade = 2,
-        Deposit = 3
+        Deposit = 3,
+        Delivery = 4
     }
 } 

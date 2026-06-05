@@ -1,0 +1,12 @@
+using Tibr.Application.Dtos;
+using Tibr.Domain.ResultPattern;
+
+namespace Tibr.Application.Services.DepositServices
+{
+    public interface IDepositService
+    {
+        Task<Result<string>> InitiateAsync(long userId, InitiateDepositDto dto);
+        Task<Result> HandleCallbackAsync(string transactionRef, bool success);
+        Task<Result<List<DepositDto>>> GetUserDepositsAsync(long userId);
+    }
+}

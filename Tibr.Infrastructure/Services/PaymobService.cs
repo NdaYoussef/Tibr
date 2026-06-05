@@ -21,6 +21,9 @@ namespace Tibr.Infrastructure.Services
         // In-memory mapping: PaymobOrderId → OurOrderId
         private static readonly ConcurrentDictionary<long, long> _paymobOrderMap = new();
 
+        // In-memory mapping: PaymobOrderId → Deposit TransactionRef
+        private static readonly ConcurrentDictionary<long, string> _paymobDepositMap = new();
+
         private readonly HttpClient _http;
         private readonly PaymobSettings _settings;
         private readonly IGenericRepository<Order, long> _orderRepository;
@@ -227,6 +230,65 @@ namespace Tibr.Infrastructure.Services
                 transaction.Id,
                 payment.Amount
             );
+        }
+
+        // ─────────────────────────────────────────
+        // PUBLIC: Create intention for deposit (no OrderId)
+        // ─────────────────────────────────────────
+        public async Task<string> CreateDepositIntentionAsync(string specialReference, int amountCents, string currency, string firstName, string lastName, string email, string phone)
+        {
+            var body = new
+            {
+                amount = amountCents,
+                currency,
+                payment_methods = new[] { int.Parse(_settings.IntegrationId) },
+                items = Array.Empty<object>(),
+                billing_data = new
+                {
+                    first_name = firstName,
+                    last_name = lastName,
+                    email,
+                    phone_number = phone,
+                    apartment = "NA",
+                    floor = "NA",
+                    street = "NA",
+                    building = "NA",
+                    postal_code = "NA",
+                    city = "NA",
+                    country = "EGY",
+                    state = "NA",
+                },
+                customer = new
+                {
+                    first_name = firstName,
+                    last_name = lastName,
+                    email,
+                },
+                special_reference = specialReference,
+            };
+
+            var response = await PostJsonAsync($"{_settings.BaseUrl}/v1/intention/", body);
+
+            if (response.TryGetProperty("intention_order_id", out var paymobOrderIdProp))
+            {
+                var paymobOrderId = paymobOrderIdProp.GetInt64();
+                _paymobDepositMap[paymobOrderId] = specialReference;
+                _logger.LogInformation(
+                    "Mapped PaymobOrderId={PaymobId} to DepositRef={Ref}",
+                    paymobOrderId,
+                    specialReference
+                );
+            }
+            else
+            {
+                _logger.LogWarning("Could not extract intention_order_id from deposit intention response");
+            }
+
+            var clientSecret =
+                response.GetProperty("client_secret").GetString()
+                ?? throw new Exception("Paymob: missing client_secret in intention response");
+
+            return $"https://accept.paymob.com/unifiedcheckout/?publicKey={_settings.PublicKey}&clientSecret={clientSecret}";
         }
 
         // ─────────────────────────────────────────

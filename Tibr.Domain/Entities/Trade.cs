@@ -11,7 +11,7 @@ namespace Tibr.Domain.Entities
 
         public long UserId { get; set; }
 
-        public AlertType AssetType { get; set; }
+        public AssetType AssetType { get; set; }
 
         public TradeSide Side { get; set; }
 

@@ -10,6 +10,7 @@ namespace Tibr.Domain.Enums
         Triggered = 2,
         Executed = 3,
         Cancelled = 4,
-        Failed = 5
+        Failed = 5,
+        Expired = 6
     }
 }
