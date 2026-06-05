@@ -4,9 +4,8 @@ using System.Text;
 
 namespace Tibr.Domain.Enums
 {
-    public enum MetalType
+    public enum ConditionType
     {
-        Gold,
-        Silver
+        PriceTarget = 1
     }
 }

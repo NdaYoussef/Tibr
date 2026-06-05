@@ -4,9 +4,9 @@ using System.Text;
 
 namespace Tibr.Domain.Enums
 {
-    public enum MetalType
+    public enum AlertType
     {
-        Gold,
-        Silver
+        PriceReached = 1,
+        NearTarget = 2
     }
 }

@@ -4,9 +4,10 @@ using System.Text;
 
 namespace Tibr.Domain.Enums
 {
-    public enum MetalType
+    public enum WalletType
     {
-        Gold,
-        Silver
+        Cash = 1,
+        Gold = 2,
+        Silver = 3
     }
 }

@@ -4,9 +4,10 @@ using System.Text;
 
 namespace Tibr.Domain.Enums
 {
-    public enum MetalType
+    public enum ReferenceType
     {
-        Gold,
-        Silver
+        OrderInvestment = 1,
+        Trade = 2,
+        Deposit = 3
     }
-}
+} 

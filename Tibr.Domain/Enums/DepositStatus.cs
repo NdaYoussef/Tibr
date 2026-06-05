@@ -4,9 +4,10 @@ using System.Text;
 
 namespace Tibr.Domain.Enums
 {
-    public enum MetalType
+    public enum DepositStatus
     {
-        Gold,
-        Silver
+        Pending = 1,
+        Completed = 2,
+        Failed = 3
     }
 }

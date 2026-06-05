@@ -4,9 +4,9 @@ using System.Text;
 
 namespace Tibr.Domain.Enums
 {
-    public enum MetalType
+    public enum PaymentMethod
     {
-        Gold,
-        Silver
+        Paymob = 1,
+        Visa = 2
     }
 }

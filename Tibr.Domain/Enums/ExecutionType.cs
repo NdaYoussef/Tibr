@@ -4,9 +4,10 @@ using System.Text;
 
 namespace Tibr.Domain.Enums
 {
-    public enum MetalType
+    public enum ExecutionType
     {
-        Gold,
-        Silver
+        AlertOnly = 1,
+        AutoExecute = 2,
+        AlertAndExecute = 3
     }
 }
