@@ -55,7 +55,7 @@ public class PaymentService
         await _paymentRepo.SaveChangesAsync();
 
         var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
-        var specialReference = $"payment:{payment.Id}:{timestamp}";
+        var specialReference = $"payment:{payment.Id}:{orderId}:{timestamp}";
 
         var intentionRequest = new Dtos.Payment.PaymentIntentionRequest
         {
@@ -143,6 +143,10 @@ public class PaymentService
                 order.PaymentStatus = "Paid";
                 order.OrderStatus = "Processing";
                 await _orderRepo.UpdateAsync(order);
+            }
+            else
+            {
+                _logger.LogWarning("Order with id {OrderId} not found during payment callback.", payment.OrderId);
             }
         }
         else

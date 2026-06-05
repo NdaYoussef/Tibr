@@ -189,7 +189,7 @@ public class PaymobPaymentGateway : IPaymentGateway
     private class PaymobWebhookOrder
     {
         [JsonPropertyName("id")] public long Id { get; set; }
-        [JsonPropertyName("special_reference")] public string? SpecialReference { get; set; }
+        [JsonPropertyName("merchant_order_id")] public string? SpecialReference { get; set; }
     }
 
     private class PaymobSourceData

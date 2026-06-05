@@ -1,4 +1,5 @@
 using System.Text.Json;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Tibr.Application.Dtos.Paymob;
@@ -40,7 +41,7 @@ public class PaymentController : ControllerBase
         return Ok(new PaymentInitiateResponse(result.Data!));
     }
 
-    [HttpPost("callback/processed")]
+    [HttpPost("callback/processed"), AllowAnonymous]
     public async Task<ActionResult> Callback(
         [FromBody] JsonElement payload,
         [FromQuery] string hmac)
@@ -58,7 +59,7 @@ public class PaymentController : ControllerBase
         return Ok();
     }
 
-    [HttpGet("callback/response")]
+    [HttpGet("callback/response"), AllowAnonymous]
     public ActionResult ResponseCallback([FromQuery] bool success)
     {
         _logger.LogInformation(
@@ -66,8 +67,13 @@ public class PaymentController : ControllerBase
             Request.QueryString,
             success);
 
-        var orderId = Request.Query["merchant_order_id"];
+        var merchantOrderId = Request.Query["merchant_order_id"].ToString();
         var status = success ? "success" : "failed";
+
+        var orderId = merchantOrderId;
+        var parts = merchantOrderId.Split(':');
+        if (parts.Length >= 3 && parts[0] == "payment")
+            orderId = parts[2];
 
         var redirectUrl = string.IsNullOrEmpty(orderId)
             ? $"{_settings.FrontendBaseUrl}/orders?payment={status}"

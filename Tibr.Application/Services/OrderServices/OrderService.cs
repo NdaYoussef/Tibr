@@ -64,6 +64,7 @@ namespace Tibr.Application.Services.OrderServices
                 OrderStatus = "Pending",
                 PaymentStatus = "Unpaid",
                 TotalAmount = 0,
+                CreatedAt = DateTime.UtcNow,
             };
 
             await _orderRepository.AddAsync(order);
