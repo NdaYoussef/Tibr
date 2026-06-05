@@ -7,6 +7,7 @@ using Tibr.Application.Services.DeliveryServices;
 using Tibr.Application.Services.DepositServices;
 using Tibr.Application.Services.InvestmentOrderServices;
 using Tibr.Application.Services.OrderServices;
+using Tibr.Application.Services.PaymentServices;
 using Tibr.Application.Services.ResolutionServices;
 using Tibr.Application.Services.TradeServices;
 using Tibr.Application.Services.WalletServices;
@@ -26,6 +27,7 @@ namespace Tibr.Application
             services.AddScoped<IResolutionService, ResolutionService>();
             services.AddScoped<IDepositService, DepositService>();
             services.AddScoped<IDeliveryService, DeliveryService>();
+            services.AddScoped<PaymentService>();
             services.AddMapster();
             services.AddFluentValidationAutoValidation()
                     .AddFluentValidationClientsideAdapters();

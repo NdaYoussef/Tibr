@@ -66,7 +66,7 @@ namespace Tibr.API
             builder.Services.Configure<PaymobSettings>(
                 configuration.GetSection(PaymobSettings.SectionName)
             );
-            builder.Services.AddHttpClient<IPaymobService, PaymobService>();
+            builder.Services.AddHttpClient<IPaymentGateway, PaymobPaymentGateway>();
 
             var app = builder.Build();
 
