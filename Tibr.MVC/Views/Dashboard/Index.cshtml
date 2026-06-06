@@ -1,0 +1,613 @@
+﻿@model Tibr.MVC.Models.DashboardViewModel
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Dashboard";
+    ViewData["PageTitle"] = "Overview";
+
+    var monthLabels = System.Text.Json.JsonSerializer.Serialize(Model.MonthlySales.Select(m => m.Month));
+    var monthRevenue = System.Text.Json.JsonSerializer.Serialize(Model.MonthlySales.Select(m => m.Revenue));
+    var monthOrders = System.Text.Json.JsonSerializer.Serialize(Model.MonthlySales.Select(m => m.Orders));
+    var dailyLabels = System.Text.Json.JsonSerializer.Serialize(Model.DailySales.Select(d => d.Day));
+    var dailyRevenue = System.Text.Json.JsonSerializer.Serialize(Model.DailySales.Select(d => d.Revenue));
+    var custLabels = System.Text.Json.JsonSerializer.Serialize(Model.CustomerGrowth.Select(c => c.Month));
+    var custData = System.Text.Json.JsonSerializer.Serialize(Model.CustomerGrowth.Select(c => c.NewCustomers));
+    var donutData = System.Text.Json.JsonSerializer.Serialize(new[]
+    {
+        Model.OrdersDelivered, Model.OrdersPending, Model.OrdersProcessing, Model.OrdersCancelled
+    });
+}
+
+<!-- ══════════════════════════════════════════════
+     PAGE HEADER
+══════════════════════════════════════════════ -->
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Dashboard Overview</h1>
+        <p class="page-sub">Welcome to Tibr Admin — @DateTime.Now.ToString("dddd, dd MMMM yyyy")</p>
+    </div>
+    <div class="page-header-actions">
+        <a asp-controller="Dashboard" asp-action="Reports" class="btn-tibr btn-tibr-outline">
+            <i class="fa-solid fa-chart-bar"></i>
+            Detailed Reports
+        </a>
+        <a asp-controller="Dashboard" asp-action="Reports" asp-route-reportType="sales" class="btn-tibr btn-tibr-gold">
+            <i class="fa-solid fa-file-export"></i>
+            Export Report
+        </a>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     KPI CARDS
+══════════════════════════════════════════════ -->
+<div class="kpi-grid">
+
+    <!-- Total Revenue -->
+    <div class="kpi-card kpi-gold reveal">
+        <div class="kpi-top">
+            <div class="kpi-icon">
+                <i class="fa-solid fa-coins"></i>
+            </div>
+            <span class="kpi-change @(Model.RevenueChangePercent >= 0 ? "kpi-up" : "kpi-down")">
+                <i class="fa-solid @(Model.RevenueChangePercent >= 0 ? "fa-caret-up" : "fa-caret-down")"></i>
+                @Math.Abs(Math.Round(Model.RevenueChangePercent, 1))%
+            </span>
+        </div>
+        <div class="kpi-body">
+            <span class="kpi-label">Total Revenue</span>
+            <h2 class="kpi-value" data-count="@Model.TotalRevenue" data-currency="true">
+                @Model.TotalRevenue.ToString("N0") EGP
+            </h2>
+            <span class="kpi-sub">Compared to last month</span>
+        </div>
+        <div class="kpi-sparkline">
+            <canvas id="sparkRevenue" height="40"></canvas>
+        </div>
+    </div>
+
+    <!-- Total Orders -->
+    <div class="kpi-card reveal">
+        <div class="kpi-top">
+            <div class="kpi-icon kpi-icon-blue">
+                <i class="fa-solid fa-cart-shopping"></i>
+            </div>
+            <span class="kpi-change @(Model.OrdersChangePercent >= 0 ? "kpi-up" : "kpi-down")">
+                <i class="fa-solid @(Model.OrdersChangePercent >= 0 ? "fa-caret-up" : "fa-caret-down")"></i>
+                @Math.Abs(Math.Round(Model.OrdersChangePercent, 1))%
+            </span>
+        </div>
+        <div class="kpi-body">
+            <span class="kpi-label">Total Orders</span>
+            <h2 class="kpi-value" data-count="@Model.TotalOrders">@Model.TotalOrders.ToString("N0")</h2>
+            <span class="kpi-sub">
+                <span class="dot dot-yellow"></span> @Model.OrdersPending pending
+                <span class="dot dot-red ms-2"></span> @Model.OrdersCancelled cancelled
+            </span>
+        </div>
+        <div class="kpi-sparkline">
+            <canvas id="sparkOrders" height="40"></canvas>
+        </div>
+    </div>
+
+    <!-- Total Customers -->
+    <div class="kpi-card reveal">
+        <div class="kpi-top">
+            <div class="kpi-icon kpi-icon-green">
+                <i class="fa-solid fa-users"></i>
+            </div>
+            <span class="kpi-change kpi-up">
+                <i class="fa-solid fa-caret-up"></i>
+                —
+            </span>
+        </div>
+        <div class="kpi-body">
+            <span class="kpi-label">Total Customers</span>
+            <h2 class="kpi-value" data-count="@Model.TotalCustomers">@Model.TotalCustomers.ToString("N0")</h2>
+            <span class="kpi-sub">Registered on the platform</span>
+        </div>
+        <div class="kpi-sparkline">
+            <canvas id="sparkCustomers" height="40"></canvas>
+        </div>
+    </div>
+
+    <!-- Products / Inventory -->
+    <div class="kpi-card reveal">
+        <div class="kpi-top">
+            <div class="kpi-icon kpi-icon-purple">
+                <i class="fa-solid fa-layer-group"></i>
+            </div>
+            @if (Model.OutOfStockProducts > 0)
+            {
+                <span class="kpi-alert">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    @Model.OutOfStockProducts out of stock
+                </span>
+            }
+        </div>
+        <div class="kpi-body">
+            <span class="kpi-label">Products</span>
+            <h2 class="kpi-value" data-count="@Model.TotalProducts">@Model.TotalProducts.ToString("N0")</h2>
+            <span class="kpi-sub">
+                <span class="dot dot-green"></span> @Model.ActiveProducts active
+                @if (Model.LowStockProducts > 0)
+                {
+                    <span class="dot dot-yellow ms-2"></span>
+                    <span>@Model.LowStockProducts low stock</span>
+                }
+            </span>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     CHARTS ROW 1 — Revenue Line + Order Donut
+══════════════════════════════════════════════ -->
+<div class="charts-row">
+
+    <!-- Monthly Revenue -->
+    <div class="chart-card chart-card-wide reveal">
+        <div class="chart-card-header">
+            <div>
+                <h3 class="chart-title">Monthly Sales</h3>
+                <p class="chart-sub">Revenue over the last 12 months</p>
+            </div>
+            <div class="chart-tabs" id="mainChartTabs">
+                <button class="chart-tab active" data-chart="monthly">Monthly</button>
+                <button class="chart-tab" data-chart="daily">Daily</button>
+            </div>
+        </div>
+        <div class="chart-body">
+            <canvas id="mainChart" height="260"></canvas>
+        </div>
+    </div>
+
+    <!-- Order Status Donut -->
+    <div class="chart-card reveal">
+        <div class="chart-card-header">
+            <div>
+                <h3 class="chart-title">Order Distribution</h3>
+                <p class="chart-sub">Breakdown by current status</p>
+            </div>
+        </div>
+        <div class="chart-body donut-body">
+            <div class="donut-wrapper">
+                <canvas id="donutChart" height="220"></canvas>
+                <div class="donut-center">
+                    <strong>@Model.TotalOrders</strong>
+                    <span>Total</span>
+                </div>
+            </div>
+            <div class="donut-legend">
+                <div class="legend-item">
+                    <span class="legend-dot" style="background:#22c55e"></span>
+                    <span>Delivered</span>
+                    <strong>@Model.OrdersDelivered</strong>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-dot" style="background:#f2ca50"></span>
+                    <span>Pending</span>
+                    <strong>@Model.OrdersPending</strong>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-dot" style="background:#3b82f6"></span>
+                    <span>Processing</span>
+                    <strong>@Model.OrdersProcessing</strong>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-dot" style="background:#ef4444"></span>
+                    <span>Cancelled</span>
+                    <strong>@Model.OrdersCancelled</strong>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     CHARTS ROW 2 — Customer Growth + Order Stats
+══════════════════════════════════════════════ -->
+<div class="charts-row">
+
+    <div class="chart-card reveal">
+        <div class="chart-card-header">
+            <div>
+                <h3 class="chart-title">Customer Growth</h3>
+                <p class="chart-sub">New customers per month</p>
+            </div>
+        </div>
+        <div class="chart-body">
+            <canvas id="customerChart" height="220"></canvas>
+        </div>
+    </div>
+
+    <div class="chart-card reveal">
+        <div class="chart-card-header">
+            <div>
+                <h3 class="chart-title">Order Statistics</h3>
+                <p class="chart-sub">Number of orders per month</p>
+            </div>
+        </div>
+        <div class="chart-body">
+            <canvas id="ordersChart" height="220"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     BOTTOM ROW — Recent Orders + Best Sellers
+══════════════════════════════════════════════ -->
+<div class="bottom-row">
+
+    <!-- Recent Orders Table -->
+    <div class="table-card reveal">
+        <div class="table-card-header">
+            <h3 class="chart-title">Recent Orders</h3>
+            <a asp-controller="Order" asp-action="Index" class="btn-link-gold">
+                View All <i class="fa-solid fa-arrow-right"></i>
+            </a>
+        </div>
+        <div class="table-responsive">
+            <table class="tibr-table">
+                <thead>
+                    <tr>
+                        <th>Order #</th>
+                        <th>Customer</th>
+                        <th>Amount</th>
+                        <th>Payment</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var order in Model.RecentOrders)
+                    {
+                        <tr class="table-row-anim">
+                            <td><span class="order-num">@order.OrderNumber</span></td>
+                            <td>
+                                <div class="customer-cell">
+                                    <div class="customer-avatar">@order.CustomerName.FirstOrDefault()</div>
+                                    <span>@order.CustomerName</span>
+                                </div>
+                            </td>
+                            <td><strong class="price-cell">@order.TotalAmount.ToString("N0") EGP</strong></td>
+                            <td>
+                                <span class="status-badge @GetPaymentBadgeClass(order.PaymentStatus)">
+                                    <span class="status-dot"></span>
+                                    @order.PaymentStatus
+                                </span>
+                            </td>
+                            <td>
+                                <span class="status-badge @GetOrderBadgeClass(order.OrderStatus)">
+                                    <span class="status-dot"></span>
+                                    @order.OrderStatus
+                                </span>
+                            </td>
+                            <td><span class="date-cell">@order.CreatedAt.ToString("dd/MM/yyyy")</span></td>
+                            <td>
+                                <a asp-controller="Order" asp-action="Details" asp-route-id="@order.Id"
+                                       class="btn-icon-sm" title="View">
+                                    <i class="fa-solid fa-eye"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    }
+                    @if (!Model.RecentOrders.Any())
+                    {
+                        <tr>
+                            <td colspan="7" class="empty-row">
+                                <i class="fa-solid fa-inbox"></i>
+                                No orders yet
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Best Sellers + Inventory Alerts -->
+    <div class="table-card best-sellers-card reveal">
+        <div class="table-card-header">
+            <h3 class="chart-title">Best Sellers</h3>
+            <a asp-controller="Product" asp-action="Index" class="btn-link-gold">
+                All <i class="fa-solid fa-arrow-right"></i>
+            </a>
+        </div>
+        <div class="best-sellers-list">
+            @if (Model.BestSellers.Any())
+            {
+                var rank = 1;
+                foreach (var item in Model.BestSellers)
+                {
+                    <div class="best-seller-row reveal">
+                        <div class="bs-rank @(rank == 1 ? "rank-gold" : rank == 2 ? "rank-silver" : "rank-bronze")">
+                            @rank
+                        </div>
+                        <div class="bs-img">
+                            @if (!string.IsNullOrEmpty(item.ImageUrl))
+                            {
+                                <img src="@item.ImageUrl" alt="@item.ProductName" />
+                            }
+                            else
+                            {
+                                <div class="bs-img-placeholder">
+                                    <i class="fa-solid fa-coins"></i>
+                                </div>
+                            }
+                        </div>
+                        <div class="bs-info">
+                            <span class="bs-name">@item.ProductName</span>
+                            <span class="bs-type @(item.MetalType == "Gold" ? "type-gold" : "type-silver")">
+                                @item.MetalType
+                            </span>
+                        </div>
+                        <div class="bs-stats">
+                            <span class="bs-sold">@item.TotalSold sold</span>
+                            <span class="bs-rev">@item.TotalRevenue.ToString("N0") EGP</span>
+                        </div>
+                    </div>
+                    rank++;
+                }
+            }
+            else
+            {
+                <div class="empty-row">
+                    <i class="fa-solid fa-star"></i>
+                    No sales data yet
+                </div>
+            }
+        </div>
+
+        <!-- Inventory Alerts -->
+        @if (Model.LowStockProducts > 0 || Model.OutOfStockProducts > 0)
+        {
+            <div class="inventory-alert">
+                <div class="inv-alert-header">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                    Inventory Alerts
+                </div>
+                @if (Model.OutOfStockProducts > 0)
+                {
+                    <div class="inv-alert-row danger">
+                        <span>Out of Stock</span>
+                        <strong>@Model.OutOfStockProducts products</strong>
+                    </div>
+                }
+                @if (Model.LowStockProducts > 0)
+                {
+                    <div class="inv-alert-row warning">
+                        <span>Low Stock (≤5)</span>
+                        <strong>@Model.LowStockProducts products</strong>
+                    </div>
+                }
+                <a asp-controller="Dashboard" asp-action="Reports" asp-route-reportType="inventory"
+                       class="btn-tibr btn-tibr-outline btn-sm mt-2">
+                    View Inventory Report
+                </a>
+            </div>
+        }
+    </div>
+</div>
+
+@functions {
+    string GetPaymentBadgeClass(string status) => status switch
+    {
+        "Paid" => "badge-success",
+        "Unpaid" => "badge-danger",
+        "Pending" => "badge-warning",
+        _ => "badge-secondary"
+    };
+
+    string GetOrderBadgeClass(string status) => status switch
+    {
+        "Delivered" => "badge-success",
+        "Pending" => "badge-warning",
+        "Processing" => "badge-info",
+        "Cancelled" => "badge-danger",
+        _ => "badge-secondary"
+    };
+}
+
+@section Scripts {
+    <script>
+        const MONTH_LABELS  = @Html.Raw(monthLabels);
+        const MONTH_REVENUE = @Html.Raw(monthRevenue);
+        const MONTH_ORDERS  = @Html.Raw(monthOrders);
+        const DAILY_LABELS  = @Html.Raw(dailyLabels);
+        const DAILY_REVENUE = @Html.Raw(dailyRevenue);
+        const CUST_LABELS   = @Html.Raw(custLabels);
+        const CUST_DATA     = @Html.Raw(custData);
+        const DONUT_DATA    = @Html.Raw(donutData);
+
+        const GOLD       = '#f2ca50';
+        const GOLD_ALPHA = 'rgba(242,202,80,0.15)';
+        const GREEN      = '#22c55e';
+        const BLUE       = '#3b82f6';
+        const RED        = '#ef4444';
+        const GRID       = 'rgba(255,255,255,0.06)';
+        const TEXT       = '#9ca3af';
+
+        Chart.defaults.color       = TEXT;
+        Chart.defaults.font.family = "'Outfit', sans-serif";
+
+        // ── Shared tooltip style ────────────────────────────────────────
+        const tooltip = (borderColor) => ({
+            backgroundColor: '#1e1e2e',
+            borderColor,
+            borderWidth: 1,
+            padding: 12
+        });
+
+        // ── Main chart (monthly / daily toggle) ────────────────────────
+        let mainChart;
+
+        function buildMainChart(type) {
+            if (mainChart) mainChart.destroy();
+            const labels = type === 'monthly' ? MONTH_LABELS  : DAILY_LABELS;
+            const data   = type === 'monthly' ? MONTH_REVENUE : DAILY_REVENUE;
+
+            const ctx  = document.getElementById('mainChart').getContext('2d');
+            const grad = ctx.createLinearGradient(0, 0, 0, 300);
+            grad.addColorStop(0, 'rgba(242,202,80,0.3)');
+            grad.addColorStop(1, 'rgba(242,202,80,0)');
+
+            mainChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels,
+                    datasets: [{
+                        data,
+                        borderColor: GOLD,
+                        borderWidth: 3,
+                        backgroundColor: grad,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointBackgroundColor: GOLD,
+                        pointHoverRadius: 7,
+                        pointHoverBackgroundColor: '#fff',
+                        pointHoverBorderColor: GOLD,
+                        pointHoverBorderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: { intersect: false, mode: 'index' },
+                    animation: { duration: 1200, easing: 'easeInOutQuart' },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { ...tooltip(GOLD), callbacks: { label: ctx => `  ${ctx.parsed.y.toLocaleString()} EGP` } }
+                    },
+                    scales: {
+                        x: { grid: { color: GRID }, ticks: { color: TEXT } },
+                        y: { grid: { color: GRID }, ticks: { color: TEXT, callback: v => v.toLocaleString() } }
+                    }
+                }
+            });
+        }
+        buildMainChart('monthly');
+
+        document.querySelectorAll('.chart-tab').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.chart-tab').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                buildMainChart(btn.dataset.chart);
+            });
+        });
+
+        // ── Donut ───────────────────────────────────────────────────────
+        new Chart(document.getElementById('donutChart').getContext('2d'), {
+            type: 'doughnut',
+            data: {
+                labels: ['Delivered', 'Pending', 'Processing', 'Cancelled'],
+                datasets: [{
+                    data: DONUT_DATA,
+                    backgroundColor: [GREEN, GOLD, BLUE, RED],
+                    borderWidth: 0,
+                    hoverOffset: 8
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                cutout: '72%',
+                animation: { animateRotate: true, duration: 1400, easing: 'easeInOutQuart' },
+                plugins: { legend: { display: false }, tooltip: tooltip(GOLD) }
+            }
+        });
+
+        // ── Customer Growth Bar ─────────────────────────────────────────
+        new Chart(document.getElementById('customerChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: CUST_LABELS,
+                datasets: [{
+                    label: 'New Customers',
+                    data: CUST_DATA,
+                    backgroundColor: GOLD_ALPHA,
+                    borderColor: GOLD,
+                    borderWidth: 2,
+                    borderRadius: 6,
+                    hoverBackgroundColor: GOLD
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 1200, easing: 'easeInOutQuart' },
+                plugins: { legend: { display: false }, tooltip: tooltip(GOLD) },
+                scales: {
+                    x: { grid: { color: GRID }, ticks: { color: TEXT } },
+                    y: { grid: { color: GRID }, ticks: { color: TEXT } }
+                }
+            }
+        });
+
+        // ── Orders Bar ──────────────────────────────────────────────────
+        new Chart(document.getElementById('ordersChart').getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: MONTH_LABELS,
+                datasets: [{
+                    label: 'Orders',
+                    data: MONTH_ORDERS,
+                    backgroundColor: 'rgba(59,130,246,0.2)',
+                    borderColor: BLUE,
+                    borderWidth: 2,
+                    borderRadius: 6,
+                    hoverBackgroundColor: BLUE
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: { duration: 1200, easing: 'easeInOutQuart' },
+                plugins: { legend: { display: false }, tooltip: tooltip(BLUE) },
+                scales: {
+                    x: { grid: { color: GRID }, ticks: { color: TEXT } },
+                    y: { grid: { color: GRID }, ticks: { color: TEXT } }
+                }
+            }
+        });
+
+        // ── Sparklines ──────────────────────────────────────────────────
+        function sparkline(id, data, color) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            new Chart(el.getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: data.map((_, i) => i),
+                    datasets: [{ data, borderColor: color, borderWidth: 2, fill: false, tension: 0.4, pointRadius: 0 }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    animation: { duration: 1000 },
+                    plugins: { legend: { display: false }, tooltip: { enabled: false } },
+                    scales: { x: { display: false }, y: { display: false } }
+                }
+            });
+        }
+        sparkline('sparkRevenue',   MONTH_REVENUE.slice(-7), GOLD);
+        sparkline('sparkOrders',    MONTH_ORDERS.slice(-7),  BLUE);
+        sparkline('sparkCustomers', CUST_DATA.slice(-7),     GREEN);
+
+        // ── KPI counter animation ───────────────────────────────────────
+        document.querySelectorAll('[data-count]').forEach(el => {
+            const target   = parseFloat(el.dataset.count);
+            const isCurr   = el.dataset.currency === 'true';
+            const duration = 1600;
+            const start    = performance.now();
+            const update   = now => {
+                const p    = Math.min((now - start) / duration, 1);
+                const ease = p < 0.5 ? 2 * p * p : -1 + (4 - 2 * p) * p;
+                const val  = Math.round(target * ease);
+                el.textContent = isCurr ? val.toLocaleString() + ' EGP' : val.toLocaleString();
+                if (p < 1) requestAnimationFrame(update);
+            };
+            requestAnimationFrame(update);
+        });
+    </script>
+}

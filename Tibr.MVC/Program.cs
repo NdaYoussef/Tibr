@@ -1,3 +1,5 @@
+using Mapster;
+using Tibr.Application;
 using Tibr.Infrastructure;
 namespace Tibr.MVC
 {
@@ -10,6 +12,11 @@ namespace Tibr.MVC
             // Add services to the container.
             builder.Services.AddControllersWithViews();
             builder.Services.AddInfrastructure(builder.Configuration);
+            builder.Services.AddApplicationServices();
+
+            TypeAdapterConfig.GlobalSettings.Scan(
+                        typeof(Tibr.Application.Mappers.ProductMappingConfig).Assembly,
+                        typeof(Tibr.MVC.Mapping.DashboardMappingConfig).Assembly);
 
             builder.Services.AddHttpClient("TibrApi", client =>
             {
@@ -34,7 +41,7 @@ namespace Tibr.MVC
             app.MapStaticAssets();
             app.MapControllerRoute(
                 name: "default",
-                pattern: "{controller=Home}/{action=Index}/{id?}")
+                pattern: "{controller=Dashboard}/{action=Index}/{id?}")
                 .WithStaticAssets();
 
             app.Run();
