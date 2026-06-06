@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Authentication.Cookies;
 using Tibr.Infrastructure;
+
 namespace Tibr.MVC
 {
     public class Program
@@ -10,6 +12,20 @@ namespace Tibr.MVC
             // Add services to the container.
             builder.Services.AddControllersWithViews();
             builder.Services.AddInfrastructure(builder.Configuration);
+
+            // Add HttpClientFactory
+            builder.Services.AddHttpClient();
+
+            // Add Cookie Authentication
+            builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
+                .AddCookie(options =>
+                {
+                    options.LoginPath = "/AdminAuth/Login";
+                    options.LogoutPath = "/AdminAuth/Logout";
+                    options.AccessDeniedPath = "/AdminAuth/AccessDenied";
+                    options.ExpireTimeSpan = TimeSpan.FromDays(1);
+                    options.SlidingExpiration = true;
+                });
 
             var app = builder.Build();
 
@@ -24,6 +40,7 @@ namespace Tibr.MVC
             app.UseHttpsRedirection();
             app.UseRouting();
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapStaticAssets();
