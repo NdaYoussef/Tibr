@@ -1,0 +1,462 @@
+﻿@model Tibr.MVC.Models.ReportsViewModel
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Reports & Analytics";
+    ViewData["PageTitle"] = "Reports";
+
+    var monthLabels = System.Text.Json.JsonSerializer.Serialize(Model.MonthlySales.Select(m => m.Month));
+    var monthRevenue = System.Text.Json.JsonSerializer.Serialize(Model.MonthlySales.Select(m => m.Revenue));
+    var monthOrders = System.Text.Json.JsonSerializer.Serialize(Model.MonthlySales.Select(m => m.Orders));
+}
+
+<!-- ══════════════════════════════════════════════
+     PAGE HEADER
+══════════════════════════════════════════════ -->
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Reports & Analytics</h1>
+        <p class="page-sub">Comprehensive business and financial performance analysis</p>
+    </div>
+    <div class="page-header-actions">
+        <button class="btn-tibr btn-tibr-outline" onclick="exportPDF()">
+            <i class="fa-solid fa-file-pdf"></i>
+            Export PDF
+        </button>
+        <button class="btn-tibr btn-tibr-gold" onclick="exportExcel()">
+            <i class="fa-solid fa-file-excel"></i>
+            Export Excel
+        </button>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     REPORT TYPE TABS
+══════════════════════════════════════════════ -->
+<div class="report-tabs">
+    <a asp-action="Reports"
+           asp-route-reportType="sales"
+           asp-route-from="@Model.FromDate?.ToString("yyyy-MM-dd")"
+           asp-route-to="@Model.ToDate?.ToString("yyyy-MM-dd")"
+           class="report-tab @(Model.ReportType == "sales" ? "active" : "")">
+        <i class="fa-solid fa-chart-line"></i> Sales Report
+    </a>
+    <a asp-action="Reports"
+           asp-route-reportType="revenue"
+           asp-route-from="@Model.FromDate?.ToString("yyyy-MM-dd")"
+           asp-route-to="@Model.ToDate?.ToString("yyyy-MM-dd")"
+           class="report-tab @(Model.ReportType == "revenue" ? "active" : "")">
+        <i class="fa-solid fa-coins"></i> Revenue Report
+    </a>
+    <a asp-action="Reports"
+           asp-route-reportType="products"
+           class="report-tab @(Model.ReportType == "products" ? "active" : "")">
+        <i class="fa-solid fa-layer-group"></i> Product Performance
+    </a>
+    <a asp-action="Reports"
+           asp-route-reportType="customers"
+           class="report-tab @(Model.ReportType == "customers" ? "active" : "")">
+        <i class="fa-solid fa-users"></i> Customer Report
+    </a>
+    <a asp-action="Reports"
+           asp-route-reportType="inventory"
+           class="report-tab @(Model.ReportType == "inventory" ? "active" : "")">
+        <i class="fa-solid fa-boxes-stacked"></i> Inventory
+    </a>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     DATE FILTER BAR
+══════════════════════════════════════════════ -->
+<form asp-action="Reports" method="get" class="report-filter-bar">
+    <input type="hidden" name="reportType" value="@Model.ReportType" />
+    <div class="filter-group">
+        <label>From Date</label>
+        <input type="date" name="from" value="@Model.FromDate?.ToString("yyyy-MM-dd")" class="filter-input" />
+    </div>
+    <div class="filter-group">
+        <label>To Date</label>
+        <input type="date" name="to" value="@Model.ToDate?.ToString("yyyy-MM-dd")" class="filter-input" />
+    </div>
+    <button type="submit" class="btn-tibr btn-tibr-gold">
+        <i class="fa-solid fa-filter"></i>
+        Apply Filter
+    </button>
+    <a asp-action="Reports" asp-route-reportType="@Model.ReportType" class="btn-tibr btn-tibr-outline">
+        <i class="fa-solid fa-rotate-left"></i>
+        Reset
+    </a>
+</form>
+
+<!-- ══════════════════════════════════════════════
+     KPI SUMMARY TILES
+══════════════════════════════════════════════ -->
+<div class="report-kpi-strip">
+    <div class="rk-tile">
+        <i class="fa-solid fa-coins rk-icon gold"></i>
+        <div>
+            <span class="rk-label">Total Revenue</span>
+            <strong class="rk-val">@Model.Summary.TotalRevenue.ToString("N0") EGP</strong>
+        </div>
+    </div>
+    <div class="rk-tile">
+        <i class="fa-solid fa-cart-shopping rk-icon blue"></i>
+        <div>
+            <span class="rk-label">Total Orders</span>
+            <strong class="rk-val">@Model.Summary.TotalOrders.ToString("N0")</strong>
+        </div>
+    </div>
+    <div class="rk-tile">
+        <i class="fa-solid fa-users rk-icon green"></i>
+        <div>
+            <span class="rk-label">Total Customers</span>
+            <strong class="rk-val">@Model.Summary.TotalCustomers.ToString("N0")</strong>
+        </div>
+    </div>
+    <div class="rk-tile">
+        <i class="fa-solid fa-layer-group rk-icon purple"></i>
+        <div>
+            <span class="rk-label">Total Products</span>
+            <strong class="rk-val">@Model.Summary.TotalProducts.ToString("N0")</strong>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     HEADER CHART
+══════════════════════════════════════════════ -->
+<div class="chart-card reveal mb-4">
+    <div class="chart-card-header">
+        <div>
+            <h3 class="chart-title">Monthly Revenue & Orders</h3>
+            <p class="chart-sub">Last 12 months</p>
+        </div>
+    </div>
+    <div class="chart-body">
+        <canvas id="reportChart" height="240"></canvas>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     DATA TABLE
+══════════════════════════════════════════════ -->
+<div class="table-card reveal" id="reportTable">
+    <div class="table-card-header">
+        <h3 class="chart-title">
+            @(Model.ReportType switch
+            {
+                "sales" => "Sales Details",
+                "revenue" => "Revenue Details",
+                "products" => "Product Performance",
+                "customers" => "Customer Data",
+                "inventory" => "Inventory Report",
+                _ => "Data"
+            })
+        </h3>
+        <div class="table-search">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" id="tableSearch" placeholder="Search table..." class="filter-input" />
+        </div>
+    </div>
+    <div class="table-responsive">
+
+        @* ── Sales / Revenue ── *@
+        @if ((Model.ReportType == "sales" || Model.ReportType == "revenue") && Model.SalesRows.Any())
+        {
+            <table class="tibr-table" id="dataTable">
+                <thead>
+                    <tr>
+                        <th>Order #</th>
+                        <th>Customer</th>
+                        <th>Date</th>
+                        <th>Amount</th>
+                        <th>Payment</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in Model.SalesRows)
+                    {
+                        <tr class="table-row-anim">
+                            <td><span class="order-num">@row.OrderNumber</span></td>
+                            <td>@row.CustomerName</td>
+                            <td><span class="date-cell">@row.Date.ToString("dd/MM/yyyy")</span></td>
+                            <td><strong class="price-cell">@row.Amount.ToString("N0") EGP</strong></td>
+                            <td>
+                                <span class="status-badge @(row.PaymentStatus == "Paid" ? "badge-success" : row.PaymentStatus == "Unpaid" ? "badge-danger" : "badge-warning")">
+                                    <span class="status-dot"></span>
+                                    @row.PaymentStatus
+                                </span>
+                            </td>
+                            <td>
+                                <span class="status-badge @(row.OrderStatus == "Delivered" ? "badge-success" : row.OrderStatus == "Cancelled" ? "badge-danger" : row.OrderStatus == "Processing" ? "badge-info" : "badge-warning")">
+                                    <span class="status-dot"></span>
+                                    @row.OrderStatus
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+
+        @* ── Product Performance ── *@
+        @if (Model.ReportType == "products" && Model.ProductRows.Any())
+        {
+            <table class="tibr-table" id="dataTable">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Metal Type</th>
+                        <th>Units Sold</th>
+                        <th>Revenue</th>
+                        <th>Stock</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in Model.ProductRows)
+                    {
+                        <tr class="table-row-anim">
+                            <td><strong>@row.ProductName</strong></td>
+                            <td>
+                                <span class="metal-badge @(row.MetalType == "Gold" ? "metal-gold" : "metal-silver")">
+                                    @row.MetalType
+                                </span>
+                            </td>
+                            <td>@row.TotalSold units</td>
+                            <td><strong class="price-cell">@row.Revenue.ToString("N0") EGP</strong></td>
+                            <td>
+                                <span class="@(row.Stock == 0 ? "text-danger fw-bold" : row.Stock <= 5 ? "text-warning fw-bold" : "text-success")">
+                                    @row.Stock
+                                </span>
+                            </td>
+                            <td>
+                                <span class="status-badge @(row.Status == "Active" ? "badge-success" : "badge-secondary")">
+                                    <span class="status-dot"></span>
+                                    @row.Status
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+
+        @* ── Inventory ── *@
+        @if (Model.ReportType == "inventory" && Model.InventoryRows.Any())
+        {
+            <table class="tibr-table" id="dataTable">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Category</th>
+                        <th>Metal Type</th>
+                        <th>Stock</th>
+                        <th>Stock Status</th>
+                        <th>Buy Price</th>
+                        <th>Sell Price</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in Model.InventoryRows)
+                    {
+                        <tr class="table-row-anim">
+                            <td><strong>@row.ProductName</strong></td>
+                            <td>@row.Category</td>
+                            <td>
+                                <span class="metal-badge @(row.MetalType == "Gold" ? "metal-gold" : "metal-silver")">
+                                    @row.MetalType
+                                </span>
+                            </td>
+                            <td>
+                                <span class="@(row.StockStatus == "Out" ? "text-danger fw-bold" : row.StockStatus == "Low" ? "text-warning fw-bold" : "text-success")">
+                                    @row.Stock
+                                </span>
+                            </td>
+                            <td>
+                                <span class="status-badge @(row.StockStatus == "Out" ? "badge-danger" : row.StockStatus == "Low" ? "badge-warning" : "badge-success")">
+                                    <span class="status-dot"></span>
+                                    @row.StockStatus
+                                </span>
+                            </td>
+                            <td>@row.BuyPrice.ToString("N0") EGP</td>
+                            <td><strong class="price-cell">@row.SellPrice.ToString("N0") EGP</strong></td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+
+        @* ── Customers ── *@
+        @if (Model.ReportType == "customers" && Model.CustomerRows.Any())
+        {
+            <table class="tibr-table" id="dataTable">
+                <thead>
+                    <tr>
+                        <th>Customer</th>
+                        <th>Email</th>
+                        <th>Orders</th>
+                        <th>Total Spent</th>
+                        <th>Joined</th>
+                        <th>KYC</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in Model.CustomerRows)
+                    {
+                        <tr class="table-row-anim">
+                            <td>
+                                <div class="customer-cell">
+                                    <div class="customer-avatar">@row.CustomerName.FirstOrDefault()</div>
+                                    <span>@row.CustomerName</span>
+                                </div>
+                            </td>
+                            <td>@row.Email</td>
+                            <td>@row.TotalOrders</td>
+                            <td><strong class="price-cell">@row.TotalSpent.ToString("N0") EGP</strong></td>
+                            <td><span class="date-cell">@row.JoinedAt.ToString("dd/MM/yyyy")</span></td>
+                            <td>
+                                <span class="status-badge @(row.KycStatus == "Approved" ? "badge-success" : row.KycStatus == "Pending" ? "badge-warning" : "badge-secondary")">
+                                    <span class="status-dot"></span>
+                                    @row.KycStatus
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+
+        @if (!Model.SalesRows.Any() && !Model.ProductRows.Any() && !Model.InventoryRows.Any() && !Model.CustomerRows.Any())
+        {
+            <div class="empty-row py-5">
+                <i class="fa-solid fa-chart-bar fa-2x mb-2"></i>
+                <p>No data available for this date range</p>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     EXPORT PROGRESS OVERLAY
+══════════════════════════════════════════════ -->
+<div class="export-overlay" id="exportOverlay" style="display:none">
+    <div class="export-modal">
+        <div class="export-icon">
+            <i class="fa-solid fa-file-export fa-spin"></i>
+        </div>
+        <h4>Preparing your report...</h4>
+        <div class="export-progress">
+            <div class="export-progress-fill" id="exportFill"></div>
+        </div>
+        <p class="export-sub" id="exportMsg">Gathering data...</p>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const MONTH_LABELS  = @Html.Raw(monthLabels);
+        const MONTH_REVENUE = @Html.Raw(monthRevenue);
+        const MONTH_ORDERS  = @Html.Raw(monthOrders);
+        const GOLD = '#f2ca50', BLUE = '#3b82f6';
+        const GRID = 'rgba(255,255,255,0.06)', TEXT = '#9ca3af';
+
+        Chart.defaults.color       = TEXT;
+        Chart.defaults.font.family = "'Outfit', sans-serif";
+
+        // ── Header dual-axis chart ──────────────────────────────────────
+        const rCtx  = document.getElementById('reportChart').getContext('2d');
+        const rGrad = rCtx.createLinearGradient(0, 0, 0, 280);
+        rGrad.addColorStop(0, 'rgba(242,202,80,0.25)');
+        rGrad.addColorStop(1, 'rgba(242,202,80,0)');
+
+        new Chart(rCtx, {
+            type: 'line',
+            data: {
+                labels: MONTH_LABELS,
+                datasets: [
+                    {
+                        label: 'Revenue (EGP)',
+                        data: MONTH_REVENUE,
+                        borderColor: GOLD,
+                        backgroundColor: rGrad,
+                        borderWidth: 3,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 4,
+                        pointBackgroundColor: GOLD,
+                        pointHoverRadius: 7,
+                        yAxisID: 'y'
+                    },
+                    {
+                        label: 'Orders',
+                        data: MONTH_ORDERS,
+                        borderColor: BLUE,
+                        backgroundColor: 'transparent',
+                        borderWidth: 2,
+                        fill: false,
+                        tension: 0.4,
+                        pointRadius: 3,
+                        pointBackgroundColor: BLUE,
+                        borderDash: [6, 3],
+                        yAxisID: 'y1'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                interaction: { intersect: false, mode: 'index' },
+                animation: { duration: 1200, easing: 'easeInOutQuart' },
+                plugins: {
+                    legend: { display: true, position: 'top', labels: { color: TEXT, usePointStyle: true } },
+                    tooltip: { backgroundColor: '#1e1e2e', borderColor: GOLD, borderWidth: 1, padding: 12 }
+                },
+                scales: {
+                    x:  { grid: { color: GRID }, ticks: { color: TEXT } },
+                    y:  { grid: { color: GRID }, ticks: { color: TEXT, callback: v => v.toLocaleString() + ' EGP' }, position: 'left' },
+                    y1: { grid: { display: false }, ticks: { color: BLUE }, position: 'right' }
+                }
+            }
+        });
+
+        // ── Table live search ───────────────────────────────────────────
+        document.getElementById('tableSearch')?.addEventListener('input', function () {
+            const q = this.value.toLowerCase();
+            document.querySelectorAll('#dataTable tbody tr').forEach(row => {
+                row.style.display = row.textContent.toLowerCase().includes(q) ? '' : 'none';
+            });
+        });
+
+        // ── Export progress animation ───────────────────────────────────
+        const exportSteps = [
+            { pct: 20,  msg: 'Gathering data...' },
+            { pct: 50,  msg: 'Processing report...' },
+            { pct: 80,  msg: 'Formatting file...' },
+            { pct: 100, msg: 'Export complete ✓' }
+        ];
+
+        function runExport() {
+            const overlay = document.getElementById('exportOverlay');
+            const fill    = document.getElementById('exportFill');
+            const msg     = document.getElementById('exportMsg');
+            overlay.style.display = 'flex';
+            let i = 0;
+            const tick = () => {
+                if (i >= exportSteps.length) { setTimeout(() => overlay.style.display = 'none', 800); return; }
+                fill.style.width = exportSteps[i].pct + '%';
+                msg.textContent  = exportSteps[i].msg;
+                i++;
+                setTimeout(tick, 600);
+            };
+            tick();
+        }
+
+        function exportPDF()   { runExport(); }
+        function exportExcel() { runExport(); }
+
+        document.getElementById('exportOverlay')?.addEventListener('click', function (e) {
+            if (e.target === this) this.style.display = 'none';
+        });
+    </script>
+}
