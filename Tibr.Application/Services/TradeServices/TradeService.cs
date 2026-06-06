@@ -71,7 +71,8 @@ namespace Tibr.Application.Services.TradeServices
                 Quantity = dto.Quantity,
                 RequestedPrice = dto.ExpectedPrice,
                 CurrentPrice = price.SellPrice,
-                Status = OrderStatus.Executed
+                Status = OrderStatus.Executed,
+                CreatedAt = DateTime.UtcNow,
             };
             await _investmentOrderRepo.AddAsync(order);
 
@@ -84,7 +85,8 @@ namespace Tibr.Application.Services.TradeServices
                 Quantity = dto.Quantity,
                 ExecutedPrice = price.SellPrice,
                 TotalAmount = totalCost,
-                ExecutedAt = DateTime.UtcNow
+                ExecutedAt = DateTime.UtcNow,
+                CreatedAt = DateTime.UtcNow,
             };
             await _tradeRepo.AddAsync(trade);
 
@@ -94,7 +96,8 @@ namespace Tibr.Application.Services.TradeServices
                 TradeId = trade.Id,
                 TransactionType = TransactionType.Buy,
                 Amount = totalCost,
-                Status = TransactionStatusEnum.Success
+                Status = TransactionStatusEnum.Success,
+                CreatedAt = DateTime.UtcNow,
             };
             await _transactionRepo.AddAsync(transaction);
 
@@ -107,7 +110,8 @@ namespace Tibr.Application.Services.TradeServices
                 Type = WalletTransactionType.Debit,
                 Amount = totalCost,
                 ReferenceType = ReferenceType.Trade,
-                ReferenceId = trade.Id
+                ReferenceId = trade.Id,
+                CreatedAt = DateTime.UtcNow,
             });
 
             metalWallet.Balance += dto.Quantity;
@@ -119,7 +123,8 @@ namespace Tibr.Application.Services.TradeServices
                 Type = WalletTransactionType.Credit,
                 Amount = dto.Quantity,
                 ReferenceType = ReferenceType.Trade,
-                ReferenceId = trade.Id
+                ReferenceId = trade.Id,
+                CreatedAt = DateTime.UtcNow,
             });
 
             await _investmentOrderRepo.SaveChangesAsync();
@@ -193,7 +198,8 @@ namespace Tibr.Application.Services.TradeServices
                 Quantity = dto.Quantity,
                 RequestedPrice = dto.ExpectedPrice,
                 CurrentPrice = price.BuyPrice,
-                Status = OrderStatus.Executed
+                Status = OrderStatus.Executed,
+                CreatedAt = DateTime.UtcNow,
             };
             await _investmentOrderRepo.AddAsync(order);
 
@@ -206,7 +212,8 @@ namespace Tibr.Application.Services.TradeServices
                 Quantity = dto.Quantity,
                 ExecutedPrice = price.BuyPrice,
                 TotalAmount = totalProceeds,
-                ExecutedAt = DateTime.UtcNow
+                ExecutedAt = DateTime.UtcNow,
+                CreatedAt = DateTime.UtcNow,
             };
             await _tradeRepo.AddAsync(trade);
 
@@ -216,7 +223,8 @@ namespace Tibr.Application.Services.TradeServices
                 TradeId = trade.Id,
                 TransactionType = TransactionType.Sell,
                 Amount = totalProceeds,
-                Status = TransactionStatusEnum.Success
+                Status = TransactionStatusEnum.Success,
+                CreatedAt = DateTime.UtcNow,
             };
             await _transactionRepo.AddAsync(transaction);
 
@@ -229,7 +237,8 @@ namespace Tibr.Application.Services.TradeServices
                 Type = WalletTransactionType.Debit,
                 Amount = dto.Quantity,
                 ReferenceType = ReferenceType.Trade,
-                ReferenceId = trade.Id
+                ReferenceId = trade.Id,
+                CreatedAt = DateTime.UtcNow,
             });
 
             cashWallet.Balance += totalProceeds;
@@ -241,7 +250,8 @@ namespace Tibr.Application.Services.TradeServices
                 Type = WalletTransactionType.Credit,
                 Amount = totalProceeds,
                 ReferenceType = ReferenceType.Trade,
-                ReferenceId = trade.Id
+                ReferenceId = trade.Id,
+                CreatedAt = DateTime.UtcNow,
             });
 
             await _investmentOrderRepo.SaveChangesAsync();

@@ -50,7 +50,8 @@ namespace Tibr.Application.Services.AddressServices
                 Street = dto.Street,
                 Building = dto.Building,
                 PostalCode = dto.PostalCode,
-                IsDefault = dto.IsDefault
+                IsDefault = dto.IsDefault,
+                CreatedAt = DateTime.UtcNow,
             };
 
             await _addressRepo.AddAsync(address);

@@ -40,7 +40,8 @@ namespace Tibr.Application.Services.AssetPriceServices
                 AssetType = assetType,
                 BuyPrice = buyPrice,
                 SellPrice = sellPrice,
-                Source = source
+                Source = source,
+                CreatedAt = DateTime.UtcNow,
             };
 
             await _assetPriceRepo.AddAsync(price);

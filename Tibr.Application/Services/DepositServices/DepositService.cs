@@ -45,6 +45,7 @@ public class DepositService : IDepositService
             Amount = dto.Amount,
             Status = DepositStatus.Pending,
             PaymentMethod = dto.PaymentMethod,
+            CreatedAt = DateTime.UtcNow,
         };
 
         await _depositRepo.AddAsync(deposit);

@@ -54,7 +54,8 @@ namespace Tibr.Application.Services.DeliveryServices
                 AssetType = dto.AssetType,
                 Quantity = dto.Quantity,
                 AddressId = dto.AddressId,
-                Status = DeliveryStatus.Pending
+                Status = DeliveryStatus.Pending,
+                CreatedAt = DateTime.UtcNow,
             };
             await _deliveryRepo.AddAsync(delivery);
 
@@ -64,7 +65,8 @@ namespace Tibr.Application.Services.DeliveryServices
                 Type = WalletTransactionType.Reserve,
                 Amount = dto.Quantity,
                 ReferenceType = ReferenceType.Delivery,
-                ReferenceId = delivery.Id
+                ReferenceId = delivery.Id,
+                CreatedAt = DateTime.UtcNow,
             });
 
             await _deliveryRepo.SaveChangesAsync();
@@ -109,7 +111,8 @@ namespace Tibr.Application.Services.DeliveryServices
                 Type = WalletTransactionType.Debit,
                 Amount = delivery.Quantity,
                 ReferenceType = ReferenceType.Delivery,
-                ReferenceId = delivery.Id
+                ReferenceId = delivery.Id,
+                CreatedAt = DateTime.UtcNow,
             });
 
             await _deliveryRepo.SaveChangesAsync();
@@ -142,7 +145,8 @@ namespace Tibr.Application.Services.DeliveryServices
                         Type = WalletTransactionType.Release,
                         Amount = delivery.Quantity,
                         ReferenceType = ReferenceType.Delivery,
-                        ReferenceId = delivery.Id
+                        ReferenceId = delivery.Id,
+                        CreatedAt = DateTime.UtcNow,
                     });
                 }
             }
