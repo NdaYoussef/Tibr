@@ -11,6 +11,11 @@ namespace Tibr.MVC
             builder.Services.AddControllersWithViews();
             builder.Services.AddInfrastructure(builder.Configuration);
 
+            builder.Services.AddHttpClient("TibrApi", client =>
+            {
+                client.BaseAddress = new Uri(builder.Configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7280/api/");
+            });
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.

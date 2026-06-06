@@ -1,0 +1,140 @@
+@model Tibr.MVC.Models.Orders.OrderListViewModel
+@{
+    ViewData["Title"] = "Order History";
+}
+
+<div class="mb-4">
+    <h2 class="font-bold text-white mb-1" style="font-size: 1.8rem; letter-spacing: -0.5px;">Order History</h2>
+    <p class="text-muted" style="font-size: 0.9rem;">Track and manage your premium acquisitions.</p>
+</div>
+
+<!-- Horizontal Scrolling Category Filter Selector -->
+<div class="horizontal-scroll-filters mb-4">
+    <a asp-action="Index" class="scroll-filter-pill @(string.IsNullOrEmpty(Model.StatusFilter) ? "active" : "")">All Orders</a>
+    <a asp-action="Index" asp-route-statusFilter="Delivered" class="scroll-filter-pill @(Model.StatusFilter == "Delivered" ? "active" : "")">Completed</a>
+    <a asp-action="Index" asp-route-statusFilter="Processing" class="scroll-filter-pill @(Model.StatusFilter == "Processing" ? "active" : "")">Processing</a>
+    <a asp-action="Index" asp-route-statusFilter="Shipped" class="scroll-filter-pill @(Model.StatusFilter == "Shipped" ? "active" : "")">Shipped</a>
+    <a asp-action="Index" asp-route-statusFilter="Cancelled" class="scroll-filter-pill @(Model.StatusFilter == "Cancelled" ? "active" : "")">Cancelled</a>
+    <a asp-action="Index" asp-route-statusFilter="Pending" class="scroll-filter-pill @(Model.StatusFilter == "Pending" ? "active" : "")">Pending</a>
+</div>
+
+<!-- Search Panel (Details expandable or hidden) -->
+<details class="executive-card p-3 mb-4 shadow-sm" style="border-radius: 14px;">
+    <summary class="accordion-summary text-muted fw-semibold" style="font-size: 0.85rem;">
+        <span><i class="bi bi-search me-2"></i> Search and Additional Filters</span>
+        <i class="bi bi-chevron-down text-muted" style="font-size: 0.75rem;"></i>
+    </summary>
+    <div class="mt-3 pt-3 border-top border-light">
+        <form method="get" asp-action="Index" class="row g-2">
+            <input type="hidden" name="statusFilter" value="@Model.StatusFilter" />
+            <div class="col-12">
+                <input type="text" name="searchQuery" value="@Model.SearchQuery" class="form-control executive-input" placeholder="Search order reference or client name..." />
+            </div>
+            <div class="col-md-6">
+                <label class="form-label text-muted text-uppercase fw-semibold" style="font-size: 0.65rem;">Payment status</label>
+                <select name="paymentStatusFilter" class="form-select executive-input" onchange="this.form.submit()">
+                    <option value="">All Payments</option>
+                    <option value="Paid" selected="@(Model.PaymentStatusFilter == "Paid" ? "selected" : null)">Paid</option>
+                    <option value="Pending" selected="@(Model.PaymentStatusFilter == "Pending" ? "selected" : null)">Pending</option>
+                    <option value="Refunded" selected="@(Model.PaymentStatusFilter == "Refunded" ? "selected" : null)">Refunded</option>
+                </select>
+            </div>
+            <div class="col-md-6 d-flex align-items-end">
+                <button type="submit" class="btn btn-gold w-100 py-2">Apply Search</button>
+            </div>
+        </form>
+    </div>
+</details>
+
+<!-- Orders Grid List -->
+<div class="mb-4">
+    @if (!Model.Orders.Any())
+    {
+        <div class="executive-card text-center p-5 text-muted">
+            <i class="bi bi-cart-x display-4 mb-3 text-secondary"></i>
+            <div>No matching acquisition transactions found.</div>
+        </div>
+    }
+    else
+    {
+        var count = 0;
+        @foreach (var order in Model.Orders)
+        {
+            count++;
+            
+            // Format order number like ORD-9921 or ORD-8842
+            var formattedNum = order.OrderNumber.Contains("-") 
+                ? order.OrderNumber.Replace("TIBR-2026-000", "ORD-").Replace("TIBR-", "ORD-") 
+                : order.OrderNumber;
+
+            <div class="executive-card accent-top shadow-sm p-4">
+                <div class="d-flex justify-content-between align-items-start mb-2">
+                    <div>
+                        <span class="text-uppercase fw-bold text-muted" style="font-size: 0.65rem; letter-spacing: 0.5px;">Transaction</span>
+                        <h4 class="mb-1 text-white" style="font-size: 1.25rem; font-weight: 700;">#@formattedNum</h4>
+                    </div>
+                    <div>
+                        <span class="pill-badge @($"badge-{order.OrderStatus.ToLower()}")">@order.OrderStatus</span>
+                    </div>
+                </div>
+                
+                <div class="d-flex justify-content-between align-items-center mt-3 pt-2 border-top border-light">
+                    <div>
+                        <div class="text-muted mb-1" style="font-size: 0.75rem;"><i class="bi bi-calendar-event me-1"></i> @order.CreatedAt.ToString("MMM dd, yyyy")</div>
+                        <div class="item-gold-price">$@order.TotalAmount.ToString("N2")</div>
+                    </div>
+                    <div>
+                        <a asp-action="Details" asp-route-id="@order.Id" class="d-flex align-items-center justify-content-center rounded-circle" 
+                           style="width: 38px; height: 38px; background-color: #f1f5f9; color: var(--text-dark); transition: all 0.2s;"
+                           onmouseover="this.style.backgroundColor='var(--accent-gold)'; this.style.color='#ffffff';"
+                           onmouseout="this.style.backgroundColor='#f1f5f9'; this.style.color='var(--text-dark)';">
+                            <i class="bi bi-chevron-right" style="font-size: 1.1rem; line-height: 1;"></i>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            // Inject the premium Dedicated Concierge promo card in the middle of list for premium aesthetics
+            if (count == 3)
+            {
+                <div class="concierge-banner-card shadow-sm p-4">
+                    <div class="concierge-tag">Exclusive Support</div>
+                    <h4 class="concierge-title">Dedicated Concierge</h4>
+                    <p class="concierge-text">Priority assistance for your executive orders.</p>
+                </div>
+            }
+        }
+    }
+</div>
+
+<!-- Pagination -->
+@if (Model.TotalPages > 1)
+{
+    <nav aria-label="Page navigation" class="mt-4">
+        <ul class="pagination pagination-custom justify-content-center">
+            <li class="page-item @(!Model.HasPreviousPage ? "disabled" : "")">
+                <a class="page-link" asp-action="Index" 
+                   asp-route-page="@(Model.CurrentPage - 1)"
+                   asp-route-statusFilter="@Model.StatusFilter"
+                   asp-route-searchQuery="@Model.SearchQuery"
+                   asp-route-paymentStatusFilter="@Model.PaymentStatusFilter">Previous</a>
+            </li>
+            @for (int i = 1; i <= Model.TotalPages; i++)
+            {
+                <li class="page-item @(i == Model.CurrentPage ? "active" : "")">
+                    <a class="page-link" asp-action="Index" asp-route-page="@i"
+                       asp-route-statusFilter="@Model.StatusFilter"
+                       asp-route-searchQuery="@Model.SearchQuery"
+                       asp-route-paymentStatusFilter="@Model.PaymentStatusFilter">@i</a>
+                </li>
+            }
+            <li class="page-item @(!Model.HasNextPage ? "disabled" : "")">
+                <a class="page-link" asp-action="Index" 
+                   asp-route-page="@(Model.CurrentPage + 1)"
+                   asp-route-statusFilter="@Model.StatusFilter"
+                   asp-route-searchQuery="@Model.SearchQuery"
+                   asp-route-paymentStatusFilter="@Model.PaymentStatusFilter">Next</a>
+            </li>
+        </ul>
+    </nav>
+}

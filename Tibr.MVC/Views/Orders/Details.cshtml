@@ -1,0 +1,265 @@
+@model Tibr.MVC.Models.Orders.OrderDetailsViewModel
+@{
+    ViewData["Title"] = $"Order Details - {Model.OrderNumber}";
+    
+    // Milestones status helpers
+    var isPending = Model.OrderStatus == "Pending";
+    var isProcessing = Model.OrderStatus == "Processing";
+    var isShipped = Model.OrderStatus == "Shipped";
+    var isDelivered = Model.OrderStatus == "Delivered";
+    var isCancelled = Model.OrderStatus == "Cancelled";
+
+    // Establish milestone numbers for timeline mockup
+    int stepCode = 1; // Ordered
+    if (isProcessing) stepCode = 2; // Processing
+    else if (isShipped) stepCode = 3; // In Transit
+    else if (isDelivered) stepCode = 4; // Delivered
+    else if (isCancelled) stepCode = 0; // Cancelled
+}
+
+<!-- Order Timeline Progress Card -->
+@if (stepCode > 0)
+{
+    <div class="executive-card accent-top shadow-sm py-4 px-2 text-center mb-4">
+        <div class="executive-timeline">
+            <!-- Ordered Step -->
+            <div class="timeline-step-custom @(stepCode >= 1 ? "completed" : "")">
+                <div class="timeline-node-custom">
+                    @if (stepCode >= 1) { <i class="bi bi-check-lg" style="font-size: 0.9rem;"></i> } else { <span>1</span> }
+                </div>
+                <div class="timeline-text-custom">Ordered</div>
+            </div>
+            
+            <!-- Processing Step -->
+            <div class="timeline-step-custom @(stepCode >= 2 ? "completed" : "")">
+                <div class="timeline-node-custom">
+                    @if (stepCode >= 2) { <i class="bi bi-check-lg" style="font-size: 0.9rem;"></i> } else { <span>2</span> }
+                </div>
+                <div class="timeline-text-custom">Processing</div>
+            </div>
+            
+            <!-- In Transit Step -->
+            <div class="timeline-step-custom @(stepCode >= 3 ? (stepCode == 3 ? "active" : "completed") : "")">
+                <div class="timeline-node-custom">
+                    @if (stepCode > 3) { <i class="bi bi-check-lg" style="font-size: 0.9rem;"></i> }
+                    else if (stepCode == 3) { <i class="bi bi-truck" style="font-size: 0.9rem;"></i> }
+                    else { <span>3</span> }
+                </div>
+                <div class="timeline-text-custom">In Transit</div>
+            </div>
+            
+            <!-- Delivered Step -->
+            <div class="timeline-step-custom @(stepCode >= 4 ? "completed" : "")">
+                <div class="timeline-node-custom">
+                    @if (stepCode >= 4) { <i class="bi bi-check-lg" style="font-size: 0.9rem;"></i> } else { <i class="bi bi-box-seam" style="font-size: 0.85rem;"></i> }
+                </div>
+                <div class="timeline-text-custom">Delivered</div>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <div class="executive-card shadow-sm bg-danger-subtle border-danger text-danger p-3 mb-4 d-flex align-items-center gap-3" style="background-color: #fef2f2;">
+        <i class="bi bi-x-octagon-fill fs-4"></i>
+        <div>
+            <h6 class="fw-bold mb-0">Acquisition Cancelled</h6>
+            <p class="mb-0 text-muted" style="font-size: 0.8rem;">This order was marked as Cancelled & Refunded.</p>
+        </div>
+    </div>
+}
+
+<!-- Item Breakdown Card -->
+<div class="executive-card shadow-sm p-4 mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0 text-dark" style="font-size: 1.15rem; font-weight: 700;">Item Breakdown</h4>
+        <span class="pill-badge badge-grey-light">@Model.Items.Sum(i => i.Quantity) ITEMS</span>
+    </div>
+    
+    <div class="item-list-container">
+        @{
+            int index = 0;
+        }
+        @foreach (var item in Model.Items)
+        {
+            index++;
+            // Mock premium product image links
+            var imgUrl = "https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=150&auto=format&fit=crop"; // Chronos
+            var categorySubText = "Premium Wristwear";
+            
+            if (index == 2)
+            {
+                imgUrl = "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=150&auto=format&fit=crop"; // Aura Headphones
+                categorySubText = "Audio Gear";
+            }
+            else if (index >= 3)
+            {
+                imgUrl = "https://images.unsplash.com/photo-1583394838336-acd977736f90?q=80&w=150&auto=format&fit=crop"; // Office
+                categorySubText = "Office Essentials";
+            }
+
+            <div class="item-list-row">
+                <img src="@imgUrl" class="item-thumbnail" alt="Product Thumbnail" />
+                <div class="flex-grow-1">
+                    <h5 class="mb-1 text-dark" style="font-size: 0.95rem; font-weight: 700; line-height: 1.2;">@item.ProductName</h5>
+                    <span class="text-muted" style="font-size: 0.8rem;">@categorySubText • Qty: @item.Quantity</span>
+                </div>
+                <div class="item-gold-price text-end">
+                    $@item.Total.ToString("N2")
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Shipping Info Card -->
+<details class="executive-card p-4 mb-4 shadow-sm" open>
+    <summary class="accordion-summary text-dark fw-bold" style="font-size: 1rem;">
+        <span class="d-flex align-items-center gap-2"><i class="bi bi-geo-alt text-warning"></i> SHIPPING INFO</span>
+        <i class="bi bi-chevron-down text-muted" style="font-size: 0.8rem;"></i>
+    </summary>
+    <div class="mt-3 pt-3 border-top border-light">
+        <h5 class="mb-1 text-dark" style="font-size: 0.95rem; font-weight: 700;">@Model.UserFullName</h5>
+        <p class="text-muted mb-3" style="font-size: 0.85rem; line-height: 1.4;">
+            @Model.ShippingAddress
+        </p>
+        <span class="text-warning fw-bold" style="font-size: 0.8rem;">
+            <i class="bi bi-shield-check me-1"></i> Priority Express Delivery
+        </span>
+    </div>
+</details>
+
+<!-- Payment Summary Card -->
+<details class="executive-card p-4 mb-4 shadow-sm" open>
+    <summary class="accordion-summary text-dark fw-bold" style="font-size: 1rem;">
+        <span class="d-flex align-items-center gap-2"><i class="bi bi-wallet2 text-warning"></i> PAYMENT SUMMARY</span>
+        <i class="bi bi-chevron-down text-muted" style="font-size: 0.8rem;"></i>
+    </summary>
+    <div class="mt-3 pt-3 border-top border-light">
+        <div class="d-flex justify-content-between mb-2" style="font-size: 0.9rem;">
+            <span class="text-muted">Subtotal</span>
+            <span class="text-dark">$@Model.TotalAmount.ToString("N2")</span>
+        </div>
+        <div class="d-flex justify-content-between mb-2" style="font-size: 0.9rem;">
+            <span class="text-muted">Shipping</span>
+            <span class="text-dark">$45.00</span>
+        </div>
+        <div class="d-flex justify-content-between mb-3" style="font-size: 0.9rem;">
+            <span class="text-muted">Tax</span>
+            <span class="text-dark">$165.40</span>
+        </div>
+        
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <span class="fw-bold text-dark fs-5">Total</span>
+            <span class="fw-bold fs-4 text-warning" style="color: var(--accent-gold) !important;">
+                $@((Model.TotalAmount + 45.00m + 165.40m).ToString("N2"))
+            </span>
+        </div>
+        
+        <div class="p-3 d-flex justify-content-between align-items-center rounded bg-primary-subtle" style="background-color: #e0f2fe; color: #0369a1; font-weight: 700; font-size: 0.85rem; border: 1px solid rgba(3,105,161,0.1);">
+            <span><i class="bi bi-credit-card-2-front me-2"></i> Amex •••• 9002</span>
+            <span class="text-uppercase" style="letter-spacing: 0.5px;">PAID</span>
+        </div>
+    </div>
+</details>
+
+<!-- Estimated Arrival and Logs -->
+<div class="text-center mb-4">
+    <span class="text-uppercase fw-bold text-muted d-block mb-1" style="font-size: 0.65rem; letter-spacing: 1px;">Estimated Arrival</span>
+    <h5 class="text-dark mb-0" style="font-weight: 700;">Oct 24, 2023 • 2:00 PM - 5:00 PM</h5>
+</div>
+
+<!-- Logs expandable for admin audit -->
+<details class="executive-card p-3 mb-5 shadow-sm" style="border-radius: 14px;">
+    <summary class="accordion-summary text-muted fw-semibold" style="font-size: 0.85rem;">
+        <span><i class="bi bi-clock-history me-2"></i> Audit Status History Logs</span>
+        <i class="bi bi-chevron-down text-muted" style="font-size: 0.75rem;"></i>
+    </summary>
+    <div class="mt-3 pt-3 border-top border-light">
+        <div class="list-group list-group-flush" style="max-height: 200px; overflow-y: auto;">
+            @foreach (var log in Model.TrackingTimeline.Where(t => t.UpdatedTime != DateTime.MinValue).OrderByDescending(t => t.UpdatedTime))
+            {
+                <div class="list-group-item bg-transparent text-dark border-0 border-bottom border-light py-2 d-flex justify-content-between" style="font-size: 0.8rem;">
+                    <span><strong>@log.Status</strong>: @log.Description</span>
+                    <span class="text-muted">@log.UpdatedTime.ToString("MM-dd HH:mm")</span>
+                </div>
+            }
+        </div>
+    </div>
+</details>
+
+<!-- Persistent Bottom Actions Drawer Drawer -->
+<div class="row g-2 mb-4">
+    <div class="col-4">
+        <button type="button" class="btn btn-outline-gold w-100 py-3" style="font-weight: 700; font-size: 0.85rem; border-color: #cbd5e1; color: var(--text-dark);" data-bs-toggle="modal" data-bs-target="#updateStatusModal">Update</button>
+    </div>
+    <div class="col-4">
+        <button type="button" class="btn btn-outline-gold w-100 py-3" style="font-weight: 700; font-size: 0.85rem; border-color: #cbd5e1; color: var(--text-dark);" data-bs-toggle="modal" data-bs-target="#assignCourierModal">Assign</button>
+    </div>
+    <div class="col-4">
+        <a asp-action="Invoice" asp-route-id="@Model.Id" target="_blank" class="btn btn-gold w-100 py-3 d-flex align-items-center justify-content-center gap-1" style="font-weight: 700; font-size: 0.85rem;">
+            <i class="bi bi-file-earmark-text"></i> Invoice
+        </a>
+    </div>
+</div>
+
+<!-- Modal: Update Status -->
+<div class="modal fade" id="updateStatusModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content p-4 border-0" style="border-radius: 16px;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title font-bold text-dark"><i class="bi bi-sliders me-2 text-warning"></i> Process Order</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" asp-action="UpdateStatus" asp-route-id="@Model.Id">
+                <div class="modal-body py-3">
+                    <div class="mb-3">
+                        <label class="form-label text-muted text-uppercase fw-semibold" style="font-size: 0.7rem;">Advance Order Status</label>
+                        <select name="orderStatus" class="form-select executive-input w-100">
+                            <option value="Pending" selected="@(isPending ? "selected" : null)">Pending</option>
+                            <option value="Processing" selected="@(isProcessing ? "selected" : null)">Processing</option>
+                            <option value="Shipped" selected="@(isShipped ? "selected" : null)">Shipped</option>
+                            <option value="Delivered" selected="@(isDelivered ? "selected" : null)">Delivered</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label text-muted text-uppercase fw-semibold" style="font-size: 0.7rem;">Payment Status</label>
+                        <select name="paymentStatus" class="form-select executive-input w-100">
+                            <option value="Pending" selected="@(Model.PaymentStatus == "Pending" ? "selected" : null)">Pending</option>
+                            <option value="Paid" selected="@(Model.PaymentStatus == "Paid" ? "selected" : null)">Paid</option>
+                            <option value="Refunded" selected="@(Model.PaymentStatus == "Refunded" ? "selected" : null)">Refunded</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-gold">Apply Changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Modal: Assign Courier -->
+<div class="modal fade" id="assignCourierModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content p-4 border-0" style="border-radius: 16px;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title font-bold text-dark"><i class="bi bi-truck me-2 text-warning"></i> Assign Courier</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="post" asp-action="AssignDelivery" asp-route-id="@Model.Id">
+                <div class="modal-body py-3">
+                    <div class="mb-3">
+                        <label class="form-label text-muted text-uppercase fw-semibold" style="font-size: 0.7rem;">Delivery Operator Name</label>
+                        <input type="text" name="courierName" value="@Model.CourierName" class="form-control executive-input w-100" placeholder="DHL Express, FedEx..." required />
+                    </div>
+                </div>
+                <div class="modal-footer border-0 pt-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-gold">Assign Courier</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

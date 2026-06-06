@@ -1,0 +1,157 @@
+@model Tibr.MVC.Models.Users.UserDetailsViewModel
+@{
+    ViewData["Title"] = $"Member Profile - {Model.FullName}";
+    
+    // Status helper badge matching mockup: VERIFIED / PENDING / INACTIVE
+    var statusClass = "badge-pending";
+    var statusLabel = "PENDING";
+    if (Model.KycStatus == "Approved" && Model.Status == "Active")
+    {
+        statusClass = "badge-verified";
+        statusLabel = "VERIFIED";
+    }
+    else if (Model.Status == "Suspended" || Model.KycStatus == "Rejected")
+    {
+        statusClass = "badge-inactive";
+        statusLabel = "INACTIVE";
+    }
+
+    var avatarUrl = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=150&auto=format&fit=crop";
+    if (Model.FirstName.Equals("Sarah", StringComparison.OrdinalIgnoreCase) || Model.FirstName.Equals("Fatima", StringComparison.OrdinalIgnoreCase) || Model.FirstName.Equals("Aria", StringComparison.OrdinalIgnoreCase) || Model.FirstName.Equals("Elena", StringComparison.OrdinalIgnoreCase))
+    {
+        avatarUrl = "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=150&auto=format&fit=crop";
+    }
+}
+
+<div class="mb-4">
+    <a asp-action="Index" class="btn btn-outline-gold px-3 py-2" style="font-weight: 600; border-color: #cbd5e1; color: var(--text-dark);">
+        <i class="bi bi-arrow-left me-1"></i> Back to Members Directory
+    </a>
+</div>
+
+<div class="row">
+    <!-- User Profile Card -->
+    <div class="col-lg-4">
+        <div class="executive-card accent-top shadow-sm text-center py-4">
+            <div class="mb-3 position-relative d-inline-block">
+                <img src="@avatarUrl" class="rounded-circle border border-warning" alt="Avatar" style="width: 80px; height: 80px; object-fit: cover; border-width: 2px !important;" />
+            </div>
+            
+            <h3 class="mb-1 text-dark" style="font-size: 1.4rem;">@Model.FullName</h3>
+            <p class="text-muted mb-3" style="font-size: 0.8rem;">Elite Member ID: #@Model.Id</p>
+            
+            <div class="mb-4">
+                <span class="pill-badge @statusClass">@statusLabel</span>
+            </div>
+
+            <hr class="border-light my-3">
+            
+            <div class="text-start px-2">
+                <div class="mb-3">
+                    <label class="text-muted text-uppercase fw-semibold" style="font-size: 0.65rem; letter-spacing: 0.5px;">Email Address</label>
+                    <div class="text-dark fw-medium" style="font-size: 0.9rem;">@Model.Email</div>
+                </div>
+                <div class="mb-3">
+                    <label class="text-muted text-uppercase fw-semibold" style="font-size: 0.65rem; letter-spacing: 0.5px;">Phone Number</label>
+                    <div class="text-dark fw-medium" style="font-size: 0.9rem;">@Model.Phone</div>
+                </div>
+                <div class="mb-3">
+                    <label class="text-muted text-uppercase fw-semibold" style="font-size: 0.65rem; letter-spacing: 0.5px;">KYC Status</label>
+                    <div>
+                        <span class="pill-badge @($"badge-{Model.KycStatus.ToLower()}")">@Model.KycStatus</span>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="text-muted text-uppercase fw-semibold" style="font-size: 0.65rem; letter-spacing: 0.5px;">Authentication Status</label>
+                    <div>
+                        @if (Model.OtpVerified)
+                        {
+                            <span class="text-success fw-bold" style="font-size: 0.85rem;"><i class="bi bi-shield-check me-1"></i> OTP Checked</span>
+                        }
+                        else
+                        {
+                            <span class="text-danger fw-bold" style="font-size: 0.85rem;"><i class="bi bi-shield-x me-1"></i> OTP Unverified</span>
+                        }
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="text-muted text-uppercase fw-semibold" style="font-size: 0.65rem; letter-spacing: 0.5px;">Member Since</label>
+                    <div class="text-dark fw-medium" style="font-size: 0.9rem;">@Model.CreatedAt.ToString("MMMM dd, yyyy")</div>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-gold w-100 py-2">
+                    <i class="bi bi-pencil-square me-1"></i> Edit Profile Settings
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Order History Details -->
+    <div class="col-lg-8">
+        <div class="executive-card accent-top shadow-sm">
+            <h4 class="mb-4 text-dark" style="font-size: 1.15rem;"><i class="bi bi-receipt me-2 text-warning"></i> Transaction & Acquisition Records</h4>
+
+            @if (!Model.Orders.Any())
+            {
+                <div class="p-5 text-center text-muted">
+                    <i class="bi bi-cart-x display-4 mb-3 text-secondary"></i>
+                    <div>This member has not processed any transactions yet.</div>
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-custom m-0">
+                        <thead>
+                            <tr>
+                                <th>Order Ref</th>
+                                <th>Amount</th>
+                                <th>Order Status</th>
+                                <th>Payment Status</th>
+                                <th>Date</th>
+                                <th class="text-end">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var order in Model.Orders)
+                            {
+                                var formattedNum = order.OrderNumber.Contains("-") 
+                                    ? order.OrderNumber.Replace("TIBR-9821-", "TR-").Replace("TIBR-", "TR-") 
+                                    : order.OrderNumber;
+
+                                <tr>
+                                    <td>
+                                        <span class="fw-bold text-dark">#@formattedNum</span>
+                                    </td>
+                                    <td>
+                                        <span class="item-gold-price">$@order.TotalAmount.ToString("N2")</span>
+                                    </td>
+                                    <td>
+                                        <span class="pill-badge @($"badge-{order.OrderStatus.ToLower()}")">
+                                            @order.OrderStatus
+                                        </span>
+                                    </td>
+                                    <td>
+                                        <span class="pill-badge @($"badge-{order.PaymentStatus.ToLower()}")">
+                                            @order.PaymentStatus
+                                        </span>
+                                    </td>
+                                    <td class="text-muted" style="font-size: 0.85rem;">
+                                        @order.CreatedAt.ToString("yyyy-MM-dd")
+                                    </td>
+                                    <td class="text-end">
+                                        <a asp-controller="Orders" asp-action="Details" asp-route-id="@order.OrderId" class="btn btn-sm btn-outline-gold py-1 px-3" style="font-size: 0.75rem;">
+                                            Manage
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>
