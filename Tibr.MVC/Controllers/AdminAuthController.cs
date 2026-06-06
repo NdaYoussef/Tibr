@@ -29,7 +29,7 @@ namespace Tibr.MVC.Controllers
             if (!ModelState.IsValid) return View(model);
 
             var client = _httpClientFactory.CreateClient();
-            var apiBaseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:5001";
+            var apiBaseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7280";
             var loginUrl = $"{apiBaseUrl}/api/admin-login";
 
             var loginRequest = new LoginRequestData(model.Email, model.Password, model.RememberMe);

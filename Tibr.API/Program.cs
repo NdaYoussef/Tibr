@@ -10,6 +10,7 @@ using Tibr.Application.Services.PaymentServices;
 using Tibr.Infrastructure;
 using Tibr.Infrastructure.Config;
 using Tibr.Infrastructure.Services;
+using Tibr.Infrastructure.Extensions;
 
 namespace Tibr.API
 {
@@ -69,6 +70,21 @@ namespace Tibr.API
             builder.Services.AddHttpClient<IPaymobService, PaymobService>();
 
             var app = builder.Build();
+
+            // Seed database with initial data
+            try
+            {
+                app.SeedDatabase();
+            }
+            catch (Exception ex)
+            {
+                var logger = app.Services.GetRequiredService<ILogger<Program>>();
+                logger.LogError(ex, "An error occurred while seeding the database. The application may not function correctly.");
+                logger.LogWarning("Continuing with application startup despite seeding error. Please check the database configuration.");
+            }
+
+            // Use global exception handling middleware
+            app.UseGlobalExceptionHandling();
 
             if (app.Environment.IsDevelopment())
             {

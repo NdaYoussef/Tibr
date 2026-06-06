@@ -53,7 +53,7 @@ namespace Tibr.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Admins");
+                    b.ToTable("Admins", (string)null);
                 });
 
             modelBuilder.Entity("Tibr.Domain.Entities.AuditLog", b =>
@@ -91,7 +91,7 @@ namespace Tibr.Infrastructure.Migrations
 
                     b.HasIndex("AdminId");
 
-                    b.ToTable("AuditLogs");
+                    b.ToTable("AuditLogs", (string)null);
                 });
 
             modelBuilder.Entity("Tibr.Domain.Entities.Cart", b =>
@@ -118,7 +118,7 @@ namespace Tibr.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Carts");
+                    b.ToTable("Carts", (string)null);
                 });
 
             modelBuilder.Entity("Tibr.Domain.Entities.CartItem", b =>
@@ -157,7 +157,7 @@ namespace Tibr.Infrastructure.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("CartItems");
+                    b.ToTable("CartItems", (string)null);
                 });
 
             modelBuilder.Entity("Tibr.Domain.Entities.Category", b =>
@@ -183,7 +183,7 @@ namespace Tibr.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Categories");
+                    b.ToTable("Categories", (string)null);
                 });
 
             modelBuilder.Entity("Tibr.Domain.Entities.Favorite", b =>
@@ -215,7 +215,7 @@ namespace Tibr.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Favorites");
+                    b.ToTable("Favorites", (string)null);
                 });
 
             modelBuilder.Entity("Tibr.Domain.Entities.KYCDocument", b =>
@@ -271,7 +271,7 @@ namespace Tibr.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("KYCDocuments");
+                    b.ToTable("KYCDocuments", (string)null);
                 });
 
             modelBuilder.Entity("Tibr.Domain.Entities.Notification", b =>
@@ -309,7 +309,7 @@ namespace Tibr.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Notifications");
+                    b.ToTable("Notifications", (string)null);
                 });
 
             modelBuilder.Entity("Tibr.Domain.Entities.Order", b =>
@@ -352,7 +352,7 @@ namespace Tibr.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Orders");
+                    b.ToTable("Orders", (string)null);
                 });
 
             modelBuilder.Entity("Tibr.Domain.Entities.OrderItem", b =>
@@ -391,7 +391,7 @@ namespace Tibr.Infrastructure.Migrations
 
                     b.HasIndex("ProductId");
 
-                    b.ToTable("OrderItems");
+                    b.ToTable("OrderItems", (string)null);
                 });
 
             modelBuilder.Entity("Tibr.Domain.Entities.Payment", b =>
@@ -438,7 +438,7 @@ namespace Tibr.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Payments");
+                    b.ToTable("Payments", (string)null);
                 });
 
             modelBuilder.Entity("Tibr.Domain.Entities.Product", b =>
@@ -502,7 +502,7 @@ namespace Tibr.Infrastructure.Migrations
 
                     b.HasIndex("CategoryId");
 
-                    b.ToTable("Products");
+                    b.ToTable("Products", (string)null);
                 });
 
             modelBuilder.Entity("Tibr.Domain.Entities.Support", b =>
@@ -536,7 +536,7 @@ namespace Tibr.Infrastructure.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Supports");
+                    b.ToTable("Supports", (string)null);
                 });
 
             modelBuilder.Entity("Tibr.Domain.Entities.Ticket", b =>
@@ -572,7 +572,7 @@ namespace Tibr.Infrastructure.Migrations
 
                     b.HasIndex("SupportId");
 
-                    b.ToTable("Tickets");
+                    b.ToTable("Tickets", (string)null);
                 });
 
             modelBuilder.Entity("Tibr.Domain.Entities.User", b =>
@@ -631,7 +631,7 @@ namespace Tibr.Infrastructure.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Users");
+                    b.ToTable("Users", (string)null);
                 });
 
             modelBuilder.Entity("Tibr.Domain.Entities.AuditLog", b =>

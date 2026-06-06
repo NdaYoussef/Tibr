@@ -29,16 +29,16 @@ namespace Tibr.Application.Services.Auth
             var admin = await _context.Set<Admin>().FirstOrDefaultAsync(a => a.Email == request.Model.Email, cancellationToken);
 
             if (admin == null || admin.Status != "Active")
-                return new AuthResponse(false, "بيانات الدخول غير صحيحة أو الحساب غير مفعل.", "The login details are incorrect or account is inactive.");
+                return new AuthResponse(false, "The login details are incorrect or account is inactive.", "The login details are incorrect or account is inactive.");
 
             // For admin, we need to verify against the user's password
             var user = await _context.Set<User>().FirstOrDefaultAsync(u => u.Email == request.Model.Email, cancellationToken);
 
             if (user == null || !BCrypt.Net.BCrypt.Verify(request.Model.Password, user.Password))
-                return new AuthResponse(false, "بيانات الدخول غير صحيحة.", "The login details are incorrect.");
+                return new AuthResponse(false, "The login details are incorrect.", "The login details are incorrect.");
 
             if (!user.OtpVerified)
-                return new AuthResponse(false, "يرجى تفعيل الحساب أولاً عبر رمز الـ OTP.", "Please activate your account first via OTP code.");
+                return new AuthResponse(false, "Please activate your account first via OTP code.", "Please activate your account first via OTP code.");
 
             // Create admin JWT token
             var authClaims = new List<Claim>
@@ -60,7 +60,7 @@ namespace Tibr.Application.Services.Auth
 
             return new AuthResponse(
                 true,
-                "تم تسجيل الدخول بنجاح.",
+                "Admin login successful.",
                 "Admin login successful.",
                 new JwtSecurityTokenHandler().WriteToken(token),
                 token.ValidTo,
