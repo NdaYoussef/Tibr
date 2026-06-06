@@ -12,7 +12,11 @@ using Tibr.Application.Services.FavoriteServices;
 using Tibr.Application.Services.ProductServices;
 using Tibr.Application.Services.SuppoertServices;
 using Tibr.Application.Services.SupportServices;
+
 using Tibr.Application.Services.TicketServices;
+
+using Tibr.Application.Services.UserServices;
+
 using Tibr.Domain.IRepositories;
 using Tibr.Infrastructure.Contexts;
 using Tibr.Infrastructure.Queries;
@@ -58,6 +62,7 @@ namespace Tibr.Infrastructure
             services.AddScoped<ICartRepository, CartRepository>();
             services.AddScoped<ICartService, CartService>();
 
+
             services.AddScoped<ITicketRepository, TicketRepository>();
             services.AddScoped<ITicketService, TicketService>();
 
@@ -66,7 +71,13 @@ namespace Tibr.Infrastructure
             services.AddScoped<IAnalyticsService, AnalyticsService>();
 
 
+            // User
+            services.AddScoped<IUserRepository, UserRepository>();
+            services.AddScoped<IUserService, UserService>();
+
+
             return services;
         }
     }
 }
+

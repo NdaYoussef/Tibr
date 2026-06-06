@@ -1,8 +1,104 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+@{
+    ViewData["Title"] = "Dashboard Overview";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="mb-4 text-center text-md-start">
+    <span class="text-uppercase fw-bold text-muted" style="font-size: 0.75rem; letter-spacing: 1px;">Admin Center</span>
+    <h2 class="font-bold text-white mb-1" style="font-size: 1.8rem; letter-spacing: -0.5px;">Dashboard Overview</h2>
+    <p class="text-muted" style="font-size: 0.9rem;">Monitor operational analytics and quick action workflows.</p>
+</div>
+
+<!-- Metrics Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-6 col-md-3">
+        <div class="executive-card p-3 mb-0 text-center accent-top shadow-sm">
+            <div class="text-muted text-uppercase fw-semibold mb-2" style="font-size: 0.7rem; letter-spacing: 0.5px;">Acquisition Revenue</div>
+            <div class="item-gold-price fs-4">$2,205.40</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="executive-card p-3 mb-0 text-center accent-top shadow-sm">
+            <div class="text-muted text-uppercase fw-semibold mb-2" style="font-size: 0.7rem; letter-spacing: 0.5px;">Active Members</div>
+            <div class="fw-bold text-white fs-4">1,492</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="executive-card p-3 mb-0 text-center accent-top shadow-sm">
+            <div class="text-muted text-uppercase fw-semibold mb-2" style="font-size: 0.7rem; letter-spacing: 0.5px;">Pending Orders</div>
+            <div class="fw-bold text-warning fs-4">2</div>
+        </div>
+    </div>
+    <div class="col-6 col-md-3">
+        <div class="executive-card p-3 mb-0 text-center accent-top shadow-sm">
+            <div class="text-muted text-uppercase fw-semibold mb-2" style="font-size: 0.7rem; letter-spacing: 0.5px;">KYC Verifications</div>
+            <div class="fw-bold text-info fs-4">3 Pending</div>
+        </div>
+    </div>
+</div>
+
+<!-- Quick Actions Card -->
+<div class="executive-card shadow-sm p-4 mb-4">
+    <h4 class="mb-3 text-white" style="font-size: 1.1rem; font-weight: 700;"><i class="bi bi-rocket-takeoff me-2 text-warning"></i> Operational Workflows</h4>
+    <div class="row g-2">
+        <div class="col-md-4">
+            <a asp-controller="Users" asp-action="Create" class="btn btn-outline-gold w-100 py-3 d-flex align-items-center justify-content-center gap-2" style="font-size: 0.85rem; border-color: #cbd5e1; color: var(--text-dark); font-weight: 700;">
+                <i class="bi bi-person-plus-fill"></i> REGISTER NEW USER
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a asp-controller="Orders" asp-action="Index" class="btn btn-outline-gold w-100 py-3 d-flex align-items-center justify-content-center gap-2" style="font-size: 0.85rem; border-color: #cbd5e1; color: var(--text-dark); font-weight: 700;">
+                <i class="bi bi-receipt"></i> DISPATCH LOGISTICS
+            </a>
+        </div>
+        <div class="col-md-4">
+            <a asp-controller="Settings" asp-action="Index" class="btn btn-gold w-100 py-3 d-flex align-items-center justify-content-center gap-2" style="font-size: 0.85rem; font-weight: 700;">
+                <i class="bi bi-gear-fill"></i> SYSTEM CONFIG
+            </a>
+        </div>
+    </div>
+</div>
+
+<!-- Audit Modification Logs & Activity -->
+<div class="executive-card shadow-sm p-4 mb-0">
+    <h4 class="mb-3 text-white" style="font-size: 1.1rem; font-weight: 700;"><i class="bi bi-activity me-2 text-warning"></i> Real-time System Updates</h4>
+    <div class="list-group list-group-flush">
+        <div class="list-group-item bg-transparent text-dark border-0 border-bottom border-light py-3 d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-3">
+                <div class="d-flex align-items-center justify-content-center bg-success-subtle text-success rounded-circle" style="width: 38px; height: 38px; background-color: #ecfdf5;">
+                    <i class="bi bi-person-check-fill"></i>
+                </div>
+                <div>
+                    <h6 class="mb-0 text-white" style="font-weight: 700; font-size: 0.9rem;">Member KYC Approved</h6>
+                    <span class="text-muted" style="font-size: 0.75rem;">Aria Montgomery verified successfully.</span>
+                </div>
+            </div>
+            <span class="text-muted" style="font-size: 0.75rem;">2 mins ago</span>
+        </div>
+
+        <div class="list-group-item bg-transparent text-dark border-0 border-bottom border-light py-3 d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-3">
+                <div class="d-flex align-items-center justify-content-center bg-warning-subtle text-warning rounded-circle" style="width: 38px; height: 38px; background-color: #fffbeb;">
+                    <i class="bi bi-cart-fill"></i>
+                </div>
+                <div>
+                    <h6 class="mb-0 text-white" style="font-weight: 700; font-size: 0.9rem;">New Order #TR-9821</h6>
+                    <span class="text-muted" style="font-size: 0.75rem;">Marcus Sterling processed checkout of 3 items.</span>
+                </div>
+            </div>
+            <span class="text-muted" style="font-size: 0.75rem;">15 mins ago</span>
+        </div>
+
+        <div class="list-group-item bg-transparent text-dark border-0 border-bottom border-light py-3 d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center gap-3">
+                <div class="d-flex align-items-center justify-content-center bg-danger-subtle text-danger rounded-circle" style="width: 38px; height: 38px; background-color: #fef2f2;">
+                    <i class="bi bi-x-circle-fill"></i>
+                </div>
+                <div>
+                    <h6 class="mb-0 text-white" style="font-weight: 700; font-size: 0.9rem;">Transaction Cancelled</h6>
+                    <span class="text-muted" style="font-size: 0.75rem;">Order #TR-6521 flagged as refunded.</span>
+                </div>
+            </div>
+            <span class="text-muted" style="font-size: 0.75rem;">1 hour ago</span>
+        </div>
+    </div>
 </div>

@@ -18,6 +18,11 @@ namespace Tibr.MVC
                         typeof(Tibr.Application.Mappers.ProductMappingConfig).Assembly,
                         typeof(Tibr.MVC.Mapping.DashboardMappingConfig).Assembly);
 
+            builder.Services.AddHttpClient("TibrApi", client =>
+            {
+                client.BaseAddress = new Uri(builder.Configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7280/api/");
+            });
+
             var app = builder.Build();
 
             // Configure the HTTP request pipeline.
