@@ -5,12 +5,14 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 using Tibr.Application.InfrastructureContracts;
+using Tibr.Application.Services.AdminServices;
 using Tibr.Application.Services.CartServices;
 using Tibr.Application.Services.CategoryServices;
 using Tibr.Application.Services.FavoriteServices;
 using Tibr.Application.Services.ProductServices;
 using Tibr.Application.Services.SuppoertServices;
 using Tibr.Application.Services.SupportServices;
+using Tibr.Application.Services.TicketServices;
 using Tibr.Domain.IRepositories;
 using Tibr.Infrastructure.Contexts;
 using Tibr.Infrastructure.Queries;
@@ -25,6 +27,8 @@ namespace Tibr.Infrastructure
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"))
             );
+
+            services.AddMemoryCache();
 
             // Mapster
             var config = TypeAdapterConfig.GlobalSettings;
@@ -53,6 +57,14 @@ namespace Tibr.Infrastructure
 
             services.AddScoped<ICartRepository, CartRepository>();
             services.AddScoped<ICartService, CartService>();
+
+            services.AddScoped<ITicketRepository, TicketRepository>();
+            services.AddScoped<ITicketService, TicketService>();
+
+            services.AddScoped<IAdminService, AdminService>();
+
+            services.AddScoped<IAnalyticsService, AnalyticsService>();
+
 
             return services;
         }
