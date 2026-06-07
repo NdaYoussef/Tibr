@@ -1,3 +1,4 @@
+using Microsoft.EntityFrameworkCore;
 using Tibr.Application.Dtos;
 using Tibr.Domain.Entities;
 using Tibr.Domain.Enums;
@@ -24,15 +25,23 @@ namespace Tibr.Application.Services.WalletServices
 
         public async Task<Result<List<WalletBalanceDto>>> GetBalancesAsync(long userId)
         {
-            var wallets = _walletRepo.GetAll(w => w.UserId == userId).ToList();
+            var wallets = await _walletRepo.GetAll(w => w.UserId == userId)
+                .ToListAsync();
 
-            var dtos = wallets.Select(w => new WalletBalanceDto
-            {
-                WalletType = w.WalletType,
-                Balance = w.Balance,
-                ReservedBalance = w.ReservedBalance,
-                AvailableBalance = w.Balance - w.ReservedBalance
-            }).ToList();
+            var dtos = Enum.GetValues<WalletType>()
+                .Select(walletType =>
+                {
+                    var wallet = wallets.FirstOrDefault(w => w.WalletType == walletType);
+
+                    return new WalletBalanceDto
+                    {
+                        WalletType = walletType,
+                        Balance = wallet?.Balance ?? 0,
+                        ReservedBalance = wallet?.ReservedBalance ?? 0,
+                        AvailableBalance = (wallet?.Balance ?? 0) - (wallet?.ReservedBalance ?? 0)
+                    };
+                })
+                .ToList();
 
             return Result<List<WalletBalanceDto>>.Success(dtos);
         }
