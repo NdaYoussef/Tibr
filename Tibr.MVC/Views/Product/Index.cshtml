@@ -1,0 +1,298 @@
+﻿@model Tibr.MVC.Models.Products.ProductListViewModel
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Products";
+    ViewData["PageTitle"] = "Products Management";
+}
+
+<!-- ══════════════════════════════════════════════
+     PAGE HEADER
+══════════════════════════════════════════════ -->
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Products Management</h1>
+        <p class="page-sub">Manage your precious metal inventory and pricing</p>
+    </div>
+    <div class="page-header-actions">
+        <a asp-action="Inventory" class="btn-tibr btn-tibr-outline">
+            <i class="fa-solid fa-boxes-stacked"></i>
+            Inventory
+        </a>
+        <a asp-action="Create" class="btn-tibr btn-tibr-gold">
+            <i class="fa-solid fa-plus"></i>
+            Add Product
+        </a>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     QUICK STAT CARDS
+══════════════════════════════════════════════ -->
+<div class="prod-stats-strip reveal">
+    <div class="pstat-card">
+        <div class="pstat-icon"><i class="fa-solid fa-layer-group"></i></div>
+        <div>
+            <span class="pstat-label">Total Products</span>
+            <strong class="pstat-val">@Model.TotalCount</strong>
+        </div>
+    </div>
+    <div class="pstat-card">
+        <div class="pstat-icon green"><i class="fa-solid fa-circle-check"></i></div>
+        <div>
+            <span class="pstat-label">Active</span>
+            <strong class="pstat-val">@Model.TotalActive</strong>
+        </div>
+    </div>
+    <div class="pstat-card">
+        <div class="pstat-icon yellow"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <div>
+            <span class="pstat-label">Low Stock</span>
+            <strong class="pstat-val">@Model.TotalLowStock</strong>
+        </div>
+    </div>
+    <div class="pstat-card">
+        <div class="pstat-icon red"><i class="fa-solid fa-circle-xmark"></i></div>
+        <div>
+            <span class="pstat-label">Out of Stock</span>
+            <strong class="pstat-val">@Model.TotalOutOfStock</strong>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     FILTER BAR
+══════════════════════════════════════════════ -->
+<div class="filter-card reveal">
+    <form asp-action="Index" method="get" class="filter-form-row">
+
+        <!-- Search -->
+        <div class="filter-search-wrap">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" name="search" value="@Model.SearchKeyword"
+                   placeholder="Search by name or metal type..."
+                   class="filter-input filter-search" />
+        </div>
+
+        <!-- Metal Type chips -->
+        <div class="metal-chips">
+            <span class="chip-label">Metal:</span>
+            <a asp-action="Index"
+               asp-route-search="@Model.SearchKeyword"
+               asp-route-status="@Model.StatusFilter"
+               asp-route-categoryId="@Model.CategoryIdFilter"
+               class="chip @(string.IsNullOrEmpty(Model.MetalTypeFilter) ? "chip-active" : "")">All</a>
+            <a asp-action="Index"
+               asp-route-search="@Model.SearchKeyword"
+               asp-route-metalType="Gold"
+               asp-route-status="@Model.StatusFilter"
+               asp-route-categoryId="@Model.CategoryIdFilter"
+               class="chip chip-gold @(Model.MetalTypeFilter == "Gold" ? "chip-active" : "")">
+                <i class="fa-solid fa-coins"></i> Gold
+            </a>
+            <a asp-action="Index"
+               asp-route-search="@Model.SearchKeyword"
+               asp-route-metalType="Silver"
+               asp-route-status="@Model.StatusFilter"
+               asp-route-categoryId="@Model.CategoryIdFilter"
+               class="chip chip-silver @(Model.MetalTypeFilter == "Silver" ? "chip-active" : "")">
+                <i class="fa-solid fa-circle-dot"></i> Silver
+            </a>
+        </div>
+
+        <!-- Dropdowns -->
+        <select name="status" class="filter-input filter-select">
+            <option value="">All Statuses</option>
+            <option value="Active" selected="@(Model.StatusFilter == "Active" ? "selected" : "")">Active</option>
+            <option value="Inactive" selected="@(Model.StatusFilter == "Inactive" ? "selected" : "")">Inactive</option>
+        </select>
+
+        <select name="categoryId" class="filter-input filter-select">
+            <option value="">All Categories</option>
+            @foreach (var cat in Model.CategoryOptions)
+            {
+                <option value="@cat.Value"
+                        selected="@(Model.CategoryIdFilter?.ToString() == cat.Value ? "selected" : "")">
+                    @cat.Text
+                </option>
+            }
+        </select>
+
+        <select name="sortBy" class="filter-input filter-select">
+            <option value="newest"     selected="@(Model.SortBy == "newest"     ? "selected" : "")">Newest</option>
+            <option value="price_asc"  selected="@(Model.SortBy == "price_asc"  ? "selected" : "")">Price ↑</option>
+            <option value="price_desc" selected="@(Model.SortBy == "price_desc" ? "selected" : "")">Price ↓</option>
+            <option value="popularity" selected="@(Model.SortBy == "popularity" ? "selected" : "")">Popular</option>
+        </select>
+
+        <button type="submit" class="btn-tibr btn-tibr-gold btn-sm">
+            <i class="fa-solid fa-filter"></i> Filter
+        </button>
+        <a asp-action="Index" class="btn-tibr btn-tibr-outline btn-sm">
+            <i class="fa-solid fa-rotate-left"></i>
+        </a>
+    </form>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     PRODUCTS TABLE
+══════════════════════════════════════════════ -->
+<div class="table-card reveal">
+    <div class="table-card-header">
+        <h3 class="chart-title">
+            Product Catalog
+            <span class="table-count-badge">@Model.TotalCount total</span>
+        </h3>
+    </div>
+    <div class="table-responsive">
+        <table class="tibr-table product-table">
+            <thead>
+                <tr>
+                    <th style="width:50px">#</th>
+                    <th style="width:70px">Image</th>
+                    <th>Name</th>
+                    <th>Metal</th>
+                    <th>Purity</th>
+                    <th>Weight</th>
+                    <th>Buy Price</th>
+                    <th>Sell Price</th>
+                    <th>Margin</th>
+                    <th>Stock</th>
+                    <th>Status</th>
+                    <th style="width:100px">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Products.Any())
+                {
+                    <tr>
+                        <td colspan="12" class="empty-row">
+                            <i class="fa-solid fa-box-open"></i>
+                            No products found
+                        </td>
+                    </tr>
+                }
+                @{ int rowNum = (Model.PageNumber - 1) * Model.PageSize + 1; }
+                @foreach (var p in Model.Products)
+                {
+                    <tr class="table-row-anim product-row">
+                        <td class="row-num">@rowNum.ToString("D2")</td>
+                        <td>
+                            <div class="prod-thumb">
+                                @if (!string.IsNullOrEmpty(p.ImageUrl))
+                                {
+                                    <img src="@p.ImageUrl" alt="@p.Name" />
+                                }
+                                else
+                                {
+                                    <div class="prod-thumb-placeholder">
+                                        <i class="fa-solid fa-coins"></i>
+                                    </div>
+                                }
+                            </div>
+                        </td>
+                        <td>
+                            <div class="prod-name-cell">
+                                <span class="prod-name">@p.Name</span>
+                                <span class="prod-created">Added @p.CreatedAt.ToString("MMM dd, yyyy")</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="metal-badge @(p.MetalType == "Gold" ? "metal-gold" : "metal-silver")">
+                                @p.MetalType
+                            </span>
+                        </td>
+                        <td class="text-muted-sm">@p.Purity</td>
+                        <td class="text-muted-sm">@p.Weight g</td>
+                        <td class="text-muted-sm">@p.BuyPrice.ToString("N2") EGP</td>
+                        <td><strong class="price-cell">@p.SellPrice.ToString("N2") EGP</strong></td>
+                        <td>
+                            <span class="margin-badge @(p.Margin >= 10 ? "margin-good" : p.Margin >= 5 ? "margin-ok" : "margin-low")">
+                                +@p.Margin%
+                            </span>
+                        </td>
+                        <td>
+                            <div class="stock-cell">
+                                <span class="stock-num @p.StockStatusClass">@p.Stock</span>
+                                <span class="stock-bar-wrap">
+                                    <span class="stock-bar @p.StockStatusClass"
+                                          style="width: @Math.Min(100, (int)(p.Stock / 100.0 * 100))%"></span>
+                                </span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="status-badge @(p.Status == "Active" ? "badge-success" : "badge-secondary")">
+                                <span class="status-dot"></span>
+                                @p.Status
+                            </span>
+                        </td>
+                        <td>
+                            <div class="action-btns">
+                                <a asp-action="Edit" asp-route-id="@p.Id"
+                                   class="btn-icon-sm" title="Edit">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </a>
+                                <form asp-action="Delete" asp-route-id="@p.Id"
+                                      method="post" class="d-inline"
+                                      onsubmit="return confirm('Delete @Html.Raw(p.Name.Replace("'","\'"))?');">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn-icon-sm btn-icon-danger" title="Delete">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                    rowNum++;
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Pagination -->
+    @if (Model.TotalPages > 1)
+    {
+        <div class="tibr-pagination">
+            <span class="pag-info">
+                Showing @((Model.PageNumber - 1) * Model.PageSize + 1)–@Math.Min(Model.PageNumber * Model.PageSize, Model.TotalCount)
+                of @Model.TotalCount products
+            </span>
+            <div class="pag-controls">
+                @if (Model.HasPrevious)
+                {
+                    <a asp-action="Index"
+                       asp-route-pageNumber="@(Model.PageNumber - 1)"
+                       asp-route-search="@Model.SearchKeyword"
+                       asp-route-metalType="@Model.MetalTypeFilter"
+                       asp-route-status="@Model.StatusFilter"
+                       asp-route-sortBy="@Model.SortBy"
+                       class="pag-btn">
+                        <i class="fa-solid fa-chevron-left"></i>
+                    </a>
+                }
+                @for (int i = Math.Max(1, Model.PageNumber - 2);
+                         i <= Math.Min(Model.TotalPages, Model.PageNumber + 2); i++)
+                {
+                    <a asp-action="Index"
+                       asp-route-pageNumber="@i"
+                       asp-route-search="@Model.SearchKeyword"
+                       asp-route-metalType="@Model.MetalTypeFilter"
+                       asp-route-status="@Model.StatusFilter"
+                       asp-route-sortBy="@Model.SortBy"
+                       class="pag-btn @(i == Model.PageNumber ? "pag-active" : "")">@i</a>
+                }
+                @if (Model.HasNext)
+                {
+                    <a asp-action="Index"
+                       asp-route-pageNumber="@(Model.PageNumber + 1)"
+                       asp-route-search="@Model.SearchKeyword"
+                       asp-route-metalType="@Model.MetalTypeFilter"
+                       asp-route-status="@Model.StatusFilter"
+                       asp-route-sortBy="@Model.SortBy"
+                       class="pag-btn">
+                        <i class="fa-solid fa-chevron-right"></i>
+                    </a>
+                }
+            </div>
+        </div>
+    }
+</div>
