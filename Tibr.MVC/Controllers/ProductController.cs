@@ -31,45 +31,57 @@ namespace Tibr.MVC.Controllers
 
         //  GET /Product 
         public async Task<IActionResult> Index(
-            string? search = null,
-            string? metalType = null,
-            string? status = null,
-            long? categoryId = null,
-            string sortBy = "newest",
-            int pageNumber = 1,
-            int pageSize = 10)
+    string? search = null,
+    string? metalType = null,
+    string? status = null,
+    long? categoryId = null,
+    string sortBy = "newest",
+    int pageNumber = 1,
+    int pageSize = 10)
         {
-            var filterParams = new ProductFilterParams
-            {
-                SearchKeyword = search,
-                MetalType = metalType,
-                CategoryId = categoryId,
-                SortBy = sortBy,
-                PageNumber = pageNumber,
-                PageSize = pageSize,
-                IncludeOutOfStock = true    
-            };
+            var safeSortBy = sortBy == "popularity" ? "newest" : sortBy;
 
-            // Parse status filter
-            if (!string.IsNullOrEmpty(status))
+            List<ProductSummaryDto> pageItems;
+            int totalCount;
+
+            if (string.IsNullOrEmpty(status))
             {
-                if (Enum.TryParse<ProductStatus>(status, ignoreCase: true, out var ps))
-                    filterParams.Status = ps;
+                // No status filter selected — fetch Active and Inactive counts separately
+                // then combine the COUNTS, but only fetch the current page from Active
+                // (since Active is what the service defaults to anyway).
+                // Better approach: fetch both full lists once, merge, paginate in memory.
+                // This is correct because the total catalog is small (hundreds of products).
+
+                var (activeItems, _) = await FetchProducts(search, metalType, categoryId, safeSortBy, 1, 9999, ProductStatus.Active);
+                var (inactiveItems, _) = await FetchProducts(search, metalType, categoryId, safeSortBy, 1, 9999, ProductStatus.Inactive);
+
+                var merged = SortMerged([.. activeItems, .. inactiveItems], safeSortBy);
+                totalCount = merged.Count;
+
+                pageItems = merged
+                    .Skip((pageNumber - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToList();
+            }
+            else
+            {
+                var parsed = Enum.TryParse<ProductStatus>(status, ignoreCase: true, out var ps)
+                    ? ps : ProductStatus.Active;
+
+                // Status explicitly selected — let the service paginate in DB
+                var (items, total) = await FetchProducts(search, metalType, categoryId, safeSortBy, pageNumber, pageSize, parsed);
+                pageItems = items;
+                totalCount = total;
             }
 
-            var result = await _productService.GetProductsWithFiltersAsync(filterParams);
+            // ── Stats (always unfiltered) 
             var categoriesResult = await _categoryService.GetAllCategoriesAsync();
+            var (allActive, activeCount) = await FetchProducts( null, null, null, "newest", 1, 9999, ProductStatus.Active);
+            var (_, inactiveCount) = await FetchProducts(null, null, null, "newest", 1, 1, ProductStatus.Inactive);
+            int lowStock = allActive.Count(p => p.Stock > 0 && p.Stock <= 5);
+            int outOfStock = allActive.Count(p => p.Stock == 0);
 
-            if (result.IsFailure)
-            {
-                TempData["Error"] = result.ErrorMessage;
-                return View(new ProductListViewModel());
-            }
-
-            var paged = result.Data!;
-
-            // Map to row ViewModels
-            var rows = paged.Items.Select(p => new ProductRowViewModel
+            var rows = pageItems.Select(p => new ProductRowViewModel
             {
                 Id = p.Id,
                 Name = p.Name,
@@ -79,36 +91,33 @@ namespace Tibr.MVC.Controllers
                 SellPrice = p.SellPrice,
                 Status = p.Status,
                 Stock = p.Stock,
-                ImageUrl = p.ImageUrl,
+                ImageUrl = string.IsNullOrEmpty(p.ImageUrl) ? null : p.ImageUrl,
                 PopularityScore = p.PopularityScore,
                 CreatedAt = p.CreatedAt
             }).ToList();
 
-            // Quick stats from current filter results
-            var allResult = await _productService.GetAllProductsAsync(
-                new PaginationParams { PageNumber = 1, PageSize = 1000 });
-            var allItems = allResult.Data?.Items ?? [];
+            int totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
 
             var vm = new ProductListViewModel
             {
                 Products = rows,
-                PageNumber = paged.PageNumber,
-                PageSize = paged.PageSize,
-                TotalCount = paged.TotalCount,
-                TotalPages = paged.TotalPages,
-                HasPrevious = paged.HasPreviousPage,
-                HasNext = paged.HasNextPage,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+                TotalCount = totalCount,
+                TotalPages = totalPages,
+                HasPrevious = pageNumber > 1,
+                HasNext = pageNumber < totalPages,
                 SearchKeyword = search,
                 MetalTypeFilter = metalType,
                 StatusFilter = status,
                 CategoryIdFilter = categoryId,
-                SortBy = sortBy,
-                TotalActive = allItems.Count(p => p.Status == "Active"),
-                TotalLowStock = allItems.Count(p => p.Stock > 0 && p.Stock <= 5),
-                TotalOutOfStock = allItems.Count(p => p.Stock == 0),
+                SortBy = safeSortBy,
+                TotalActive = activeCount,
+                TotalLowStock = lowStock,
+                TotalOutOfStock = outOfStock,
                 CategoryOptions = categoriesResult.IsSuccess
-                    ? categoriesResult.Data!.Select(c => new SelectListItem
-                    { Value = c.Id.ToString(), Text = c.Name })
+                    ? categoriesResult.Data!.Select(c =>
+                        new SelectListItem { Value = c.Id.ToString(), Text = c.Name })
                     : []
             };
 
@@ -118,11 +127,10 @@ namespace Tibr.MVC.Controllers
         //  GET /Product/Create 
         public async Task<IActionResult> Create()
         {
-            var vm = new CreateProductViewModel
+            return View(new CreateProductViewModel
             {
                 CategoryOptions = await GetCategorySelectList()
-            };
-            return View(vm);
+            });
         }
 
         //  POST /Product/Create 
@@ -136,7 +144,6 @@ namespace Tibr.MVC.Controllers
                 return View(vm);
             }
 
-            // Validate pricing
             if (vm.SellPrice <= vm.BuyPrice)
             {
                 ModelState.AddModelError(nameof(vm.SellPrice),
@@ -147,7 +154,7 @@ namespace Tibr.MVC.Controllers
 
             var dto = new CreateProductDto
             {
-                Name = vm.Name,
+                Name = vm.Name.Trim(),
                 CategoryId = vm.CategoryId,
                 MetalType = vm.MetalType,
                 Purity = vm.Purity,
@@ -183,26 +190,49 @@ namespace Tibr.MVC.Controllers
             }
 
             var p = result.Data;
+
+            // Parse MetalType safely — fallback to Gold if unknown
+            var metalType = Enum.TryParse<MetalType>(p.MetalType, ignoreCase: true, out var mt)
+                ? mt : MetalType.Gold;
+
+            // Parse ProductStatus safely — fallback to Active if unknown
+            var productStatus = Enum.TryParse<ProductStatus>(p.Status, ignoreCase: true, out var ps)
+                ? ps : ProductStatus.Active;
+
+           
+            long categoryId = 0;
+            var categoriesResult = await _categoryService.GetAllCategoriesAsync();
+            if (categoriesResult.IsSuccess && !string.IsNullOrEmpty(p.CategoryName))
+            {
+                var match = categoriesResult.Data!
+                    .FirstOrDefault(c => c.Name.Equals(p.CategoryName,
+                        StringComparison.OrdinalIgnoreCase));
+                if (match != null) categoryId = match.Id;
+            }
+
             var vm = new EditProductViewModel
             {
                 Id = p.Id,
                 Name = p.Name,
-                CategoryId = 0,    
-                MetalType = Enum.Parse<MetalType>(p.MetalType),
+                CategoryId = categoryId,
+                MetalType = metalType,
                 Purity = p.Purity,
                 Weight = p.Weight,
                 BuyPrice = p.BuyPrice,
                 SellPrice = p.SellPrice,
-                Status = Enum.Parse<ProductStatus>(p.Status),
+                Status = productStatus,
                 Stock = p.Stock,
                 ExistingImageUrl = p.ImageUrl,
-                CategoryOptions = await GetCategorySelectList()
+                CategoryOptions = categoriesResult.IsSuccess
+                    ? categoriesResult.Data!.Select(c =>
+                        new SelectListItem { Value = c.Id.ToString(), Text = c.Name })
+                    : []
             };
 
             return View(vm);
         }
 
-        // POST /Product/Edit/5 
+        //  POST /Product/Edit/5 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(long id, EditProductViewModel vm)
@@ -221,14 +251,13 @@ namespace Tibr.MVC.Controllers
                 return View(vm);
             }
 
-            // Handle image: use new upload if provided, else keep existing
             var imageUrl = vm.ImageFile != null
                 ? await SaveImageAsync(vm.ImageFile)
                 : vm.ExistingImageUrl;
 
             var dto = new UpdateProductDto
             {
-                Name = vm.Name,
+                Name = vm.Name.Trim(),
                 CategoryId = vm.CategoryId,
                 MetalType = vm.MetalType,
                 Purity = vm.Purity,
@@ -253,7 +282,7 @@ namespace Tibr.MVC.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        // POST /Product/Delete/5 
+        //  POST /Product/Delete/5 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Delete(long id)
@@ -266,48 +295,45 @@ namespace Tibr.MVC.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        //  GET /Product/Inventory 
+        // ── GET /Product/Inventory ───────────────────────────────────
         public async Task<IActionResult> Inventory(
             string? search = null,
-            string? stockLevel = null,
+            string? stockLevel = null,  // "ok" | "low" | "out" | null = all
             string? metalType = null,
             int pageNumber = 1,
             int pageSize = 10)
         {
-            var filterParams = new ProductFilterParams
+            
+            var (activeItems, _) = await FetchProducts(
+                search, metalType, null, "newest", 1, 9999, ProductStatus.Active);
+            var (inactiveItems, _) = await FetchProducts(
+                search, metalType, null, "newest", 1, 9999, ProductStatus.Inactive);
+
+            var allItems = new List<ProductSummaryDto>();
+            allItems.AddRange(activeItems);
+            allItems.AddRange(inactiveItems);
+
+            var filtered = stockLevel switch
             {
-                SearchKeyword = search,
-                MetalType = metalType,
-                PageNumber = pageNumber,
-                PageSize = pageSize,
-                IncludeOutOfStock = true,
-                SortBy = "newest"
+                "out" => allItems.Where(p => p.Stock == 0).ToList(),
+                "low" => allItems.Where(p => p.Stock > 0 && p.Stock <= 5).ToList(),
+                "ok" => allItems.Where(p => p.Stock > 5).ToList(),
+                _ => allItems
             };
 
-            // Stock level filter
-            if (stockLevel == "out")
-            {
-                filterParams.MinPrice = null;   // no price filter
-                // We'll filter in memory after fetch for out-of-stock
-            }
+            long totalStockUnits = allItems.Sum(p => p.Stock);
+            decimal totalStockValue = allItems.Sum(p => p.Stock * p.SellPrice);
+            int lowStockCount = allItems.Count(p => p.Stock > 0 && p.Stock <= 5);
+            int outOfStockCount = allItems.Count(p => p.Stock == 0);
 
-            var result = await _productService.GetProductsWithFiltersAsync(filterParams);
+            int totalCount = filtered.Count;
+            int totalPages = (int)Math.Ceiling((double)totalCount / pageSize);
+            var pagedItems = filtered
+                .Skip((pageNumber - 1) * pageSize)
+                .Take(pageSize)
+                .ToList();
 
-            if (result.IsFailure)
-            {
-                TempData["Error"] = result.ErrorMessage;
-                return View(new InventoryViewModel());
-            }
-
-            var paged = result.Data!;
-            var items = paged.Items.ToList();
-
-            // Apply stock level filter in memory (simple, small result sets)
-            if (stockLevel == "out") items = items.Where(p => p.Stock == 0).ToList();
-            if (stockLevel == "low") items = items.Where(p => p.Stock > 0 && p.Stock <= 5).ToList();
-            if (stockLevel == "ok") items = items.Where(p => p.Stock > 5).ToList();
-
-            var rows = items.Select(p => new InventoryRowViewModel
+            var rows = pagedItems.Select(p => new InventoryRowViewModel
             {
                 Id = p.Id,
                 Name = p.Name,
@@ -316,26 +342,26 @@ namespace Tibr.MVC.Controllers
                 Stock = p.Stock,
                 SellPrice = p.SellPrice,
                 BuyPrice = p.BuyPrice,
-                ImageUrl = p.ImageUrl,
+                ImageUrl = string.IsNullOrEmpty(p.ImageUrl) ? null : p.ImageUrl,
                 Status = p.Status
             }).ToList();
 
             var vm = new InventoryViewModel
             {
                 Products = rows,
-                PageNumber = paged.PageNumber,
-                PageSize = paged.PageSize,
-                TotalCount = paged.TotalCount,
-                TotalPages = paged.TotalPages,
-                HasPrevious = paged.HasPreviousPage,
-                HasNext = paged.HasNextPage,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+                TotalCount = totalCount,
+                TotalPages = totalPages,
+                HasPrevious = pageNumber > 1,
+                HasNext = pageNumber < totalPages,
                 SearchKeyword = search,
                 StockFilter = stockLevel,
                 MetalTypeFilter = metalType,
-                TotalStockUnits = rows.Sum(r => r.Stock),
-                TotalStockValue = rows.Sum(r => r.StockValue),
-                LowStockCount = rows.Count(r => r.Stock > 0 && r.Stock <= 5),
-                OutOfStockCount = rows.Count(r => r.Stock == 0)
+                TotalStockUnits = totalStockUnits,
+                TotalStockValue = totalStockValue,
+                LowStockCount = lowStockCount,
+                OutOfStockCount = outOfStockCount
             };
 
             return View(vm);
@@ -362,29 +388,77 @@ namespace Tibr.MVC.Controllers
             return RedirectToAction(nameof(Inventory));
         }
 
-        //  Helpers 
+        // PRIVATE HELPERS
+
+        /// Calls GetProductsWithFiltersAsync with a guaranteed non-null Status.
+        /// This bypasses the service's default-to-Active behaviour.
+        /// Returns (items, totalCount).
+        private async Task<(List<ProductSummaryDto> items, int total)> FetchProducts(
+            string? search,
+            string? metalType,
+            long? categoryId,
+            string sortBy,
+            int pageNumber,
+            int pageSize,
+            ProductStatus status)
+        {
+            var filterParams = new ProductFilterParams
+            {
+                SearchKeyword = search,
+                MetalType = metalType,
+                CategoryId = categoryId,
+                SortBy = sortBy,
+                PageNumber = pageNumber,
+                PageSize = pageSize,
+                IncludeOutOfStock = true,   
+                Status = status  
+            };
+
+            var result = await _productService.GetProductsWithFiltersAsync(filterParams);
+
+            if (result.IsFailure || result.Data == null)
+                return ([], 0);
+
+            return (result.Data.Items.ToList(), result.Data.TotalCount);
+        }
+
+      
+        private static List<ProductSummaryDto> SortMerged(
+            List<ProductSummaryDto> items, string sortBy)
+        {
+            return sortBy switch
+            {
+                "price_asc" => items.OrderBy(p => p.SellPrice).ToList(),
+                "price_desc" => items.OrderByDescending(p => p.SellPrice).ToList(),
+                "weight_asc" => items.OrderBy(p => p.Weight).ToList(),
+                "weight_desc" => items.OrderByDescending(p => p.Weight).ToList(),
+                "purity_asc" => items.OrderBy(p => p.BuyPrice).ToList(),   // no Purity in SummaryDto
+                "purity_desc" => items.OrderByDescending(p => p.BuyPrice).ToList(),
+                _ => items.OrderByDescending(p => p.CreatedAt).ToList()
+            };
+        }
 
         private async Task<IEnumerable<SelectListItem>> GetCategorySelectList()
         {
             var result = await _categoryService.GetAllCategoriesAsync();
             return result.IsSuccess
-                ? result.Data!.Select(c => new SelectListItem
-                { Value = c.Id.ToString(), Text = c.Name })
+                ? result.Data!.Select(c =>
+                    new SelectListItem { Value = c.Id.ToString(), Text = c.Name })
                 : [];
         }
 
         /// Saves an uploaded image to wwwroot/images/products/ and returns the relative URL.
-        /// Returns null if no file is provided.
+        /// Returns null if no file provided or extension not allowed.
         private async Task<string?> SaveImageAsync(IFormFile? file)
         {
             if (file == null || file.Length == 0) return null;
 
-            var uploadsDir = Path.Combine(_env.WebRootPath, "images", "products");
-            Directory.CreateDirectory(uploadsDir);
-
             var ext = Path.GetExtension(file.FileName).ToLowerInvariant();
             var allowed = new[] { ".jpg", ".jpeg", ".png", ".webp" };
             if (!allowed.Contains(ext)) return null;
+
+            var uploadsDir = Path.Combine(_env.WebRootPath, "images", "products");
+            Directory.CreateDirectory(uploadsDir);
 
             var fileName = $"{Guid.NewGuid()}{ext}";
             var filePath = Path.Combine(uploadsDir, fileName);
