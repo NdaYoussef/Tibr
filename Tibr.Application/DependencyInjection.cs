@@ -6,6 +6,7 @@ using Tibr.Application.Services.AssetPriceServices;
 using Tibr.Application.Services.DeliveryServices;
 using Tibr.Application.Services.DepositServices;
 using Tibr.Application.Services.InvestmentOrderServices;
+using Tibr.Application.Services.MarketPriceService;
 using Tibr.Application.Services.OrderServices;
 using Tibr.Application.Services.PaymentServices;
 using Tibr.Application.Services.ResolutionServices;
@@ -31,6 +32,8 @@ namespace Tibr.Application
             services.AddMapster();
             services.AddFluentValidationAutoValidation()
                     .AddFluentValidationClientsideAdapters();
+
+
             return services;
         }
     }

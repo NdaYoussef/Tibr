@@ -54,6 +54,8 @@ namespace Tibr.Infrastructure
             services.AddScoped<ICartRepository, CartRepository>();
             services.AddScoped<ICartService, CartService>();
 
+            services.AddScoped<IAssetPriceRepository, AssetPriceRepository>();
+
             return services;
         }
     }

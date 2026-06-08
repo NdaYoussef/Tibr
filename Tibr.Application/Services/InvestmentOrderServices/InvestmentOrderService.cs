@@ -65,7 +65,8 @@ namespace Tibr.Application.Services.InvestmentOrderServices
                 RequestedPrice = 0,
                 CurrentPrice = currentPrice,
                 Status = OrderStatus.Pending,
-                ExpiryDate = dto.ExpiryDate
+                ExpiryDate = dto.ExpiryDate,
+                CreatedAt = DateTime.UtcNow,
             };
             await _orderRepository.AddAsync(order);
 
@@ -76,7 +77,8 @@ namespace Tibr.Application.Services.InvestmentOrderServices
                     OrderId = order.Id,
                     ConditionType = c.ConditionType,
                     Operator = c.Operator,
-                    TargetValue = c.TargetValue
+                    TargetValue = c.TargetValue,
+                    CreatedAt = DateTime.UtcNow,
                 });
             }
 

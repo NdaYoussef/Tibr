@@ -70,15 +70,22 @@ public class PaymentController : ControllerBase
         var merchantOrderId = Request.Query["merchant_order_id"].ToString();
         var status = success ? "success" : "failed";
 
-        var orderId = merchantOrderId;
         var parts = merchantOrderId.Split(':');
-        if (parts.Length >= 3 && parts[0] == "payment")
-            orderId = parts[2];
+        var entityType = parts.Length >= 1 ? parts[0] : null;
+        var entityId = parts.Length >= 3 ? parts[2] : null;
 
-        var redirectUrl = string.IsNullOrEmpty(orderId)
-            ? $"{_settings.FrontendBaseUrl}/orders?payment={status}"
-            : $"{_settings.FrontendBaseUrl}/orders/{orderId}?payment={status}";
+        var routes = new Dictionary<string, string>
+        {
+            ["payment"] = "/orders/{0}?payment={1}",
+            ["deposit"] = "/wallet?deposit={1}",
+        };
 
-        return Redirect(redirectUrl);
+        if (entityType is not null && routes.TryGetValue(entityType, out var template))
+        {
+            var path = string.Format(template, entityId ?? "", status);
+            return Redirect($"{_settings.FrontendBaseUrl}{path}");
+        }
+
+        return Redirect($"{_settings.FrontendBaseUrl}/orders?payment={status}");
     }
 }

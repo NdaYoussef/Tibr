@@ -69,7 +69,8 @@ namespace Tibr.Application.Services.WalletServices
                 Type = WalletTransactionType.Credit,
                 Amount = amount,
                 ReferenceType = referenceType,
-                ReferenceId = referenceId
+                ReferenceId = referenceId,
+                CreatedAt = DateTime.UtcNow,
             };
 
             await _walletRepo.UpdateAsync(wallet);
@@ -97,7 +98,8 @@ namespace Tibr.Application.Services.WalletServices
                 Type = WalletTransactionType.Debit,
                 Amount = amount,
                 ReferenceType = referenceType,
-                ReferenceId = referenceId
+                ReferenceId = referenceId,
+                CreatedAt = DateTime.UtcNow,
             };
 
             await _walletRepo.UpdateAsync(wallet);
@@ -125,7 +127,8 @@ namespace Tibr.Application.Services.WalletServices
                 OrderId = investmentOrderId,
                 Amount = amount,
                 Status = ReservationStatus.Active,
-                UserId = wallet.UserId
+                UserId = wallet.UserId,
+                CreatedAt = DateTime.UtcNow,
             };
 
             var transaction = new WalletTransaction
@@ -134,7 +137,8 @@ namespace Tibr.Application.Services.WalletServices
                 Type = WalletTransactionType.Reserve,
                 Amount = amount,
                 ReferenceType = ReferenceType.OrderInvestment,
-                ReferenceId = investmentOrderId
+                ReferenceId = investmentOrderId,
+                CreatedAt = DateTime.UtcNow,
             };
 
             await _walletRepo.UpdateAsync(wallet);
@@ -163,7 +167,8 @@ namespace Tibr.Application.Services.WalletServices
                 Type = WalletTransactionType.Release,
                 Amount = reservation.Amount,
                 ReferenceType = ReferenceType.OrderInvestment,
-                ReferenceId = reservation.OrderId
+                ReferenceId = reservation.OrderId,
+                CreatedAt = DateTime.UtcNow,
             };
 
             reservation.Status = ReservationStatus.Released;

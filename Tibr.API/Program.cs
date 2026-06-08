@@ -2,13 +2,14 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
+using Tibr.Application;
 using Tibr.Application.Interfaces;
 using Tibr.Application.Services.Email;
-using Tibr.Infrastructure.Contexts;
-using Tibr.Application;
+using Tibr.Application.Services.MarketPriceService;
 using Tibr.Application.Services.PaymentServices;
 using Tibr.Infrastructure;
 using Tibr.Infrastructure.Config;
+using Tibr.Infrastructure.Contexts;
 using Tibr.Infrastructure.Services;
 
 namespace Tibr.API
@@ -67,6 +68,9 @@ namespace Tibr.API
                 configuration.GetSection(PaymobSettings.SectionName)
             );
             builder.Services.AddHttpClient<IPaymentGateway, PaymobPaymentGateway>();
+
+            builder.Services.AddHttpClient<IMarketPriceService, MarketPriceService>();
+            builder.Services.AddHostedService<AssetPriceBackgroundService>();
 
             var app = builder.Build();
 

@@ -102,7 +102,8 @@ namespace Tibr.Application.Services.ResolutionServices
                 Quantity = order.Quantity,
                 ExecutedPrice = executedPrice,
                 TotalAmount = totalAmount,
-                ExecutedAt = DateTime.UtcNow
+                ExecutedAt = DateTime.UtcNow,
+                CreatedAt = DateTime.UtcNow,
             };
             await _tradeRepo.AddAsync(trade);
 
@@ -112,7 +113,8 @@ namespace Tibr.Application.Services.ResolutionServices
                 TradeId = trade.Id,
                 TransactionType = order.OrderType == OrderType.Buy ? TransactionType.Buy : TransactionType.Sell,
                 Amount = totalAmount,
-                Status = TransactionStatusEnum.Success
+                Status = TransactionStatusEnum.Success,
+                CreatedAt = DateTime.UtcNow,
             };
             await _transactionRepo.AddAsync(transaction);
 
@@ -141,7 +143,8 @@ namespace Tibr.Application.Services.ResolutionServices
                                 Type = WalletTransactionType.Credit,
                                 Amount = order.Quantity,
                                 ReferenceType = ReferenceType.Trade,
-                                ReferenceId = trade.Id
+                                ReferenceId = trade.Id,
+                                CreatedAt = DateTime.UtcNow,
                             });
                         }
                     }
@@ -161,7 +164,8 @@ namespace Tibr.Application.Services.ResolutionServices
                                 Type = WalletTransactionType.Credit,
                                 Amount = totalAmount,
                                 ReferenceType = ReferenceType.Trade,
-                                ReferenceId = trade.Id
+                                ReferenceId = trade.Id,
+                                CreatedAt = DateTime.UtcNow,
                             });
                         }
                     }
@@ -174,7 +178,8 @@ namespace Tibr.Application.Services.ResolutionServices
                         Type = WalletTransactionType.Debit,
                         Amount = order.OrderType == OrderType.Buy ? reservation.Amount : order.Quantity,
                         ReferenceType = ReferenceType.Trade,
-                        ReferenceId = trade.Id
+                        ReferenceId = trade.Id,
+                        CreatedAt = DateTime.UtcNow,
                     });
                 }
 

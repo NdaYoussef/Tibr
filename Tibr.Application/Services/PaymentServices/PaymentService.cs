@@ -49,6 +49,7 @@ public class PaymentService
             UserId = order.UserId,
             Amount = request.AmountCents / 100m,
             Status = "Pending",
+            CreatedAt = DateTime.UtcNow,
         };
 
         await _paymentRepo.AddAsync(payment);

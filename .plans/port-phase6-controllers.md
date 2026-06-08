@@ -15,30 +15,30 @@ SupportService fixes) — all already present here.
 
 All investment module files exist only in this local copy.
 
-### Phase 3: Application — 📋 needs porting
-- [ ] **DTOs** (6 files): `AddressDtos`, `AssetPriceDtos`, `DeliveryDtos`, `DepositDtos`, `TradingDtos`, `WalletDtos`
-- [ ] **Mappers** (4 files): `AddressMappingConfig`, `AssetPriceMappingConfig`, `TradingMappingConfig`, `WalletMappingConfig`
-- [ ] **Services** (8 pairs interface+impl): Address, AssetPrice, Delivery, Deposit, InvestmentOrder, Resolution, Trade, Wallet
-- [ ] **Modified DI**: register new services
-- [ ] **Modified files**: merge changes to `OrderService.cs`, `IPaymobService.cs`
+### Phase 3: Application — ✅ ALL DONE (commit `7a524fe`)
+- [x] **DTOs** (6 files): `AddressDtos`, `AssetPriceDtos`, `DeliveryDtos`, `DepositDtos`, `TradingDtos`, `WalletDtos`
+- [x] **Mappers** (4 files): `AddressMappingConfig`, `AssetPriceMappingConfig`, `TradingMappingConfig`, `WalletMappingConfig`
+- [x] **Services** (8 pairs interface+impl): Address, AssetPrice, Delivery, Deposit, InvestmentOrder, Resolution, Trade, Wallet
+- [x] **Modified DI**: register new services
+- [x] **Modified files**: merge changes to `IPaymobService.cs`, `PaymobService.cs`
 
-### Phase 4: API — 📋 needs porting
-- [ ] **7 new controllers**: AddressController, AssetPriceController, DeliveryController, DepositController, InvestmentOrderController, TradeController, WalletController
-- [ ] **Modified**: `PaymentController.cs`, `Program.cs`
+### Phase 4: API — ✅ ALL DONE (commit `7a524fe`)
+- [x] **7 new controllers**: AddressController, AssetPriceController, DeliveryController, DepositController, InvestmentOrderController, TradeController, WalletController
+- [x] **Modified**: `PaymentController.cs` (deposit callback handling)
 
-### Phase 5: Migration — pending
-- [ ] Generate fresh migration after all layers are ported
-- [ ] Apply to database (if needed)
+### Phase 5: Migration — not needed (schema unchanged in Stage 2)
 
 ---
 
 ## Decisions
-- Skip custom IRepository interfaces from Domain — our GenericRepository handles CRUD
-- Skip entity config files from Infrastructure — we configure inline in DbContext
-- Skip custom repositories — GenericRepository suffices
-- Skip NotificationService — not in our target architecture
-- Port DTOs, Mappers, Services, and Controllers fully from local copy
-- Merge changes carefully for modified files (OrderService, PaymobService, DI, Program.cs, PaymentController)
+- **No custom repository interfaces or classes** — all services use `IGenericRepository<,>` directly.
+  GenericRepository's `GetAll(Expression<Func<TEntity, bool>>)` provides the IQueryable to
+  express any query inline in the service with LINQ. Zero new Domain or Infrastructure files.
+- Skip entity config files from Infrastructure — we configure inline in DbContext.
+- Skip NotificationService — not in our target architecture.
+- Port DTOs, Mappers, Services, and Controllers fully from local copy, refactoring service
+  constructors to inject `IGenericRepository<Entity, long>` instead of custom repo types.
+- Merge changes carefully for modified files (OrderService, PaymobService, DI, Program.cs, PaymentController).
 
 ## Source paths (local copy)
 ```
