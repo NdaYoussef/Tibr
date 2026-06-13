@@ -37,6 +37,7 @@
            asp-route-reportType="sales"
            asp-route-from="@Model.FromDate?.ToString("yyyy-MM-dd")"
            asp-route-to="@Model.ToDate?.ToString("yyyy-MM-dd")"
+           data-report-type="sales"
            class="report-tab @(Model.ReportType == "sales" ? "active" : "")">
         <i class="fa-solid fa-chart-line"></i> Sales Report
     </a>
@@ -44,21 +45,25 @@
            asp-route-reportType="revenue"
            asp-route-from="@Model.FromDate?.ToString("yyyy-MM-dd")"
            asp-route-to="@Model.ToDate?.ToString("yyyy-MM-dd")"
+           data-report-type="revenue"
            class="report-tab @(Model.ReportType == "revenue" ? "active" : "")">
         <i class="fa-solid fa-coins"></i> Revenue Report
     </a>
     <a asp-action="Reports"
            asp-route-reportType="products"
+           data-report-type="products"
            class="report-tab @(Model.ReportType == "products" ? "active" : "")">
         <i class="fa-solid fa-layer-group"></i> Product Performance
     </a>
     <a asp-action="Reports"
            asp-route-reportType="customers"
+           data-report-type="customers"
            class="report-tab @(Model.ReportType == "customers" ? "active" : "")">
         <i class="fa-solid fa-users"></i> Customer Report
     </a>
     <a asp-action="Reports"
            asp-route-reportType="inventory"
+           data-report-type="inventory"
            class="report-tab @(Model.ReportType == "inventory" ? "active" : "")">
         <i class="fa-solid fa-boxes-stacked"></i> Inventory
     </a>
@@ -452,37 +457,74 @@
             });
         });
 
-        // ── Export progress animation ─────────────────────────────────
-        const exportSteps = [
-            { pct: 20,  msg: 'Gathering data...' },
-            { pct: 50,  msg: 'Processing report...' },
-            { pct: 80,  msg: 'Formatting file...' },
-            { pct: 100, msg: 'Export complete ✓' }
-        ];
+               
+        // ── Export — reads current filter state from the page ───────────
+        function getCurrentParams() {
+            // Read the active report type from the active tab
+            const activeTab = document.querySelector('.report-tab.active');
+            const reportType = activeTab?.dataset.reportType
+                ?? new URLSearchParams(window.location.search).get('reportType')
+                ?? 'sales';
+ 
+            const params = new URLSearchParams(window.location.search);
+            const from = params.get('from') ?? '';
+            const to   = params.get('to')   ?? '';
+ 
+            return { reportType, from, to };
+        }
 
-        function runExport() {
+         function runExportAnimation(callback) {
             const overlay = document.getElementById('exportOverlay');
             const fill    = document.getElementById('exportFill');
             const msg     = document.getElementById('exportMsg');
-            if (!overlay) return;
+ 
             overlay.style.display = 'flex';
-            let i = 0;
-            const tick = () => {
-                if (i >= exportSteps.length) {
-                    setTimeout(() => overlay.style.display = 'none', 800);
-                    return;
-                }
-                fill.style.width   = exportSteps[i].pct + '%';
-                msg.textContent    = exportSteps[i].msg;
-                i++;
-                setTimeout(tick, 600);
-            };
-            tick();
+            fill.style.width      = '0%';
+ 
+            const steps = [
+                { pct: 20,  ms: 300,  msg: 'Gathering data...' },
+                { pct: 50,  ms: 600,  msg: 'Processing report...' },
+                { pct: 80,  ms: 900,  msg: 'Formatting file...' },
+                { pct: 100, ms: 1200, msg: 'Download starting...' }
+            ];
+ 
+            steps.forEach(({ pct, ms, msg: m }) => {
+                setTimeout(() => {
+                    fill.style.width = pct + '%';
+                    msg.textContent  = m;
+                }, ms);
+            });
+ 
+            // Trigger the actual download after animation starts
+            setTimeout(() => {
+                callback();
+                // Close modal after a short delay so user sees "Download starting"
+                setTimeout(() => { overlay.style.display = 'none'; }, 1000);
+            }, 600);
         }
 
         // Attach to the export buttons
-        window.exportPDF   = () => runExport();
-        window.exportExcel = () => runExport();
+         function exportPDF() {
+            const { reportType, from, to } = getCurrentParams();
+            runExportAnimation(() => {
+                // Open print page in new tab — browser print dialog appears
+                const url = `/Export/Pdf?reportType=${reportType}&from=${from}&to=${to}`;
+                window.open(url, '_blank');
+            });
+        }
+ 
+        document.getElementById('exportOverlay')?.addEventListener('click', function (e) {
+            if (e.target === this) this.style.display = 'none';
+        });
+        
+        function exportExcel() {
+            const { reportType, from, to } = getCurrentParams();
+            runExportAnimation(() => {
+                // Navigate to the export endpoint — browser handles the download
+                const url = `/Export/Excel?reportType=${reportType}&from=${from}&to=${to}`;
+                window.location.href = url;
+            });
+        }
 
         document.getElementById('exportOverlay')?.addEventListener('click', function (e) {
             if (e.target === this) this.style.display = 'none';
