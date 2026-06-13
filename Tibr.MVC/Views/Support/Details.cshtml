@@ -1,0 +1,348 @@
+﻿@model Tibr.MVC.Models.Support.SupportDetailViewModel
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = $"Ticket {Model.TicketNumber}";
+    ViewData["PageTitle"] = "Ticket Details";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">
+            <span class="ticket-num-lg">@Model.TicketNumber</span>
+        </h1>
+        <p class="page-sub">@Model.Subject</p>
+    </div>
+    <div class="page-header-actions">
+        <a asp-action="Index" class="btn-tibr btn-tibr-outline">
+            <i class="fa-solid fa-arrow-left"></i>
+            All Tickets
+        </a>
+        @if (!Model.IsClosed)
+        {
+            <form asp-action="Delete" asp-route-id="@Model.Id"
+                  method="post" class="d-inline"
+                  onsubmit="return confirm('Delete this ticket permanently?');">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn-tibr btn-danger">
+                    <i class="fa-solid fa-trash-can"></i>
+                    Delete Ticket
+                </button>
+            </form>
+        }
+    </div>
+</div>
+
+<div class="ticket-detail-grid">
+
+    <!-- ══ LEFT: Conversation Thread ══ -->
+    <div class="ticket-main">
+
+        <!-- Thread header -->
+        <div class="thread-header reveal">
+            <div class="thread-subject">
+                <i class="fa-solid fa-envelope-open-text"></i>
+                <div>
+                    <h3>@Model.Subject</h3>
+                    <span>Opened by @Model.CustomerName · @Model.CreatedAt.ToString("MMM dd, yyyy")</span>
+                </div>
+            </div>
+            <span class="status-badge @Model.StatusBadgeClass">
+                <span class="status-dot"></span>
+                @Model.StatusLabel
+            </span>
+        </div>
+
+        <!-- Message thread -->
+        <div class="message-thread" id="messageThread">
+            @foreach (var msg in Model.Messages)
+            {
+                <div class="message-bubble @(msg.IsFromAdmin ? "msg-admin" : "msg-customer") reveal">
+                    <div class="msg-avatar @(msg.IsFromAdmin ? "avatar-admin" : "avatar-customer")">
+                        @msg.AvatarLetter
+                        @if (msg.IsFromAdmin)
+                        {
+                            <span class="avatar-badge-admin" title="Admin">
+                                <i class="fa-solid fa-shield-halved"></i>
+                            </span>
+                        }
+                    </div>
+                    <div class="msg-content">
+                        <div class="msg-header">
+                            <strong class="msg-sender">
+                                @msg.SenderName
+                                @if (msg.IsFromAdmin)
+                                {
+                                    <span class="admin-tag">Admin</span>
+                                }
+                            </strong>
+                            <span class="msg-time">@msg.TimeDisplay</span>
+                        </div>
+                        <div class="msg-text">@msg.Text</div>
+
+                        @if (msg.IsFromAdmin && msg.Id > 0)
+                        {
+                            <div class="msg-actions">
+                                <form asp-action="DeleteMessage"
+                                      asp-route-ticketId="@msg.Id"
+                                      asp-route-supportId="@Model.Id"
+                                      method="post"
+                                      onsubmit="return confirm('Delete this message?');">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="msg-delete-btn" title="Delete message">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+
+            @if (!Model.Messages.Any())
+            {
+                <div class="thread-empty">
+                    <i class="fa-solid fa-comments"></i>
+                    <p>No messages yet. Be the first to reply.</p>
+                </div>
+            }
+        </div>
+
+        <!-- Reply Box -->
+        @if (!Model.IsClosed)
+        {
+            <div class="reply-box reveal">
+                <div class="reply-box-header">
+                    <div class="reply-avatar avatar-admin">A</div>
+                    <strong>Admin Reply</strong>
+                </div>
+                <form asp-action="Reply" method="post" id="replyForm">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" asp-for="Reply.SupportId" />
+
+                    <div class="reply-textarea-wrap">
+                        <textarea asp-for="Reply.Message"
+                                  id="replyMessage"
+                                  class="reply-textarea"
+                                  placeholder="Type your reply to the customer..."
+                                  rows="4"
+                                  maxlength="2000"></textarea>
+                        <div class="char-counter">
+                            <span id="charCount">0</span>/2000
+                        </div>
+                    </div>
+                    <span asp-validation-for="Reply.Message" class="field-error"></span>
+
+                    <div class="reply-actions">
+                        <div class="reply-quick-btns">
+                            <button type="button" class="quick-reply-btn"
+                                    onclick="insertQuickReply('Thank you for reaching out. We are looking into your request and will get back to you shortly.')">
+                                <i class="fa-solid fa-bolt"></i> Quick: Acknowledge
+                            </button>
+                            <button type="button" class="quick-reply-btn"
+                                    onclick="insertQuickReply('Your issue has been resolved. Please let us know if you need any further assistance.')">
+                                <i class="fa-solid fa-check"></i> Quick: Resolved
+                            </button>
+                        </div>
+                        <button type="submit" class="btn-tibr btn-tibr-gold">
+                            <i class="fa-solid fa-paper-plane"></i>
+                            Send Reply
+                        </button>
+                    </div>
+                </form>
+            </div>
+        }
+        else
+        {
+            <div class="ticket-closed-notice">
+                <i class="fa-solid fa-lock"></i>
+                <p>This ticket is <strong>Closed</strong>. Reopen it to send a reply.</p>
+            </div>
+        }
+    </div>
+
+    <!-- ══ RIGHT: Ticket Info Sidebar ══ -->
+    <div class="ticket-sidebar">
+
+        <!-- Ticket Info -->
+        <div class="sidebar-card reveal">
+            <div class="sidebar-card-header">
+                <i class="fa-solid fa-circle-info"></i>
+                <h4>Ticket Info</h4>
+            </div>
+            <div class="info-rows">
+                <div class="info-row">
+                    <span class="info-label">Ticket #</span>
+                    <span class="ticket-num">@Model.TicketNumber</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Status</span>
+                    <span class="status-badge @Model.StatusBadgeClass">
+                        <span class="status-dot"></span>
+                        @Model.StatusLabel
+                    </span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Opened</span>
+                    <span class="info-val">@Model.CreatedAt.ToString("dd MMM yyyy")</span>
+                </div>
+                <div class="info-row">
+                    <span class="info-label">Replies</span>
+                    <span class="info-val">@(Model.Messages.Count - 1) admin replies</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Customer Info -->
+        <div class="sidebar-card reveal">
+            <div class="sidebar-card-header">
+                <i class="fa-solid fa-user"></i>
+                <h4>Customer</h4>
+            </div>
+            <div class="customer-info-card">
+                <div class="cust-avatar-lg">@Model.CustomerName.FirstOrDefault()</div>
+                <div>
+                    <strong class="cust-name">@Model.CustomerName</strong>
+                    <span class="cust-id">ID: @Model.CustomerId</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Update Status -->
+        <div class="sidebar-card reveal">
+            <div class="sidebar-card-header">
+                <i class="fa-solid fa-arrows-rotate"></i>
+                <h4>Update Status</h4>
+            </div>
+            <form asp-action="UpdateStatus" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="SupportId" value="@Model.Id" />
+                <div class="status-picker">
+                    @foreach (var (val, lbl) in Tibr.MVC.Models.Support.SupportDetailViewModel.AvailableStatuses)
+                    {
+                        <label class="status-pick-option">
+                            <input type="radio" name="Status"
+                                   value="@GetStatusEnumValue(val)"
+                            @(Model.Status == val ? "checked" : "") />
+                            <span class="status-pick-card @GetStatusPickClass(val)">
+                                <i class="@GetStatusIcon(val)"></i>
+                                @lbl
+                            </span>
+                        </label>
+                    }
+                </div>
+                <button type="submit" class="btn-tibr btn-tibr-gold w-full mt-3">
+                    <i class="fa-solid fa-floppy-disk"></i>
+                    Save Status
+                </button>
+            </form>
+        </div>
+
+        <!-- Ticket History / Timeline -->
+        <div class="sidebar-card reveal">
+            <div class="sidebar-card-header">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+                <h4>Activity Timeline</h4>
+            </div>
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="tl-dot tl-dot-blue"></div>
+                    <div class="tl-body">
+                        <span class="tl-event">Ticket created</span>
+                        <span class="tl-time">@Model.CreatedAt.ToString("MMM dd, yyyy")</span>
+                    </div>
+                </div>
+                @foreach (var msg in Model.Messages.Where(m => m.IsFromAdmin))
+                {
+                    <div class="timeline-item">
+                        <div class="tl-dot tl-dot-gold"></div>
+                        <div class="tl-body">
+                            <span class="tl-event">Admin replied</span>
+                            <span class="tl-time">@msg.TimeDisplay</span>
+                        </div>
+                    </div>
+                }
+                @if (Model.Status == "Resolved" || Model.Status == "Closed")
+                {
+                    <div class="timeline-item">
+                        <div class="tl-dot tl-dot-green"></div>
+                        <div class="tl-body">
+                            <span class="tl-event">Status: @Model.StatusLabel</span>
+                            <span class="tl-time">Updated</span>
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@functions {
+    string GetStatusEnumValue(string label) => label switch
+    {
+        "Open" => "1",
+        "Pending" => "2",
+        "Resolved" => "3",
+        "Closed" => "4",
+        _ => "1"
+    };
+
+    string GetStatusPickClass(string label) => label switch
+    {
+        "Open" => "pick-open",
+        "Pending" => "pick-pending",
+        "Resolved" => "pick-resolved",
+        "Closed" => "pick-closed",
+        _ => ""
+    };
+
+    string GetStatusIcon(string label) => label switch
+    {
+        "Open" => "fa-solid fa-circle-dot",
+        "Pending" => "fa-solid fa-hourglass-half",
+        "Resolved" => "fa-solid fa-circle-check",
+        "Closed" => "fa-solid fa-lock",
+        _ => "fa-solid fa-circle"
+    };
+}
+
+@section Scripts {
+    <script>
+        // ── Character counter for reply textarea ────────────────────────
+        const textarea  = document.getElementById('replyMessage');
+        const charCount = document.getElementById('charCount');
+
+        if (textarea && charCount) {
+            textarea.addEventListener('input', () => {
+                const len = textarea.value.length;
+                charCount.textContent = len;
+                charCount.style.color = len > 1800 ? 'var(--red)' : len > 1500 ? 'var(--yellow)' : 'var(--text-muted)';
+            });
+        }
+
+        // ── Quick reply inserts ─────────────────────────────────────────
+        function insertQuickReply(text) {
+            if (!textarea) return;
+            textarea.value = text;
+            textarea.dispatchEvent(new Event('input'));
+            textarea.focus();
+            // Scroll to reply box
+            textarea.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+
+        // ── Auto-scroll thread to bottom on load ───────────────────────
+        const thread = document.getElementById('messageThread');
+        if (thread) {
+            thread.scrollTop = thread.scrollHeight;
+        }
+
+        // ── Status radio picker visual feedback ────────────────────────
+        document.querySelectorAll('.status-pick-option input[type="radio"]').forEach(radio => {
+            radio.addEventListener('change', () => {
+                document.querySelectorAll('.status-pick-card').forEach(c => c.classList.remove('pick-selected'));
+                radio.nextElementSibling?.classList.add('pick-selected');
+            });
+            // Mark current on load
+            if (radio.checked) radio.nextElementSibling?.classList.add('pick-selected');
+        });
+    </script>
+}

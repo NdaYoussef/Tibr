@@ -37,6 +37,7 @@
            asp-route-reportType="sales"
            asp-route-from="@Model.FromDate?.ToString("yyyy-MM-dd")"
            asp-route-to="@Model.ToDate?.ToString("yyyy-MM-dd")"
+           data-report-type="sales"
            class="report-tab @(Model.ReportType == "sales" ? "active" : "")">
         <i class="fa-solid fa-chart-line"></i> Sales Report
     </a>
@@ -44,21 +45,25 @@
            asp-route-reportType="revenue"
            asp-route-from="@Model.FromDate?.ToString("yyyy-MM-dd")"
            asp-route-to="@Model.ToDate?.ToString("yyyy-MM-dd")"
+           data-report-type="revenue"
            class="report-tab @(Model.ReportType == "revenue" ? "active" : "")">
         <i class="fa-solid fa-coins"></i> Revenue Report
     </a>
     <a asp-action="Reports"
            asp-route-reportType="products"
+           data-report-type="products"
            class="report-tab @(Model.ReportType == "products" ? "active" : "")">
         <i class="fa-solid fa-layer-group"></i> Product Performance
     </a>
     <a asp-action="Reports"
            asp-route-reportType="customers"
+           data-report-type="customers"
            class="report-tab @(Model.ReportType == "customers" ? "active" : "")">
         <i class="fa-solid fa-users"></i> Customer Report
     </a>
     <a asp-action="Reports"
            asp-route-reportType="inventory"
+           data-report-type="inventory"
            class="report-tab @(Model.ReportType == "inventory" ? "active" : "")">
         <i class="fa-solid fa-boxes-stacked"></i> Inventory
     </a>
@@ -355,72 +360,96 @@
 
 @section Scripts {
     <script>
+        // ── Data injected by Razor ────────────────────────────────────
         const MONTH_LABELS  = @Html.Raw(monthLabels);
         const MONTH_REVENUE = @Html.Raw(monthRevenue);
         const MONTH_ORDERS  = @Html.Raw(monthOrders);
-        const GOLD = '#f2ca50', BLUE = '#3b82f6';
-        const GRID = 'rgba(255,255,255,0.06)', TEXT = '#9ca3af';
 
-        Chart.defaults.color       = TEXT;
+        // getChartColors() and registerChart() come from admin.js (top-level globals)
+
         Chart.defaults.font.family = "'Outfit', sans-serif";
 
-        // ── Header dual-axis chart ──────────────────────────────────────
-        const rCtx  = document.getElementById('reportChart').getContext('2d');
-        const rGrad = rCtx.createLinearGradient(0, 0, 0, 280);
-        rGrad.addColorStop(0, 'rgba(242,202,80,0.25)');
-        rGrad.addColorStop(1, 'rgba(242,202,80,0)');
+        // ── HEADER DUAL-AXIS CHART ────────────────────────────────────
+        let reportChart;
+        function buildReportChart() {
+            const c = getChartColors();
+            Chart.defaults.color = c.text;
+            if (reportChart) reportChart.destroy();
 
-        new Chart(rCtx, {
-            type: 'line',
-            data: {
-                labels: MONTH_LABELS,
-                datasets: [
-                    {
-                        label: 'Revenue (EGP)',
-                        data: MONTH_REVENUE,
-                        borderColor: GOLD,
-                        backgroundColor: rGrad,
-                        borderWidth: 3,
-                        fill: true,
-                        tension: 0.4,
-                        pointRadius: 4,
-                        pointBackgroundColor: GOLD,
-                        pointHoverRadius: 7,
-                        yAxisID: 'y'
-                    },
-                    {
-                        label: 'Orders',
-                        data: MONTH_ORDERS,
-                        borderColor: BLUE,
-                        backgroundColor: 'transparent',
-                        borderWidth: 2,
-                        fill: false,
-                        tension: 0.4,
-                        pointRadius: 3,
-                        pointBackgroundColor: BLUE,
-                        borderDash: [6, 3],
-                        yAxisID: 'y1'
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                interaction: { intersect: false, mode: 'index' },
-                animation: { duration: 1200, easing: 'easeInOutQuart' },
-                plugins: {
-                    legend: { display: true, position: 'top', labels: { color: TEXT, usePointStyle: true } },
-                    tooltip: { backgroundColor: '#1e1e2e', borderColor: GOLD, borderWidth: 1, padding: 12 }
+            const ctx = document.getElementById('reportChart')?.getContext('2d');
+            if (!ctx) return;
+
+            const grad = ctx.createLinearGradient(0, 0, 0, 280);
+            grad.addColorStop(0, c.goldGrad0);
+            grad.addColorStop(1, c.goldGrad1);
+
+            reportChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: MONTH_LABELS,
+                    datasets: [
+                        {
+                            label: 'Revenue (EGP)',
+                            data:  MONTH_REVENUE,
+                            borderColor: c.gold, borderWidth: 3,
+                            backgroundColor: grad, fill: true, tension: 0.4,
+                            pointRadius: 4, pointBackgroundColor: c.gold,
+                            pointHoverRadius: 7,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Orders',
+                            data:  MONTH_ORDERS,
+                            borderColor: c.blue, borderWidth: 2,
+                            backgroundColor: 'transparent',
+                            fill: false, tension: 0.4,
+                            pointRadius: 3, pointBackgroundColor: c.blue,
+                            borderDash: [6, 3],
+                            yAxisID: 'y1'
+                        }
+                    ]
                 },
-                scales: {
-                    x:  { grid: { color: GRID }, ticks: { color: TEXT } },
-                    y:  { grid: { color: GRID }, ticks: { color: TEXT, callback: v => v.toLocaleString() + ' EGP' }, position: 'left' },
-                    y1: { grid: { display: false }, ticks: { color: BLUE }, position: 'right' }
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    interaction: { intersect: false, mode: 'index' },
+                    animation: { duration: 1200, easing: 'easeInOutQuart' },
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top',
+                            labels: { color: c.text, usePointStyle: true, pointStyleWidth: 10 }
+                        },
+                        tooltip: {
+                            backgroundColor: c.tooltip,
+                            borderColor: c.gold, borderWidth: 1,
+                            padding: 12,
+                            titleColor: c.tooltipText,
+                            bodyColor:  c.tooltipText
+                        }
+                    },
+                    scales: {
+                        x: {
+                            grid: { color: c.grid },
+                            ticks: { color: c.text }
+                        },
+                        y: {
+                            grid: { color: c.grid },
+                            ticks: { color: c.text, callback: v => v.toLocaleString() + ' EGP' },
+                            position: 'left'
+                        },
+                        y1: {
+                            grid: { display: false },
+                            ticks: { color: c.blue },
+                            position: 'right'
+                        }
+                    }
                 }
-            }
-        });
+            });
+        }
+        buildReportChart();
+        registerChart('reportChart', buildReportChart);
 
-        // ── Table live search ───────────────────────────────────────────
+        // ── Table live search ─────────────────────────────────────────
         document.getElementById('tableSearch')?.addEventListener('input', function () {
             const q = this.value.toLowerCase();
             document.querySelectorAll('#dataTable tbody tr').forEach(row => {
@@ -428,35 +457,78 @@
             });
         });
 
-        // ── Export progress animation ───────────────────────────────────
-        const exportSteps = [
-            { pct: 20,  msg: 'Gathering data...' },
-            { pct: 50,  msg: 'Processing report...' },
-            { pct: 80,  msg: 'Formatting file...' },
-            { pct: 100, msg: 'Export complete ✓' }
-        ];
+               
+        // ── Export — reads current filter state from the page ───────────
+        function getCurrentParams() {
+            // Read the active report type from the active tab
+            const activeTab = document.querySelector('.report-tab.active');
+            const reportType = activeTab?.dataset.reportType
+                ?? new URLSearchParams(window.location.search).get('reportType')
+                ?? 'sales';
+ 
+            const params = new URLSearchParams(window.location.search);
+            const from = params.get('from') ?? '';
+            const to   = params.get('to')   ?? '';
+ 
+            return { reportType, from, to };
+        }
 
-        function runExport() {
+         function runExportAnimation(callback) {
             const overlay = document.getElementById('exportOverlay');
             const fill    = document.getElementById('exportFill');
             const msg     = document.getElementById('exportMsg');
+ 
             overlay.style.display = 'flex';
-            let i = 0;
-            const tick = () => {
-                if (i >= exportSteps.length) { setTimeout(() => overlay.style.display = 'none', 800); return; }
-                fill.style.width = exportSteps[i].pct + '%';
-                msg.textContent  = exportSteps[i].msg;
-                i++;
-                setTimeout(tick, 600);
-            };
-            tick();
+            fill.style.width      = '0%';
+ 
+            const steps = [
+                { pct: 20,  ms: 300,  msg: 'Gathering data...' },
+                { pct: 50,  ms: 600,  msg: 'Processing report...' },
+                { pct: 80,  ms: 900,  msg: 'Formatting file...' },
+                { pct: 100, ms: 1200, msg: 'Download starting...' }
+            ];
+ 
+            steps.forEach(({ pct, ms, msg: m }) => {
+                setTimeout(() => {
+                    fill.style.width = pct + '%';
+                    msg.textContent  = m;
+                }, ms);
+            });
+ 
+            // Trigger the actual download after animation starts
+            setTimeout(() => {
+                callback();
+                // Close modal after a short delay so user sees "Download starting"
+                setTimeout(() => { overlay.style.display = 'none'; }, 1000);
+            }, 600);
         }
 
-        function exportPDF()   { runExport(); }
-        function exportExcel() { runExport(); }
+        // Attach to the export buttons
+         function exportPDF() {
+            const { reportType, from, to } = getCurrentParams();
+            runExportAnimation(() => {
+                // Open print page in new tab — browser print dialog appears
+                const url = `/Export/Pdf?reportType=${reportType}&from=${from}&to=${to}`;
+                window.open(url, '_blank');
+            });
+        }
+ 
+        document.getElementById('exportOverlay')?.addEventListener('click', function (e) {
+            if (e.target === this) this.style.display = 'none';
+        });
+        
+        function exportExcel() {
+            const { reportType, from, to } = getCurrentParams();
+            runExportAnimation(() => {
+                // Navigate to the export endpoint — browser handles the download
+                const url = `/Export/Excel?reportType=${reportType}&from=${from}&to=${to}`;
+                window.location.href = url;
+            });
+        }
 
         document.getElementById('exportOverlay')?.addEventListener('click', function (e) {
             if (e.target === this) this.style.display = 'none';
         });
     </script>
 }
+
