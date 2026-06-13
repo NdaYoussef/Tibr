@@ -3,32 +3,35 @@ using Tibr.Application.Dtos.SupportDtos;
 using Tibr.Application.Dtos.TicketDtos;
 using Tibr.Application.Services.SupportServices;
 using Tibr.Application.Services.TicketServices;
+using Tibr.Application.Services.UserServices;
 using Tibr.MVC.Models.Support;
 
 namespace Tibr.MVC.Controllers
 {
+
     public class SupportController : Controller
     {
         private readonly ISupportService _supportService;
         private readonly ITicketService _ticketService;
+        private readonly IUserService _userService;
         private readonly ILogger<SupportController> _logger;
 
-        // Temporary hardcoded admin ID until auth team delivers session-based auth.
-        // Replace with: long adminId = GetCurrentAdminId(); from session/claims.
+        // Replace with session/claims admin ID when auth team delivers login
         private const long TEMP_ADMIN_ID = 1L;
 
         public SupportController(
             ISupportService supportService,
             ITicketService ticketService,
+            IUserService userService,
             ILogger<SupportController> logger)
         {
             _supportService = supportService;
             _ticketService = ticketService;
+            _userService = userService;
             _logger = logger;
         }
 
         //  GET /Support 
-        // Shows all tickets with stats strip, filter tabs, and search.
         public async Task<IActionResult> Index(
             string? status = null,
             string? search = null)
@@ -41,24 +44,47 @@ namespace Tibr.MVC.Controllers
                 return View(new SupportListViewModel());
             }
 
-            var all = result.Data!
+            var supports = result.Data!;
+
+            // ── Resolve customer names using existing IUserService ─
+            // GetUsersAsync(null, null, null) loads all non-deleted users.
+            // UserListItemDto.FullName = $"{FirstName} {LastName}".Trim()
+            // — computed property, already exactly what we need.
+            Dictionary<long, string> nameMap = [];
+
+            var usersResult = await _userService.GetUsersAsync(
+                searchQuery: null,
+                statusFilter: null,
+                kycStatusFilter: null);
+
+            if (usersResult.IsSuccess)
+            {
+                nameMap = usersResult.Data!
+                    .ToDictionary(u => u.Id, u => u.FullName);
+            }
+            // ─────────────────────────────────────────────────────
+
+            var all = supports
                 .Select(s => new SupportRowViewModel
                 {
                     Id = s.Id,
                     TicketNumber = $"TK-{s.Id:D4}",
                     Subject = s.Subject,
-                    // UserFullName is empty from GetAllAsync (no Include) — show ID fallback
-                    CustomerName = string.IsNullOrEmpty(s.UserFullName)
-                        ? $"Customer #{s.UserId}"
-                        : s.UserFullName,
+
+                    // Look up the full name; fall back to ID only if user not found
+                    CustomerName = nameMap.TryGetValue(s.UserId, out var name)
+                                   && !string.IsNullOrWhiteSpace(name)
+                        ? name
+                        : $"Customer #{s.UserId}",
+
                     CustomerId = s.UserId,
                     Status = s.Status.ToString(),
-                    CreatedAt = DateTime.UtcNow   // SupportResponse has no CreatedAt — see note below
+                    CreatedAt = DateTime.UtcNow   // placeholder until SupportResponse exposes CreatedAt
                 })
                 .OrderByDescending(s => s.CreatedAt)
                 .ToList();
 
-            // Apply search filter in memory (list is small — no SQL needed)
+            // Search in-memory — list is small
             if (!string.IsNullOrWhiteSpace(search))
             {
                 var q = search.ToLower();
@@ -68,7 +94,6 @@ namespace Tibr.MVC.Controllers
                     s.TicketNumber.ToLower().Contains(q)).ToList();
             }
 
-            // Quick stats
             var vm = new SupportListViewModel
             {
                 SearchKeyword = search,
@@ -87,8 +112,10 @@ namespace Tibr.MVC.Controllers
             return View(vm);
         }
 
-        //  GET /Support/Details/5 
-        // Shows the full ticket thread with all admin replies.
+        // ── GET /Support/Details/5 ────────────────────────────────
+        // GetSupportByIdAsync → GetSupportWithTicketsAsync already
+        // includes User so UserFullName is populated here without
+        // any extra call.
         public async Task<IActionResult> Details(long id)
         {
             var result = await _supportService.GetSupportByIdAsync(id);
@@ -100,38 +127,19 @@ namespace Tibr.MVC.Controllers
             }
 
             var support = result.Data;
-
-            // Build the conversation thread.
-            // Message 0 = original customer request (Subject field, no Ticket record).
-            // Messages 1..N = admin replies (Ticket records).
             var messages = new List<MessageViewModel>();
 
-            // Customer's original message
+            // Customer's original message (Support.Subject)
             messages.Add(new MessageViewModel
             {
                 Id = 0,
                 Text = support.Subject,
-                SenderName = string.IsNullOrEmpty(support.UserFullName)
+                SenderName = string.IsNullOrWhiteSpace(support.UserFullName)
                     ? $"Customer #{support.UserId}"
                     : support.UserFullName,
                 IsFromAdmin = false,
-                SentAt = DateTime.UtcNow   // SupportResponse has no CreatedAt — placeholder
+                SentAt = DateTime.UtcNow
             });
-
-            // TicketDto.CreatedAt is a string from the mapper.
-            // We parse it here. SupportResponse does not expose Tickets in the list call,
-            // but GetSupportByIdAsync uses GetSupportWithTicketsAsync which includes them.
-            // However, SupportResponse itself only has basic fields —
-            // Tickets are NOT in SupportResponse DTO. We need to access them differently.
-            // Since ISupportService.GetSupportByIdAsync returns SupportResponse (not Support entity),
-            // and SupportResponse has no Tickets collection, we can only show the subject line.
-            // The correct fix is to extend SupportResponse with a Tickets list — but we cannot
-            // change the Application layer here. So we note this limitation clearly.
-            //
-            // WORKAROUND: SupportResponse as currently defined only has:
-            //   Id, UserId, UserFullName, Subject, Status
-            // There is NO Tickets field. We show only the subject as customer message.
-            // When the team extends SupportResponse.Tickets, add them here.
 
             var vm = new SupportDetailViewModel
             {
@@ -139,7 +147,7 @@ namespace Tibr.MVC.Controllers
                 TicketNumber = $"TK-{support.Id:D4}",
                 Subject = support.Subject,
                 Status = support.Status.ToString(),
-                CustomerName = string.IsNullOrEmpty(support.UserFullName)
+                CustomerName = string.IsNullOrWhiteSpace(support.UserFullName)
                     ? $"Customer #{support.UserId}"
                     : support.UserFullName,
                 CustomerId = support.UserId,
@@ -168,13 +176,10 @@ namespace Tibr.MVC.Controllers
                 Message = model.Message.Trim()
             };
 
-            // TEMP_ADMIN_ID: replace with session-based admin ID when auth is ready
             var result = await _ticketService.ReplyToTicketAsync(dto, TEMP_ADMIN_ID);
 
             TempData[result.IsSuccess ? "Success" : "Error"] =
-                result.IsSuccess
-                    ? "Reply sent successfully."
-                    : result.ErrorMessage;
+                result.IsSuccess ? "Reply sent successfully." : result.ErrorMessage;
 
             return RedirectToAction(nameof(Details), new { id = model.SupportId });
         }
@@ -208,7 +213,7 @@ namespace Tibr.MVC.Controllers
             return RedirectToAction(nameof(Index));
         }
 
-        //  POST /Support/DeleteMessage/5 
+        //  POST /Support/DeleteMessage 
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteMessage(long ticketId, long supportId)
