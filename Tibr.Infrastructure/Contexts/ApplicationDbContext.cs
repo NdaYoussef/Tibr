@@ -54,6 +54,8 @@ namespace Tibr.Infrastructure.Contexts
         public DbSet<Alert> Alerts { get; set; }
         public DbSet<DeliveryRequest> DeliveryRequests { get; set; }
         public DbSet<Address> Addresses { get; set; }
+        public DbSet<Withdraw> Withdraws { get; set; }
+        public DbSet<Review> Reviews { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -341,6 +343,40 @@ namespace Tibr.Infrastructure.Contexts
 
             modelBuilder.Entity<DeliveryRequest>()
                 .Property(x => x.Quantity).HasPrecision(18, 4);
+
+            #endregion
+
+            #region Withdraw and Review
+
+            modelBuilder.Entity<Withdraw>()
+                .Property(w => w.Amount).HasPrecision(18, 2);
+
+            modelBuilder.Entity<Withdraw>()
+                .Property(w => w.Type)
+                .HasConversion<string>()
+                .HasMaxLength(20);
+
+            modelBuilder.Entity<Review>()
+                .HasIndex(r => new { r.OrderId, r.UserId })
+                .IsUnique();
+
+            modelBuilder.Entity<Withdraw>()
+                .HasOne(w => w.User)
+                .WithMany(u => u.Withdraws)
+                .HasForeignKey(w => w.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Review>()
+                .HasOne(r => r.Order)
+                .WithMany(o => o.Reviews)
+                .HasForeignKey(r => r.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Review>()
+                .HasOne(r => r.User)
+                .WithMany(u => u.Reviews)
+                .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
 
             #endregion
         }
