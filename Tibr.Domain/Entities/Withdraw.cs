@@ -10,5 +10,6 @@ public class Withdraw : BaseEntity<long>
     public string Number { get; set; } = string.Empty;
     public long UserId { get; set; }
 
+    public int Status { get; set; }
     public virtual User User { get; set; } = null!;
 }

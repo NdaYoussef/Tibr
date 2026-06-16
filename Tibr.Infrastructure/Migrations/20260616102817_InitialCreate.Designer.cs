@@ -12,8 +12,8 @@ using Tibr.Infrastructure.Contexts;
 namespace Tibr.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260614220745_AddWithdrawAndReview")]
-    partial class AddWithdrawAndReview
+    [Migration("20260616102817_InitialCreate")]
+    partial class InitialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

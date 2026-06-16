@@ -12,8 +12,8 @@ using Tibr.Infrastructure.Contexts;
 namespace Tibr.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260605222925_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260616120023_InitialCreate2")]
+    partial class InitialCreate2
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -856,6 +856,45 @@ namespace Tibr.Infrastructure.Migrations
                     b.ToTable("Reservations");
                 });
 
+            modelBuilder.Entity("Tibr.Domain.Entities.Review", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("Description")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<long>("OrderId")
+                        .HasColumnType("bigint");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint");
+
+                    b.Property<int>("Value")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("OrderId", "UserId")
+                        .IsUnique();
+
+                    b.ToTable("Reviews");
+                });
+
             modelBuilder.Entity("Tibr.Domain.Entities.Support", b =>
                 {
                     b.Property<long>("Id")
@@ -1154,6 +1193,53 @@ namespace Tibr.Infrastructure.Migrations
                     b.ToTable("WalletTransactions");
                 });
 
+            modelBuilder.Entity("Tibr.Domain.Entities.Withdraw", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bigint");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Number")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.Property<DateTime?>("UpdatedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<long>("UserId")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("Withdraws");
+                });
+
             modelBuilder.Entity("Tibr.Domain.Entities.Address", b =>
                 {
                     b.HasOne("Tibr.Domain.Entities.User", null)
@@ -1388,6 +1474,25 @@ namespace Tibr.Infrastructure.Migrations
                     b.Navigation("Wallet");
                 });
 
+            modelBuilder.Entity("Tibr.Domain.Entities.Review", b =>
+                {
+                    b.HasOne("Tibr.Domain.Entities.Order", "Order")
+                        .WithMany("Reviews")
+                        .HasForeignKey("OrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("Tibr.Domain.Entities.User", "User")
+                        .WithMany("Reviews")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Order");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Tibr.Domain.Entities.Support", b =>
                 {
                     b.HasOne("Tibr.Domain.Entities.User", "User")
@@ -1460,6 +1565,17 @@ namespace Tibr.Infrastructure.Migrations
                     b.Navigation("Wallet");
                 });
 
+            modelBuilder.Entity("Tibr.Domain.Entities.Withdraw", b =>
+                {
+                    b.HasOne("Tibr.Domain.Entities.User", "User")
+                        .WithMany("Withdraws")
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Tibr.Domain.Entities.Admin", b =>
                 {
                     b.Navigation("AuditLogs");
@@ -1484,6 +1600,8 @@ namespace Tibr.Infrastructure.Migrations
                     b.Navigation("OrderItems");
 
                     b.Navigation("Payments");
+
+                    b.Navigation("Reviews");
                 });
 
             modelBuilder.Entity("Tibr.Domain.Entities.OrdersInvestment", b =>
@@ -1529,9 +1647,13 @@ namespace Tibr.Infrastructure.Migrations
 
                     b.Navigation("Payments");
 
+                    b.Navigation("Reviews");
+
                     b.Navigation("SupportTickets");
 
                     b.Navigation("Wallets");
+
+                    b.Navigation("Withdraws");
                 });
 
             modelBuilder.Entity("Tibr.Domain.Entities.Wallet", b =>

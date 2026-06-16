@@ -81,20 +81,23 @@ public class ReviewService : IReviewService
         return Result.Success();
     }
 
-    public async Task<Result<List<ReviewDto>>> GetByUserIdAsync(long userId)
+    public async Task<Result<ReviewDto>> GetByUserIdAsync(long userId, long orderId)
     {
-        var reviews = _reviewRepo.GetAll(r => r.UserId == userId).ToList();
+        var review = _reviewRepo.GetAll(r => r.UserId == userId && r.OrderId == orderId)
+            .Select(r => new ReviewDto
+            {
+                Id = r.Id,
+                OrderId = r.OrderId,
+                Description = r.Description,
+                Value = r.Value,
+                CreatedAt = r.CreatedAt,
+                UpdatedAt = r.UpdatedAt,
+            })
+            .FirstOrDefault();
 
-        var dtos = reviews.Select(r => new ReviewDto
-        {
-            Id = r.Id,
-            OrderId = r.OrderId,
-            Description = r.Description,
-            Value = r.Value,
-            CreatedAt = r.CreatedAt,
-            UpdatedAt = r.UpdatedAt,
-        }).ToList();
+        if (review is null)
+            return Result<ReviewDto>.Failure("Review not found.");
 
-        return Result<List<ReviewDto>>.Success(dtos);
+        return Result<ReviewDto>.Success(review);
     }
 }

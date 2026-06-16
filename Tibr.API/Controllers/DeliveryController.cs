@@ -61,6 +61,24 @@ namespace Tibr.API.Controllers
             return Ok(result);
         }
 
+        [HttpGet("my-deliveries")]
+        public async Task<IActionResult> GetMyDeliveries()
+        {
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userIdClaim))
+                return Unauthorized();
+
+            long userId = long.Parse(userIdClaim);
+
+            var result = await _deliveryService.GetUserDeliveriesAsync(userId);
+
+            if (!result.IsSuccess)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+
         private long? GetUserId()
         {
             var claim = User.FindFirst(ClaimTypes.NameIdentifier);

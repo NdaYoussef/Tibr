@@ -1,4 +1,7 @@
 using Mapster;
+using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.EntityFrameworkCore;
+using System.Collections;
 using Tibr.Application.Dtos;
 using Tibr.Application.InfrastructureContracts;
 using Tibr.Domain.Entities;
@@ -13,28 +16,59 @@ namespace Tibr.Application.Services.OrderServices
         private readonly IGenericRepository<OrderItem, long> _orderItemRepository;
         private readonly IGenericRepository<Product, long> _productRepository;
         private readonly IOrderQueryService _orderQueryService;
+        private readonly DbContext _context;
 
         public OrderService(
             IGenericRepository<Order, long> orderRepository,
             IGenericRepository<OrderItem, long> orderItemRepository,
             IGenericRepository<Product, long> productRepository,
-            IOrderQueryService orderQueryService
+            IOrderQueryService orderQueryService,
+            DbContext context
         )
         {
             _orderRepository = orderRepository;
             _orderItemRepository = orderItemRepository;
             _productRepository = productRepository;
             _orderQueryService = orderQueryService;
+            _context = context;
         }
 
         public async Task<Result<OrderDto>> GetByIdAsync(long id)
         {
-            var order = await _orderQueryService.GetByIdWithDetailsAsync(id);
+            var order = await _context.Set<Order>()
+                .Where(o => !o.IsDeleted && o.Id == id)
+                .Include(o => o.User)
+                .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.Product)
+                .FirstOrDefaultAsync();
 
             if (order is null)
                 return Result<OrderDto>.Failure($"Order with ID {id} not found.");
 
-            return Result<OrderDto>.Success(order.Adapt<OrderDto>());
+            var dto = new OrderDto
+            {
+                Id = order.Id,
+                UserId = order.UserId,
+                UserFullName = order.User != null
+                    ? $"{order.User.FirstName} {order.User.LastName}"
+                    : string.Empty,
+
+                OrderNumber = order.OrderNumber,
+                TotalAmount = order.TotalAmount,
+                PaymentStatus = order.PaymentStatus.ToString(),
+                OrderStatus = order.OrderStatus.ToString(),
+                CreatedAt = order.CreatedAt,
+
+                Items = order.OrderItems?.Select(oi => new OrderItemDto
+                {
+                    ProductId = oi.ProductId,
+                    ProductName = oi.Product != null ? oi.Product.Name : string.Empty,
+                    Quantity = oi.Quantity,
+                    Price = oi.Price
+                }).ToList() ?? new List<OrderItemDto>()
+            };
+
+            return Result<OrderDto>.Success(dto);
         }
 
         public async Task<Result<IEnumerable<OrderDto>>> GetAllAsync()

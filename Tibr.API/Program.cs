@@ -20,36 +20,43 @@ namespace Tibr.API
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // Configure file logging
-            var logsPath = Path.Combine(AppContext.BaseDirectory, "Logs");
-            Directory.CreateDirectory(logsPath);
-
+            // ================= Logging =================
             builder.Logging.ClearProviders();
             builder.Logging.AddConsole();
-            builder.Logging.AddProvider(new FileLoggerProvider(logsPath));
 
-            builder.Services.AddCors(options =>
-            {
-                options.AddPolicy(
-                    "AllowAll",
-                    policy =>
-                    {
-                        policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
-                    }
-                );
-            });
+            // ================= Controllers =================
             builder.Services.AddControllers()
                 .AddJsonOptions(opts =>
-                    opts.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));
+                    opts.JsonSerializerOptions.Converters.Add(
+                        new System.Text.Json.Serialization.JsonStringEnumConverter()));
 
+            // ================= CORS =================
+            builder.Services.AddCors(options =>
+            {
+                options.AddPolicy("AllowAll", policy =>
+                {
+                    policy.AllowAnyOrigin()
+                          .AllowAnyHeader()
+                          .AllowAnyMethod();
+                });
+            });
+
+            // ================= Database =================
+            builder.Services.AddDbContext<ApplicationDbContext>(options =>
+                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+            builder.Services.AddScoped<DbContext>(p =>
+                p.GetRequiredService<ApplicationDbContext>());
+
+            // ================= Services =================
+            builder.Services.AddTransient<IEmailService, EmailService>();
+            builder.Services.AddHttpClient<IPaymentGateway, PaymobPaymentGateway>();
+            builder.Services.AddHttpClient<IMarketPriceService, MarketPriceService>();
+            builder.Services.AddHostedService<AssetPriceBackgroundService>();
+
+            // ================= JWT =================
             var configuration = builder.Configuration;
 
-            builder.Services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"))
-            );
-
-            builder.Services.AddScoped<DbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
-            builder.Services.AddTransient<IEmailService, EmailService>();
             builder.Services.AddAuthentication(options =>
             {
                 options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
@@ -63,41 +70,52 @@ namespace Tibr.API
                     ValidateAudience = true,
                     ValidAudience = configuration["JWT:ValidAudience"],
                     ValidIssuer = configuration["JWT:ValidIssuer"],
-                    IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(configuration["JWT:Secret"]!)),
+                    IssuerSigningKey = new SymmetricSecurityKey(
+                        Encoding.UTF8.GetBytes(configuration["JWT:Secret"]!)),
                     ValidateLifetime = true
                 };
             });
 
+            // ================= MediatR =================
             builder.Services.AddMediatR(cfg =>
-                cfg.RegisterServicesFromAssembly(typeof(Tibr.Application.Services.Auth.RegisterCommand).Assembly));
+                cfg.RegisterServicesFromAssembly(
+                    typeof(Tibr.Application.Services.Auth.RegisterCommand).Assembly));
 
             builder.Services.AddOpenApi();
 
             builder.Services.AddInfrastructure(builder.Configuration);
             builder.Services.AddApplicationServices();
 
+            // ================= Paymob =================
             builder.Services.Configure<PaymobSettings>(
-                configuration.GetSection(PaymobSettings.SectionName)
-            );
-            builder.Services.AddHttpClient<IPaymentGateway, PaymobPaymentGateway>();
-
-            builder.Services.AddHttpClient<IMarketPriceService, MarketPriceService>();
-            builder.Services.AddHostedService<AssetPriceBackgroundService>();
+                configuration.GetSection(PaymobSettings.SectionName));
 
             var app = builder.Build();
 
+            // ================= DEV ONLY =================
             if (app.Environment.IsDevelopment())
             {
                 app.MapOpenApi();
             }
 
+            // ================= MIDDLEWARE ORDER =================
+
             app.UseStaticFiles();
+
+            app.UseRouting();
+
             app.UseCors("AllowAll");
-            app.UseHttpsRedirection();
+
+            if (!app.Environment.IsDevelopment())
+            {
+                app.UseHttpsRedirection();
+            }
+
             app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllers();
+
             app.Run();
         }
     }

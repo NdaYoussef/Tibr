@@ -44,13 +44,14 @@ public class ReviewController : ControllerBase
         return Ok();
     }
 
-    [HttpGet]
-    public async Task<ActionResult<List<ReviewDto>>> GetMyReviews()
+    [HttpGet("{id:long}")]
+    [AllowAnonymous]
+    public async Task<ActionResult<ReviewDto>> GetMyReviews(long id)
     {
         var userId = GetUserId();
         if (userId is null) return Unauthorized();
 
-        var result = await _reviewService.GetByUserIdAsync(userId.Value);
+        var result = await _reviewService.GetByUserIdAsync((long)userId,id);
         return Ok(result.Data);
     }
 
