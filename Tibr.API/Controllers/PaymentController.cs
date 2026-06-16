@@ -53,7 +53,7 @@ public class PaymentController : ControllerBase
             _logger.LogWarning("Paymob callback received with invalid HMAC.");
             return Unauthorized("Invalid HMAC signature.");
         }
-
+        
         await _paymentService.HandlePaymentCallbackAsync(rawBody);
 
         return Ok();
