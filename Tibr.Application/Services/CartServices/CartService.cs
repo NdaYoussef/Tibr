@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
-using AutoMapper;
+using MapsterMapper;
 using Tibr.Application.Dtos;
 using Tibr.Domain.Entities;
 using Tibr.Domain.IRepositories;
@@ -16,7 +16,10 @@ namespace Tibr.Application.Services.CartServices
         private readonly IProductRepository _productRepository;
         private readonly IMapper _mapper;
 
-        public CartService(ICartRepository cartRepository, IProductRepository productRepository, IMapper mapper)
+        public CartService(
+            ICartRepository cartRepository,
+            IProductRepository productRepository,
+            IMapper mapper)
         {
             _cartRepository = cartRepository;
             _productRepository = productRepository;

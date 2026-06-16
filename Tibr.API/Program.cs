@@ -16,7 +16,7 @@ namespace Tibr.API
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
             builder.Services.AddCors(options =>
@@ -74,7 +74,7 @@ namespace Tibr.API
             // Seed database with initial data
             try
             {
-                app.SeedDatabase();
+               await app.SeedDatabaseAsync();
             }
             catch (Exception ex)
             {
@@ -92,9 +92,9 @@ namespace Tibr.API
             }
 
             app.UseStaticFiles();
-
             app.UseCors("AllowAll");
             app.UseHttpsRedirection();
+
             app.UseAuthentication();
             app.UseAuthorization();
 

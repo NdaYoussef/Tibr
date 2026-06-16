@@ -1,0 +1,88 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - Tibr</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/Tibr.MVC.styles.css" asp-append-version="true" />
+</head>
+<body>
+    @{
+        var controller = ViewContext.RouteData.Values["controller"]?.ToString();
+        var showBack = ViewData["ShowBack"] as bool? ?? false;
+        var headerTitle = ViewData["HeaderTitle"]?.ToString() ?? "Tibr";
+        var headerBadge = ViewData["HeaderBadge"]?.ToString();
+        
+      
+        bool isAuthPage = controller == "AdminAuth";
+    }
+
+    @if (!isAuthPage)
+    {
+        <header class="main-header shadow-sm">
+            <div class="header-container">
+                <div class="d-flex align-items-center gap-2">
+                    @if (showBack)
+                    {
+                        <a href="javascript:history.back()" class="text-dark fs-4 me-2" style="line-height: 1;"><i class="bi bi-arrow-left"></i></a>
+                    }
+                    else
+                    {
+                        <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=150&auto=format&fit=crop" class="circular-avatar me-2" alt="Profile" />
+                    }
+                    <span class="brand-title">@headerTitle</span>
+                </div>
+                
+                <div class="d-flex align-items-center gap-3">
+                    @if (!string.IsNullOrEmpty(headerBadge))
+                    {
+                        <span class="pill-badge badge-gold-light">@headerBadge</span>
+                    }
+                    <a href="#" class="text-dark position-relative" style="line-height: 1;">
+                        <i class="bi bi-bell fs-5"></i>
+                        <span class="position-absolute top-0 start-100 translate-middle p-1 bg-warning border border-light rounded-circle"></span>
+                    </a>
+                </div>
+            </div>
+        </header>
+    }
+
+    <div class="main-content-layout container mt-4">
+        <main role="main" class="pb-3">
+            @if (TempData["SuccessMessage"] != null)
+            {
+                <div class="alert alert-success alert-dismissible fade show border-0 shadow-sm p-3 mb-4 text-white" role="alert" style="background-color: var(--color-success); border-radius: 12px;">
+                    <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+            @if (TempData["ErrorMessage"] != null)
+            {
+                <div class="alert alert-danger alert-dismissible fade show border-0 shadow-sm p-3 mb-4 text-white" role="alert" style="background-color: var(--color-danger); border-radius: 12px;">
+                    <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["ErrorMessage"]
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            }
+            @RenderBody()
+        </main>
+    </div>
+
+    @if (!isAuthPage)
+    {
+        <nav class="bottom-tab-bar">
+            <a asp-controller="Home" asp-action="Index" class="tab-item @(controller == "Home" ? "active" : "")">
+                <i class="bi bi-grid-fill"></i>
+                <span>Dashboard</span>
+            </a>
+        </nav>
+    }
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

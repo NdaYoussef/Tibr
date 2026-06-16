@@ -1,0 +1,171 @@
+@model Tibr.MVC.Models.Orders.InvoiceViewModel
+@{
+    Layout = null; // Blank canvas for printing
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Invoice - @Model.InvoiceNumber</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background: #fff;
+            color: #333;
+            font-size: 14px;
+            padding: 40px;
+        }
+        .invoice-title {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: #1e1b4b;
+        }
+        .invoice-card {
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+        .table-invoice th {
+            background-color: #f8fafc;
+            border-bottom: 2px solid #cbd5e1;
+            font-weight: 700;
+            color: #475569;
+        }
+        .table-invoice td {
+            vertical-align: middle;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .text-purple {
+            color: #6366f1;
+        }
+        @@media print {
+            body {
+                padding: 0;
+            }
+            .invoice-card {
+                border: none;
+                box-shadow: none;
+                padding: 0;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+    </style>
+</head>
+<body onload="window.print()">
+
+<div class="container my-4">
+    <div class="no-print d-flex justify-content-between mb-4 pb-3 border-bottom">
+        <div>
+            <button onclick="window.print()" class="btn btn-primary px-4"><i class="bi bi-printer"></i> Print Invoice</button>
+            <button onclick="window.close()" class="btn btn-outline-secondary px-4 ms-2">Close Window</button>
+        </div>
+        <span class="text-muted align-self-center">Tibr Enterprise Billing Document</span>
+    </div>
+
+    <div class="invoice-card">
+        <!-- Logo & Header info -->
+        <div class="row align-items-center mb-5">
+            <div class="col-sm-6">
+                <div class="fw-bold text-uppercase tracking-wider text-purple fs-4 mb-2">TIBR ENTERPRISE</div>
+                <div class="text-muted">
+                    <div>@Model.CompanyAddress</div>
+                    <div>@Model.CompanyEmail | @Model.CompanyPhone</div>
+                </div>
+            </div>
+            <div class="col-sm-6 text-sm-end mt-4 mt-sm-0">
+                <span class="text-muted text-uppercase fw-semibold d-block">TAX INVOICE</span>
+                <span class="invoice-title">@Model.InvoiceNumber</span>
+            </div>
+        </div>
+
+        <hr class="my-4" style="border-color: #e2e8f0;">
+
+        <!-- Billing Dates & Customer info -->
+        <div class="row mb-5">
+            <div class="col-sm-6">
+                <span class="text-muted text-uppercase fw-semibold d-block mb-2" style="font-size: 0.8rem; letter-spacing: 0.5px;">Billed To:</span>
+                <div class="fw-bold fs-5">@Model.OrderDetails.UserFullName</div>
+                <div class="text-muted mt-1">
+                    <div>Email: @Model.OrderDetails.UserEmail</div>
+                    <div>Phone: @Model.OrderDetails.UserPhone</div>
+                    <div class="mt-2 text-dark fw-medium">
+                        <strong>Shipping Address:</strong><br>
+                        @Model.OrderDetails.ShippingAddress
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6 text-sm-end mt-4 mt-sm-0">
+                <div class="mb-3">
+                    <span class="text-muted text-uppercase fw-semibold d-block" style="font-size: 0.75rem;">Invoice Date</span>
+                    <strong class="text-dark">@Model.InvoiceDate.ToString("yyyy-MM-dd")</strong>
+                </div>
+                <div class="mb-3">
+                    <span class="text-muted text-uppercase fw-semibold d-block" style="font-size: 0.75rem;">Due Date</span>
+                    <strong class="text-dark">@Model.DueDate.ToString("yyyy-MM-dd")</strong>
+                </div>
+                <div>
+                    <span class="text-muted text-uppercase fw-semibold d-block" style="font-size: 0.75rem;">Associated Order</span>
+                    <strong class="text-purple">@Model.OrderDetails.OrderNumber</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- Invoice items breakdown -->
+        <table class="table table-invoice mb-4">
+            <thead>
+                <tr>
+                    <th>Description</th>
+                    <th class="text-center" style="width: 15%;">Unit Price</th>
+                    <th class="text-center" style="width: 15%;">Quantity</th>
+                    <th class="text-end" style="width: 20%;">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.OrderDetails.Items)
+                {
+                    <tr>
+                        <td>
+                            <div class="fw-bold">@item.ProductName</div>
+                            <span class="text-muted" style="font-size: 0.8rem;">Item ID: #@item.ProductId</span>
+                        </td>
+                        <td class="text-center">$@item.Price.ToString("N2")</td>
+                        <td class="text-center">@item.Quantity</td>
+                        <td class="text-end fw-bold text-dark">$@item.Total.ToString("N2")</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+
+        <!-- Total Calculation Area -->
+        <div class="row justify-content-end">
+            <div class="col-sm-5 text-end">
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Subtotal:</span>
+                    <span class="fw-medium">$@Model.OrderDetails.TotalAmount.ToString("N2")</span>
+                </div>
+                <div class="d-flex justify-content-between mb-2">
+                    <span class="text-muted">Tax Rate:</span>
+                    <span class="fw-medium">0.00%</span>
+                </div>
+                <hr class="my-2">
+                <div class="d-flex justify-content-between">
+                    <span class="fw-bold text-dark fs-5">Total Due:</span>
+                    <span class="fw-bold text-purple fs-5">$@Model.OrderDetails.TotalAmount.ToString("N2")</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="mt-5 pt-5 border-top text-center text-muted" style="font-size: 0.8rem;">
+            Thank you for shopping with Tibr! If you have any inquiries regarding this invoice, please email support@tibr.com.
+        </div>
+    </div>
+</div>
+
+</body>
+</html>

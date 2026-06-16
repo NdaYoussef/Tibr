@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using Tibr.Application.Dtos.ProductDto;
 
 namespace Tibr.Application.Dtos
 {
@@ -13,5 +14,6 @@ namespace Tibr.Application.Dtos
         public int Quantity { get; set; }
         public decimal UnitPrice { get; set; }
         public decimal TotalPrice => Quantity * UnitPrice;
+        public ProductDetailsDto Product { get; set; } = null!;
     }
 }

@@ -1,3 +1,4 @@
+using Mapster;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Tibr.Infrastructure;
 
@@ -12,6 +13,17 @@ namespace Tibr.MVC
             // Add services to the container.
             builder.Services.AddControllersWithViews();
             builder.Services.AddInfrastructure(builder.Configuration);
+
+            //// Add MediatR for CQRS pattern
+            //builder.Services.AddMediatR(cfg =>
+            //    cfg.RegisterServicesFromAssembly(typeof(Tibr.Application.Services.Auth.RegisterCommand).Assembly));
+
+
+            //builder.Services.AddApplicationServices();
+
+            TypeAdapterConfig.GlobalSettings.Scan(
+                        typeof(Tibr.Application.Mappers.ProductMappingConfig).Assembly,
+                        typeof(Tibr.MVC.Mapping.DashboardMappingConfig).Assembly);
 
             // Add HttpClientFactory
             builder.Services.AddHttpClient();
@@ -46,7 +58,7 @@ namespace Tibr.MVC
             app.MapStaticAssets();
             app.MapControllerRoute(
                 name: "default",
-                pattern: "{controller=Home}/{action=Index}/{id?}")
+                pattern: "{controller=AdminAuth}/{action=Login}/{id?}")
                 .WithStaticAssets();
 
             app.Run();

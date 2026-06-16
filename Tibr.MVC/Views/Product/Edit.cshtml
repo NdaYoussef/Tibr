@@ -1,0 +1,276 @@
+﻿@model Tibr.MVC.Models.Products.EditProductViewModel
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Edit Product";
+    ViewData["PageTitle"] = "Edit Product";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Edit Product</h1>
+        <p class="page-sub">Update product details, pricing, and inventory</p>
+    </div>
+    <a asp-action="Index" class="btn-tibr btn-tibr-outline">
+        <i class="fa-solid fa-arrow-left"></i>
+        Back to Products
+    </a>
+</div>
+
+<form asp-action="Edit" asp-route-id="@Model.Id"
+      method="post" enctype="multipart/form-data"
+      class="product-form reveal">
+    @Html.AntiForgeryToken()
+
+    <div class="form-grid">
+
+        <!-- ── LEFT COLUMN ── -->
+        <div class="form-col-main">
+
+            <!-- Basic Info -->
+            <div class="form-section">
+                <div class="form-section-header">
+                    <i class="fa-solid fa-tag"></i>
+                    <h3>Basic Information</h3>
+                </div>
+
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label asp-for="Name" class="form-label"></label>
+                        <input asp-for="Name" class="filter-input w-full" />
+                        <span asp-validation-for="Name" class="field-error"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="CategoryId" class="form-label"></label>
+                        <select asp-for="CategoryId" asp-items="Model.CategoryOptions"
+                                class="filter-input filter-select w-full">
+                            <option value="">-- Select Category --</option>
+                        </select>
+                        <span asp-validation-for="CategoryId" class="field-error"></span>
+                    </div>
+                </div>
+
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label asp-for="MetalType" class="form-label"></label>
+                        <div class="metal-type-picker">
+                            <label class="metal-pick-option">
+                                <input type="radio" asp-for="MetalType" value="1" />
+                                <span class="metal-pick-card gold-pick">
+                                    <i class="fa-solid fa-coins"></i> Gold
+                                </span>
+                            </label>
+                            <label class="metal-pick-option">
+                                <input type="radio" asp-for="MetalType" value="2" />
+                                <span class="metal-pick-card silver-pick">
+                                    <i class="fa-solid fa-circle-dot"></i> Silver
+                                </span>
+                            </label>
+                        </div>
+                        <span asp-validation-for="MetalType" class="field-error"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Status" class="form-label"></label>
+                        <select asp-for="Status" class="filter-input filter-select w-full">
+                            <option value="0">Active</option>
+                            <option value="1">Inactive</option>
+                        </select>
+                        <span asp-validation-for="Status" class="field-error"></span>
+                    </div>
+                </div>
+
+                <div class="form-row-2">
+                    <div class="form-group">
+                        <label asp-for="Purity" class="form-label"></label>
+                        <div class="input-with-unit">
+                            <input asp-for="Purity" type="number" step="0.001"
+                                   class="filter-input w-full" />
+                            <span class="input-unit">‰</span>
+                        </div>
+                        <span asp-validation-for="Purity" class="field-error"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Weight" class="form-label"></label>
+                        <div class="input-with-unit">
+                            <input asp-for="Weight" type="number" step="0.001"
+                                   class="filter-input w-full" />
+                            <span class="input-unit">g</span>
+                        </div>
+                        <span asp-validation-for="Weight" class="field-error"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Pricing & Stock -->
+            <div class="form-section">
+                <div class="form-section-header">
+                    <i class="fa-solid fa-coins"></i>
+                    <h3>Pricing & Stock</h3>
+                </div>
+
+                <div class="form-row-3">
+                    <div class="form-group">
+                        <label asp-for="BuyPrice" class="form-label"></label>
+                        <div class="input-with-unit">
+                            <span class="input-unit unit-left">EGP</span>
+                            <input asp-for="BuyPrice" type="number" step="0.01"
+                                   class="filter-input w-full input-has-unit-left"
+                                   id="buyPrice" />
+                        </div>
+                        <span asp-validation-for="BuyPrice" class="field-error"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="SellPrice" class="form-label"></label>
+                        <div class="input-with-unit">
+                            <span class="input-unit unit-left">EGP</span>
+                            <input asp-for="SellPrice" type="number" step="0.01"
+                                   class="filter-input w-full input-has-unit-left"
+                                   id="sellPrice" />
+                        </div>
+                        <span asp-validation-for="SellPrice" class="field-error"></span>
+                    </div>
+                    <div class="form-group">
+                        <label asp-for="Stock" class="form-label"></label>
+                        <div class="input-with-unit">
+                            <input asp-for="Stock" type="number" min="0"
+                                   class="filter-input w-full" />
+                            <span class="input-unit">units</span>
+                        </div>
+                        <span asp-validation-for="Stock" class="field-error"></span>
+                    </div>
+                </div>
+
+                <div class="margin-preview" id="marginPreview">
+                    <i class="fa-solid fa-chart-line"></i>
+                    <span>Current Margin:</span>
+                    <strong id="marginValue">—</strong>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── RIGHT COLUMN ── -->
+        <div class="form-col-side">
+
+            <!-- Image Upload -->
+            <div class="form-section">
+                <div class="form-section-header">
+                    <i class="fa-solid fa-image"></i>
+                    <h3>Product Image</h3>
+                </div>
+
+                <div class="image-upload-zone" id="imageZone">
+                    <div class="image-preview-wrap" id="previewWrap"
+                         style="display: @(!string.IsNullOrEmpty(Model.ExistingImageUrl) ? "flex" : "none")">
+                        <img id="imagePreview"
+                             src="@(Model.ExistingImageUrl ?? "#")"
+                             alt="Product Image" class="image-preview-img" />
+                        <button type="button" class="image-remove-btn" id="removeImage">
+                            <i class="fa-solid fa-xmark"></i>
+                        </button>
+                    </div>
+                    <div class="image-upload-prompt" id="uploadPrompt"
+                         style="display: @(string.IsNullOrEmpty(Model.ExistingImageUrl) ? "flex" : "none")">
+                        <i class="fa-solid fa-cloud-arrow-up upload-icon"></i>
+                        <p>Drag & drop or <span class="upload-link">click to browse</span></p>
+                        <small>JPG, PNG, WEBP — max 5MB</small>
+                    </div>
+                    <input type="file" asp-for="ImageFile" accept=".jpg,.jpeg,.png,.webp"
+                           class="file-input-hidden" id="imageInput" />
+                </div>
+
+                <!-- Hidden field to carry existing URL -->
+                <input type="hidden" asp-for="ExistingImageUrl" id="existingImageUrl" />
+            </div>
+
+            <!-- Submit -->
+            <div class="form-section">
+                <!-- Danger zone -->
+                <div class="danger-zone">
+                    <div class="danger-zone-header">
+                        <i class="fa-solid fa-triangle-exclamation"></i>
+                        Danger Zone
+                    </div>
+                    <p>Deleting this product is permanent and cannot be undone.</p>
+                    <form asp-action="Delete" asp-route-id="@Model.Id"
+                          method="post"
+                          onsubmit="return confirm('Permanently delete this product?');">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn-tibr btn-danger w-full">
+                            <i class="fa-solid fa-trash-can"></i>
+                            Delete Product
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-tibr btn-tibr-gold w-full">
+                    <i class="fa-solid fa-floppy-disk"></i>
+                    Save Changes
+                </button>
+                <a asp-action="Index" class="btn-tibr btn-tibr-outline w-full">
+                    Cancel
+                </a>
+            </div>
+        </div>
+    </div>
+</form>
+
+@section Scripts {
+    <script>
+        // ── Image upload preview ────────────────────────────────────────
+        const zone      = document.getElementById('imageZone');
+        const input     = document.getElementById('imageInput');
+        const preview   = document.getElementById('imagePreview');
+        const preWrap   = document.getElementById('previewWrap');
+        const prompt    = document.getElementById('uploadPrompt');
+        const removeBtn = document.getElementById('removeImage');
+        const hiddenUrl = document.getElementById('existingImageUrl');
+
+        zone.addEventListener('click', () => input.click());
+        zone.addEventListener('dragover', e => { e.preventDefault(); zone.classList.add('drag-over'); });
+        zone.addEventListener('dragleave', () => zone.classList.remove('drag-over'));
+        zone.addEventListener('drop', e => {
+            e.preventDefault();
+            zone.classList.remove('drag-over');
+            if (e.dataTransfer.files[0]) showPreview(e.dataTransfer.files[0]);
+        });
+        input.addEventListener('change', () => { if (input.files[0]) showPreview(input.files[0]); });
+
+        function showPreview(file) {
+            const reader = new FileReader();
+            reader.onload = e => {
+                preview.src = e.target.result;
+                preWrap.style.display = 'flex';
+                prompt.style.display  = 'none';
+            };
+            reader.readAsDataURL(file);
+        }
+
+        removeBtn.addEventListener('click', e => {
+            e.stopPropagation();
+            input.value          = '';
+            hiddenUrl.value      = '';
+            preWrap.style.display = 'none';
+            prompt.style.display  = 'flex';
+            preview.src           = '#';
+        });
+
+        // ── Live margin calculator ──────────────────────────────────────
+        const buyInput  = document.getElementById('buyPrice');
+        const sellInput = document.getElementById('sellPrice');
+        const marginVal = document.getElementById('marginValue');
+
+        function updateMargin() {
+            const buy  = parseFloat(buyInput.value)  || 0;
+            const sell = parseFloat(sellInput.value) || 0;
+            if (buy > 0 && sell > 0) {
+                const m = ((sell - buy) / buy * 100).toFixed(1);
+                marginVal.textContent = `${m >= 0 ? '+' : ''}${m}%`;
+                marginVal.style.color = m >= 0 ? 'var(--green)' : 'var(--red)';
+            }
+        }
+        buyInput.addEventListener('input', updateMargin);
+        sellInput.addEventListener('input', updateMargin);
+        updateMargin(); // run on load for existing values
+    </script>
+}
