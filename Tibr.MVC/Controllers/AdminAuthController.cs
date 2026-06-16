@@ -1,10 +1,15 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
 using Tibr.Application.Dtos;
+using Tibr.Domain.Entities;
+using Tibr.Infrastructure.Contexts;
 using Tibr.MVC.Models;
 
 namespace Tibr.MVC.Controllers
@@ -13,11 +18,12 @@ namespace Tibr.MVC.Controllers
     {
         private readonly IHttpClientFactory _httpClientFactory;
         private readonly IConfiguration _configuration;
-
-        public AdminAuthController(IHttpClientFactory httpClientFactory, IConfiguration configuration)
+        private readonly ApplicationDbContext _context;
+        public AdminAuthController(IHttpClientFactory httpClientFactory, IConfiguration configuration, ApplicationDbContext context)
         {
             _httpClientFactory = httpClientFactory;
             _configuration = configuration;
+            _context = context;
         }
 
         [HttpGet]
@@ -26,73 +32,64 @@ namespace Tibr.MVC.Controllers
         [HttpPost]
         public async Task<IActionResult> Login(LoginViewModel model)
         {
-            if (!ModelState.IsValid) return View(model);
-
-            var client = _httpClientFactory.CreateClient();
-            var apiBaseUrl = _configuration["ApiSettings:BaseUrl"] ?? "https://localhost:7280";
-            var loginUrl = $"{apiBaseUrl}/api/admin-login";
-
-            var loginRequest = new LoginRequestData(model.Email, model.Password, model.RememberMe);
-            var jsonContent = new StringContent(
-                JsonSerializer.Serialize(loginRequest),
-                Encoding.UTF8,
-                "application/json"
-            );
+            if (!ModelState.IsValid)
+                return View(model);
 
             try
             {
-                var response = await client.PostAsync(loginUrl, jsonContent);
+                var user = await _context.Set<User>()
+                    .FirstOrDefaultAsync(x => x.Email == model.Email);
 
-                if (!response.IsSuccessStatusCode)
+                if (user == null)
                 {
-                    ModelState.AddModelError("", "Invalid login credentials or you don't have admin permissions.");
+                    ModelState.AddModelError("", "Invalid email or password");
                     return View(model);
                 }
 
-                var responseString = await response.Content.ReadAsStringAsync();
-                var authResult = JsonSerializer.Deserialize<AuthResponse>(
-                    responseString,
-                    new JsonSerializerOptions { PropertyNameCaseInsensitive = true }
-                );
+                var isPasswordValid = BCrypt.Net.BCrypt.Verify(model.Password, user.Password);
 
-                if (authResult == null || !authResult.IsSuccess || string.IsNullOrEmpty(authResult.Token))
+                if (!isPasswordValid)
                 {
-                    ModelState.AddModelError("", authResult?.MessageEN ?? "This panel is for administrators only.");
+                    ModelState.AddModelError("", "Invalid email or password");
                     return View(model);
                 }
 
-                // Create claims for the authenticated admin
+                var isAdmin = await _context.Set<Admin>()
+                    .AnyAsync(x => x.Email == model.Email);
+
+                if (!isAdmin)
+                {
+                    ModelState.AddModelError("", "You are not admin");
+                    return View(model);
+                }
+
                 var claims = new List<Claim>
-                {
-                    new Claim(ClaimTypes.NameIdentifier, authResult.userId ?? ""),
-                    new Claim(ClaimTypes.Email, model.Email),
-                    new Claim(ClaimTypes.Name, model.Email),
-                    new Claim(ClaimTypes.Role, "Admin"),
-                    new Claim("Token", authResult.Token)
-                };
+        {
+            new Claim(ClaimTypes.Name, user.Email),
+            new Claim(ClaimTypes.Email, user.Email),
+            new Claim(ClaimTypes.Role, "Admin")
+        };
 
-                var claimsIdentity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-                var authProperties = new AuthenticationProperties
-                {
-                    IsPersistent = model.RememberMe,
-                    ExpiresUtc = authResult.Expiration ?? DateTimeOffset.UtcNow.AddDays(1)
-                };
+                var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
+                var principal = new ClaimsPrincipal(identity);
 
                 await HttpContext.SignInAsync(
                     CookieAuthenticationDefaults.AuthenticationScheme,
-                    new ClaimsPrincipal(claimsIdentity),
-                    authProperties
-                );
+                    principal,
+                    new AuthenticationProperties
+                    {
+                        IsPersistent = model.RememberMe,
+                        ExpiresUtc = DateTime.UtcNow.AddDays(model.RememberMe ? 30 : 1)
+                    });
 
                 return RedirectToAction("Index", "Dashboard");
             }
             catch (Exception ex)
             {
-                ModelState.AddModelError("", $"An error occurred during login: {ex.Message}");
+                ModelState.AddModelError("", $"Error: {ex.Message}");
                 return View(model);
             }
         }
-
         [HttpPost]
         public async Task<IActionResult> Logout()
         {
