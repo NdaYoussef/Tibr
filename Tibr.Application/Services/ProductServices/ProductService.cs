@@ -131,6 +131,20 @@ namespace Tibr.Application.Services.ProductServices
         {
             try
             {
+                var nameToCheck = dto.Name.Trim();
+                var isDuplicate = await _productRepository.GetAll()
+                   .AnyAsync(p =>
+                       !p.IsDeleted &&
+                       p.Name == nameToCheck &&
+                       p.MetalType == dto.MetalType &&
+                       p.Weight == dto.Weight &&
+                       p.Purity == dto.Purity);
+
+                if (isDuplicate)
+                    return Result<ProductDetailsDto>.Failure(
+                        "A product with the same name, metal type, weight, and purity already exists. " +
+                        "Please check existing products or change one of these fields.");
+
                 var product = dto.Adapt<Product>();
                 product.Status = ProductStatus.Active;
 
@@ -157,6 +171,21 @@ namespace Tibr.Application.Services.ProductServices
 
                 if (product == null || product.IsDeleted)
                     return Result<ProductDetailsDto>.Failure("Product not found");
+
+                var nameToCheck = dto.Name.Trim();
+
+                var isDuplicate = await _productRepository.GetAll()
+                   .AnyAsync(p =>
+                       !p.IsDeleted &&
+                       p.Id != id &&
+                       p.Name == nameToCheck &&
+                       p.MetalType == dto.MetalType &&
+                       p.Weight == dto.Weight &&
+                       p.Purity == dto.Purity);
+
+                if (isDuplicate)
+                    return Result<ProductDetailsDto>.Failure(
+                        "Another product with the same name, metal type, weight, and purity already exists.");
 
                 // Map the DTO to the entity
                 dto.Adapt(product);

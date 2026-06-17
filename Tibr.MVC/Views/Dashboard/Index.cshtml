@@ -409,8 +409,10 @@
     };
 }
 
+
 @section Scripts {
     <script>
+        // ── Data injected by Razor ───────────────────────────────────
         const MONTH_LABELS  = @Html.Raw(monthLabels);
         const MONTH_REVENUE = @Html.Raw(monthRevenue);
         const MONTH_ORDERS  = @Html.Raw(monthOrders);
@@ -420,37 +422,40 @@
         const CUST_DATA     = @Html.Raw(custData);
         const DONUT_DATA    = @Html.Raw(donutData);
 
-        const GOLD       = '#f2ca50';
-        const GOLD_ALPHA = 'rgba(242,202,80,0.15)';
-        const GREEN      = '#22c55e';
-        const BLUE       = '#3b82f6';
-        const RED        = '#ef4444';
-        const GRID       = 'rgba(255,255,255,0.06)';
-        const TEXT       = '#9ca3af';
+        // getChartColors() and registerChart() come from admin.js (top-level globals)
 
-        Chart.defaults.color       = TEXT;
         Chart.defaults.font.family = "'Outfit', sans-serif";
 
-        // ── Shared tooltip style ────────────────────────────────────────
-        const tooltip = (borderColor) => ({
-            backgroundColor: '#1e1e2e',
-            borderColor,
-            borderWidth: 1,
-            padding: 12
-        });
+        // ── Shared tooltip factory ────────────────────────────────────
+        function makeTooltip(c, borderColor) {
+            return {
+                backgroundColor: c.tooltip,
+                borderColor,
+                borderWidth: 1,
+                padding: 12,
+                titleColor: c.tooltipText,
+                bodyColor:  c.tooltipText
+            };
+        }
 
-        // ── Main chart (monthly / daily toggle) ────────────────────────
+        // ── MAIN CHART (monthly / daily) ─────────────────────────────
         let mainChart;
+        let activeMainTab = 'monthly';
 
         function buildMainChart(type) {
+            const c = getChartColors();
+            Chart.defaults.color = c.text;
             if (mainChart) mainChart.destroy();
+            activeMainTab = type;
+
             const labels = type === 'monthly' ? MONTH_LABELS  : DAILY_LABELS;
             const data   = type === 'monthly' ? MONTH_REVENUE : DAILY_REVENUE;
+            const ctx    = document.getElementById('mainChart')?.getContext('2d');
+            if (!ctx) return;
 
-            const ctx  = document.getElementById('mainChart').getContext('2d');
             const grad = ctx.createLinearGradient(0, 0, 0, 300);
-            grad.addColorStop(0, 'rgba(242,202,80,0.3)');
-            grad.addColorStop(1, 'rgba(242,202,80,0)');
+            grad.addColorStop(0, c.goldGrad0);
+            grad.addColorStop(1, c.goldGrad1);
 
             mainChart = new Chart(ctx, {
                 type: 'line',
@@ -458,36 +463,31 @@
                     labels,
                     datasets: [{
                         data,
-                        borderColor: GOLD,
-                        borderWidth: 3,
-                        backgroundColor: grad,
-                        fill: true,
-                        tension: 0.4,
-                        pointRadius: 4,
-                        pointBackgroundColor: GOLD,
+                        borderColor: c.gold, borderWidth: 3,
+                        backgroundColor: grad, fill: true, tension: 0.4,
+                        pointRadius: 4, pointBackgroundColor: c.gold,
                         pointHoverRadius: 7,
                         pointHoverBackgroundColor: '#fff',
-                        pointHoverBorderColor: GOLD,
-                        pointHoverBorderWidth: 2
+                        pointHoverBorderColor: c.gold, pointHoverBorderWidth: 2
                     }]
                 },
                 options: {
-                    responsive: true,
-                    maintainAspectRatio: false,
+                    responsive: true, maintainAspectRatio: false,
                     interaction: { intersect: false, mode: 'index' },
                     animation: { duration: 1200, easing: 'easeInOutQuart' },
                     plugins: {
                         legend: { display: false },
-                        tooltip: { ...tooltip(GOLD), callbacks: { label: ctx => `  ${ctx.parsed.y.toLocaleString()} EGP` } }
+                        tooltip: { ...makeTooltip(c, c.gold), callbacks: { label: ctx => `  ${ctx.parsed.y.toLocaleString()} EGP` } }
                     },
                     scales: {
-                        x: { grid: { color: GRID }, ticks: { color: TEXT } },
-                        y: { grid: { color: GRID }, ticks: { color: TEXT, callback: v => v.toLocaleString() } }
+                        x: { grid: { color: c.grid }, ticks: { color: c.text } },
+                        y: { grid: { color: c.grid }, ticks: { color: c.text, callback: v => v.toLocaleString() } }
                     }
                 }
             });
         }
         buildMainChart('monthly');
+        registerChart('mainChart', () => buildMainChart(activeMainTab));
 
         document.querySelectorAll('.chart-tab').forEach(btn => {
             btn.addEventListener('click', () => {
@@ -497,117 +497,142 @@
             });
         });
 
-        // ── Donut ───────────────────────────────────────────────────────
-        new Chart(document.getElementById('donutChart').getContext('2d'), {
-            type: 'doughnut',
-            data: {
-                labels: ['Delivered', 'Pending', 'Processing', 'Cancelled'],
-                datasets: [{
-                    data: DONUT_DATA,
-                    backgroundColor: [GREEN, GOLD, BLUE, RED],
-                    borderWidth: 0,
-                    hoverOffset: 8
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                cutout: '72%',
-                animation: { animateRotate: true, duration: 1400, easing: 'easeInOutQuart' },
-                plugins: { legend: { display: false }, tooltip: tooltip(GOLD) }
-            }
-        });
-
-        // ── Customer Growth Bar ─────────────────────────────────────────
-        new Chart(document.getElementById('customerChart').getContext('2d'), {
-            type: 'bar',
-            data: {
-                labels: CUST_LABELS,
-                datasets: [{
-                    label: 'New Customers',
-                    data: CUST_DATA,
-                    backgroundColor: GOLD_ALPHA,
-                    borderColor: GOLD,
-                    borderWidth: 2,
-                    borderRadius: 6,
-                    hoverBackgroundColor: GOLD
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                animation: { duration: 1200, easing: 'easeInOutQuart' },
-                plugins: { legend: { display: false }, tooltip: tooltip(GOLD) },
-                scales: {
-                    x: { grid: { color: GRID }, ticks: { color: TEXT } },
-                    y: { grid: { color: GRID }, ticks: { color: TEXT } }
-                }
-            }
-        });
-
-        // ── Orders Bar ──────────────────────────────────────────────────
-        new Chart(document.getElementById('ordersChart').getContext('2d'), {
-            type: 'bar',
-            data: {
-                labels: MONTH_LABELS,
-                datasets: [{
-                    label: 'Orders',
-                    data: MONTH_ORDERS,
-                    backgroundColor: 'rgba(59,130,246,0.2)',
-                    borderColor: BLUE,
-                    borderWidth: 2,
-                    borderRadius: 6,
-                    hoverBackgroundColor: BLUE
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                animation: { duration: 1200, easing: 'easeInOutQuart' },
-                plugins: { legend: { display: false }, tooltip: tooltip(BLUE) },
-                scales: {
-                    x: { grid: { color: GRID }, ticks: { color: TEXT } },
-                    y: { grid: { color: GRID }, ticks: { color: TEXT } }
-                }
-            }
-        });
-
-        // ── Sparklines ──────────────────────────────────────────────────
-        function sparkline(id, data, color) {
-            const el = document.getElementById(id);
-            if (!el) return;
-            new Chart(el.getContext('2d'), {
-                type: 'line',
+        // ── DONUT ─────────────────────────────────────────────────────
+        let donutChart;
+        function buildDonut() {
+            const c = getChartColors();
+            Chart.defaults.color = c.text;
+            if (donutChart) donutChart.destroy();
+            const ctx = document.getElementById('donutChart')?.getContext('2d');
+            if (!ctx) return;
+            donutChart = new Chart(ctx, {
+                type: 'doughnut',
                 data: {
-                    labels: data.map((_, i) => i),
-                    datasets: [{ data, borderColor: color, borderWidth: 2, fill: false, tension: 0.4, pointRadius: 0 }]
+                    labels: ['Delivered', 'Pending', 'Processing', 'Cancelled'],
+                    datasets: [{
+                        data: DONUT_DATA,
+                        backgroundColor: [c.green, c.gold, c.blue, c.red],
+                        borderWidth: 0, hoverOffset: 8
+                    }]
                 },
                 options: {
-                    responsive: true, maintainAspectRatio: false,
-                    animation: { duration: 1000 },
-                    plugins: { legend: { display: false }, tooltip: { enabled: false } },
-                    scales: { x: { display: false }, y: { display: false } }
+                    responsive: true, maintainAspectRatio: false, cutout: '72%',
+                    animation: { animateRotate: true, duration: 1400, easing: 'easeInOutQuart' },
+                    plugins: { legend: { display: false }, tooltip: makeTooltip(c, c.gold) }
                 }
             });
         }
-        sparkline('sparkRevenue',   MONTH_REVENUE.slice(-7), GOLD);
-        sparkline('sparkOrders',    MONTH_ORDERS.slice(-7),  BLUE);
-        sparkline('sparkCustomers', CUST_DATA.slice(-7),     GREEN);
+        buildDonut();
+        registerChart('donutChart', buildDonut);
 
-        // ── KPI counter animation ───────────────────────────────────────
+        // ── CUSTOMER GROWTH BAR ───────────────────────────────────────
+        let custChart;
+        function buildCustChart() {
+            const c = getChartColors();
+            Chart.defaults.color = c.text;
+            if (custChart) custChart.destroy();
+            const ctx = document.getElementById('customerChart')?.getContext('2d');
+            if (!ctx) return;
+            custChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: CUST_LABELS,
+                    datasets: [{
+                        label: 'New Customers', data: CUST_DATA,
+                        backgroundColor: c.goldAlpha, borderColor: c.gold,
+                        borderWidth: 2, borderRadius: 6, hoverBackgroundColor: c.gold
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    animation: { duration: 1200, easing: 'easeInOutQuart' },
+                    plugins: { legend: { display: false }, tooltip: makeTooltip(c, c.gold) },
+                    scales: {
+                        x: { grid: { color: c.grid }, ticks: { color: c.text } },
+                        y: { grid: { color: c.grid }, ticks: { color: c.text } }
+                    }
+                }
+            });
+        }
+        buildCustChart();
+        registerChart('customerChart', buildCustChart);
+
+        // ── ORDERS BAR ────────────────────────────────────────────────
+        let ordersChart;
+        function buildOrdersChart() {
+            const c = getChartColors();
+            Chart.defaults.color = c.text;
+            if (ordersChart) ordersChart.destroy();
+            const ctx = document.getElementById('ordersChart')?.getContext('2d');
+            if (!ctx) return;
+            ordersChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: MONTH_LABELS,
+                    datasets: [{
+                        label: 'Orders', data: MONTH_ORDERS,
+                        backgroundColor: c.blueAlpha, borderColor: c.blue,
+                        borderWidth: 2, borderRadius: 6, hoverBackgroundColor: c.blue
+                    }]
+                },
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    animation: { duration: 1200, easing: 'easeInOutQuart' },
+                    plugins: { legend: { display: false }, tooltip: makeTooltip(c, c.blue) },
+                    scales: {
+                        x: { grid: { color: c.grid }, ticks: { color: c.text } },
+                        y: { grid: { color: c.grid }, ticks: { color: c.text } }
+                    }
+                }
+            });
+        }
+        buildOrdersChart();
+        registerChart('ordersChart', buildOrdersChart);
+
+        // ── SPARKLINES ────────────────────────────────────────────────
+        function buildSparklines() {
+            const c = getChartColors();
+            [
+                { id: 'sparkRevenue',   data: MONTH_REVENUE.slice(-7), color: c.gold  },
+                { id: 'sparkOrders',    data: MONTH_ORDERS.slice(-7),  color: c.blue  },
+                { id: 'sparkCustomers', data: CUST_DATA.slice(-7),     color: c.green }
+            ].forEach(({ id, data, color }) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                const existing = Chart.getChart(el);
+                if (existing) existing.destroy();
+                new Chart(el.getContext('2d'), {
+                    type: 'line',
+                    data: {
+                        labels: data.map((_, i) => i),
+                        datasets: [{ data, borderColor: color, borderWidth: 2, fill: false, tension: 0.4, pointRadius: 0 }]
+                    },
+                    options: {
+                        responsive: true, maintainAspectRatio: false,
+                        animation: { duration: 800 },
+                        plugins: { legend: { display: false }, tooltip: { enabled: false } },
+                        scales: { x: { display: false }, y: { display: false } }
+                    }
+                });
+            });
+        }
+        buildSparklines();
+        registerChart('sparklines', buildSparklines);
+
+        // ── KPI counter animation ──────────────────────────────────────
         document.querySelectorAll('[data-count]').forEach(el => {
-            const target   = parseFloat(el.dataset.count);
-            const isCurr   = el.dataset.currency === 'true';
-            const duration = 1600;
-            const start    = performance.now();
-            const update   = now => {
-                const p    = Math.min((now - start) / duration, 1);
+            const target = parseFloat(el.dataset.count ?? '0');
+            const isCurr = el.dataset.currency === 'true';
+            const start  = performance.now();
+            const tick   = now => {
+                const p    = Math.min((now - start) / 1600, 1);
                 const ease = p < 0.5 ? 2 * p * p : -1 + (4 - 2 * p) * p;
                 const val  = Math.round(target * ease);
                 el.textContent = isCurr ? val.toLocaleString() + ' EGP' : val.toLocaleString();
-                if (p < 1) requestAnimationFrame(update);
+                if (p < 1) requestAnimationFrame(tick);
             };
-            requestAnimationFrame(update);
+            requestAnimationFrame(tick);
         });
     </script>
 }
+
