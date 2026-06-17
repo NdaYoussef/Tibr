@@ -1,0 +1,213 @@
+﻿@model Tibr.MVC.Models.Categories.CategoryListViewModel
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Categories";
+    ViewData["PageTitle"] = "Category Management";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Category Management</h1>
+        <p class="page-sub">Organise your product catalog with categories</p>
+    </div>
+    <a asp-controller="Product" asp-action="Index" class="btn-tibr btn-tibr-outline">
+        <i class="fa-solid fa-arrow-left"></i>
+        Back to Products
+    </a>
+</div>
+
+<div class="cat-page-grid">
+
+    <!-- ── LEFT: Category List ── -->
+    <div class="table-card reveal">
+        <div class="table-card-header">
+            <h3 class="chart-title">
+                Active Categories
+                <span class="table-count-badge">@Model.Categories.Count() total</span>
+            </h3>
+        </div>
+
+        @if (!Model.Categories.Any())
+        {
+            <div class="empty-row py-5">
+                <i class="fa-solid fa-tags fa-2x mb-2"></i>
+                <p>No categories yet. Add your first one.</p>
+            </div>
+        }
+        else
+        {
+            <div class="cat-list">
+                @foreach (var cat in Model.Categories)
+                {
+                    <div class="cat-row reveal">
+                        <!-- Icon + info -->
+                        <div class="cat-icon-wrap">
+                            <i class="fa-solid fa-gem"></i>
+                        </div>
+                        <div class="cat-info">
+                            <span class="cat-name">@cat.Name</span>
+                            <span class="cat-count">
+                                <i class="fa-solid fa-layer-group"></i>
+                                @cat.ProductCount product@(cat.ProductCount != 1 ? "s" : "")
+                            </span>
+                        </div>
+
+                        <!-- Progress bar proportional to product count -->
+                        @{
+                            var maxCount = Model.Categories.Max(c => c.ProductCount);
+                            var barWidth = maxCount > 0
+                                ? (int)((double)cat.ProductCount / maxCount * 100)
+                                : 0;
+                        }
+                        <div class="cat-bar-wrap">
+                            <div class="cat-bar" style="width:@barWidth%"></div>
+                        </div>
+
+                        <!-- Actions -->
+                        <div class="cat-actions">
+                            <button type="button"
+                                    class="btn-icon-sm edit-cat-btn"
+                                    data-id="@cat.Id"
+                                    data-name="@cat.Name"
+                                    title="Edit">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </button>
+                            <form asp-action="Delete" asp-route-id="@cat.Id"
+                                  method="post" class="d-inline"
+                                  onsubmit="return confirm('Delete category \'@cat.Name\'? Products in this category may be affected.');">
+                                @Html.AntiForgeryToken()
+                                <button type="submit" class="btn-icon-sm btn-icon-danger" title="Delete">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+
+    <!-- ── RIGHT: Add Category Form ── -->
+    <div class="form-section reveal cat-add-card">
+        <div class="form-section-header">
+            <i class="fa-solid fa-plus-circle"></i>
+            <h3>Add Category</h3>
+        </div>
+        <p class="form-section-sub">
+            Categories help group products (e.g. Investment Bars, Bullion Coins, Collector's Items).
+        </p>
+
+        <form asp-action="Create" method="post">
+            @Html.AntiForgeryToken()
+            <div class="form-group">
+                <label asp-for="NewCategory.Name" class="form-label">Category Name</label>
+                <input asp-for="NewCategory.Name"
+                       name="Name"
+                       class="filter-input w-full"
+                       placeholder="e.g. Investment Bars" />
+                <span asp-validation-for="NewCategory.Name" class="field-error"></span>
+            </div>
+
+            <!-- Preview badge -->
+            <div class="cat-preview" id="catPreview" style="display:none">
+                <span class="cat-preview-label">Preview:</span>
+                <span class="cat-preview-badge" id="catPreviewText">—</span>
+            </div>
+
+            <button type="submit" class="btn-tibr btn-tibr-gold w-full mt-4">
+                <i class="fa-solid fa-plus"></i>
+                Create Category
+            </button>
+        </form>
+
+        <!-- Usage tip -->
+        <div class="cat-tip">
+            <i class="fa-solid fa-lightbulb"></i>
+            <p>Tip: Use clear, short names. You can always rename a category later.</p>
+        </div>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     EDIT CATEGORY MODAL
+══════════════════════════════════════════════ -->
+<div class="tibr-modal-overlay" id="editCatOverlay" style="display:none">
+    <div class="tibr-modal">
+        <div class="tibr-modal-header">
+            <h4><i class="fa-solid fa-pen-to-square"></i> Edit Category</h4>
+            <button type="button" class="modal-close-btn" id="closeCatModal">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
+        </div>
+        <form asp-action="Edit" method="post" id="editCatForm">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="id" id="editCatId" />
+            <div class="tibr-modal-body">
+                <div class="form-group">
+                    <label class="form-label">Category Name</label>
+                    <input type="text" name="Name" id="editCatName"
+                           class="filter-input w-full"
+                           placeholder="Category name" />
+                    <span class="field-error" id="editCatError"></span>
+                </div>
+            </div>
+            <div class="tibr-modal-footer">
+                <button type="button" class="btn-tibr btn-tibr-outline" id="cancelCatModal">
+                    Cancel
+                </button>
+                <button type="submit" class="btn-tibr btn-tibr-gold">
+                    <i class="fa-solid fa-floppy-disk"></i>
+                    Save Changes
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // ── Edit modal ──────────────────────────────────────────────────
+        const overlay   = document.getElementById('editCatOverlay');
+        const form      = document.getElementById('editCatForm');
+        const nameInput = document.getElementById('editCatName');
+        const idInput   = document.getElementById('editCatId');
+
+        document.querySelectorAll('.edit-cat-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const id   = btn.dataset.id;
+                const name = btn.dataset.name;
+                idInput.value   = id;
+                nameInput.value = name;
+                // Update form action to include the id
+                form.action = `/Category/Edit/${id}`;
+                overlay.style.display = 'flex';
+                setTimeout(() => overlay.querySelector('.tibr-modal').classList.add('modal-in'), 10);
+            });
+        });
+
+        function closeModal() {
+            overlay.querySelector('.tibr-modal').classList.remove('modal-in');
+            setTimeout(() => overlay.style.display = 'none', 250);
+        }
+
+        document.getElementById('closeCatModal').addEventListener('click', closeModal);
+        document.getElementById('cancelCatModal').addEventListener('click', closeModal);
+        overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
+        document.addEventListener('keydown', e => { if (e.key === 'Escape') closeModal(); });
+
+        // ── Add form live preview ───────────────────────────────────────
+        const addInput  = document.querySelector('input[name="Name"]');
+        const preview   = document.getElementById('catPreview');
+        const prevText  = document.getElementById('catPreviewText');
+
+        addInput?.addEventListener('input', () => {
+            const val = addInput.value.trim();
+            if (val.length > 0) {
+                prevText.textContent  = val;
+                preview.style.display = 'flex';
+            } else {
+                preview.style.display = 'none';
+            }
+        });
+    </script>
+}

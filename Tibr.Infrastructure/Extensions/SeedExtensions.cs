@@ -50,45 +50,6 @@ namespace Tibr.Infrastructure.Extensions
             }
         }
 
-        public static void SeedDatabase(this IApplicationBuilder app)
-        {
-            var logger = app.ApplicationServices
-                .GetRequiredService<ILoggerFactory>()
-                .CreateLogger("SeedDatabase");
-
-            try
-            {
-                logger.LogInformation("Database seeding started (sync)...");
-
-                using var scope = app.ApplicationServices.CreateScope();
-                var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-
-                try
-                {
-                    logger.LogInformation("Applying pending migrations (sync)...");
-                    context.Database.Migrate();
-                    logger.LogInformation("Migrations applied (sync).");
-
-                    logger.LogInformation("Seeding super admin data (sync)...");
-                    Seeds.SeedData.SeedSuperAdmin(context);
-                    logger.LogInformation("Database seeding completed successfully (sync).");
-                }
-                catch (SeedDataException seedEx)
-                {
-                    logger.LogError(seedEx, "Seed data error (sync): {Message}", seedEx.Message);
-                    throw;
-                }
-                catch (Exception ex)
-                {
-                    logger.LogError(ex, "Unexpected error during database seeding (sync).");
-                    throw new SeedDataException("Database seeding failed (sync). See inner exception for details.", ex);
-                }
-            }
-            catch (Exception ex)
-            {
-                logger.LogCritical(ex, "Critical error during database seeding (sync).");
-                throw;
-            }
-        }
+       
     }
 }

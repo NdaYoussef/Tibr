@@ -31,9 +31,7 @@ namespace Tibr.Application.Services.Email
 
             using var smtp = new SmtpClient();
             try
-
-            {
-
+            { 
                 {
 
                     await smtp.ConnectAsync

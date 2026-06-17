@@ -8,6 +8,8 @@ namespace Tibr.MVC.Controllers
     {
         public IActionResult Index()
         {
+            ViewData["HeaderTitle"] = "Dashboard";
+            ViewData["ShowBack"] = false;
             return View();
         }
 

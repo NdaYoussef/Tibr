@@ -11,7 +11,6 @@ namespace Tibr.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-
             migrationBuilder.CreateTable(
                 name: "Admins",
                 columns: table => new

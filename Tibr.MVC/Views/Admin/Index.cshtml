@@ -1,0 +1,187 @@
+@model AdminListViewModel
+@{
+    ViewData["Title"] = "Admin Management";
+    var totalPages = Math.Ceiling((double)Model.TotalCount / Model.PageSize);
+}
+
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col-md-8">
+            <h1 class="h3 mb-0 text-gray-800">Admin Management</h1>
+        </div>
+        <div class="col-md-4 text-end">
+            <a href="@Url.Action("Create", "Admin")" class="btn btn-primary">
+                <i class="fas fa-plus"></i> Add New Admin
+            </a>
+        </div>
+    </div>
+
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="card shadow mb-4">
+        <div class="card-header py-3">
+            <h6 class="m-0 font-weight-bold text-primary">Admin List</h6>
+        </div>
+        <div class="card-body">
+            <!-- Search and Filter Section -->
+            <form method="get" class="mb-4">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <input type="text" name="searchTerm" class="form-control" placeholder="Search by name or email..." value="@Model.SearchTerm" />
+                    </div>
+                    <div class="col-md-3">
+                        <select name="sortBy" class="form-select">
+                            <option value="Name" selected="@(Model.SortBy == "Name")">Name</option>
+                            <option value="Email" selected="@(Model.SortBy == "Email")">Email</option>
+                            <option value="Status" selected="@(Model.SortBy == "Status")">Status</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="input-group">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="fas fa-search"></i> Search
+                            </button>
+                            <a href="@Url.Action("Index", "Admin")" class="btn btn-secondary">
+                                <i class="fas fa-redo"></i> Reset
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-md-12">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="sortDesc" name="sortDescending" value="true" @(Model.SortDescending ? "checked" : "") />
+                            <label class="form-check-label" for="sortDesc">
+                                Sort Descending
+                            </label>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Table Section -->
+            @if (Model.Admins.Count == 0)
+            {
+                <div class="alert alert-info" role="alert">
+                    No admins found. <a href="@Url.Action("Create", "Admin")" class="alert-link">Create one now</a>.
+                </div>
+            }
+            else
+            {
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead class="table-light">
+                            <tr>
+                                <th>ID</th>
+                                <th>Name</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                                <th>Created Date</th>
+                                <th>Last Modified</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var admin in Model.Admins)
+                            {
+                                <tr>
+                                    <td>@admin.Id</td>
+                                    <td>@admin.Name</td>
+                                    <td>@admin.Email</td>
+                                    <td>
+                                        <span class="badge bg-@(admin.Status == "Active" ? "success" : "danger")">
+                                            @admin.Status
+                                        </span>
+                                    </td>
+                                    <td>@admin.CreatedAt.ToString("g")</td>
+                                    <td>@(admin.UpdatedAt?.ToString("g") ?? "N/A")</td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm" role="group">
+                                            <a href="@Url.Action("Details", "Admin", new { id = admin.Id })" class="btn btn-info btn-sm" title="View Details">
+                                                <i class="fas fa-eye"></i>
+                                            </a>
+                                            <a href="@Url.Action("Edit", "Admin", new { id = admin.Id })" class="btn btn-warning btn-sm" title="Edit">
+                                                <i class="fas fa-edit"></i>
+                                            </a>
+                                            <a href="@Url.Action("Delete", "Admin", new { id = admin.Id })" class="btn btn-danger btn-sm" title="Delete">
+                                                <i class="fas fa-trash"></i>
+                                            </a>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination Section -->
+                @if (totalPages > 1)
+                {
+                    <nav aria-label="Page navigation" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            @if (Model.PageNumber > 1)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" href="@Url.Action("Index", "Admin", new { pageNumber = 1, Model.PageSize, Model.SearchTerm, Model.SortBy, Model.SortDescending })">First</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="@Url.Action("Index", "Admin", new { pageNumber = Model.PageNumber - 1, Model.PageSize, Model.SearchTerm, Model.SortBy, Model.SortDescending })">Previous</a>
+                                </li>
+                            }
+
+                            @for (int i = Math.Max(1, Model.PageNumber - 2); i <= Math.Min((int)totalPages, Model.PageNumber + 2); i++)
+                            {
+                                <li class="page-item @(i == Model.PageNumber ? "active" : "")">
+                                    <a class="page-link" href="@Url.Action("Index", "Admin", new { pageNumber = i, Model.PageSize, Model.SearchTerm, Model.SortBy, Model.SortDescending })">@i</a>
+                                </li>
+                            }
+
+                            @if (Model.PageNumber < totalPages)
+                            {
+                                <li class="page-item">
+                                    <a class="page-link" href="@Url.Action("Index", "Admin", new { pageNumber = Model.PageNumber + 1, Model.PageSize, Model.SearchTerm, Model.SortBy, Model.SortDescending })">Next</a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="@Url.Action("Index", "Admin", new { pageNumber = (int)totalPages, Model.PageSize, Model.SearchTerm, Model.SortBy, Model.SortDescending })">Last</a>
+                                </li>
+                            }
+                        </ul>
+                    </nav>
+
+                    <div class="text-center mt-2 text-muted">
+                        Page @Model.PageNumber of @totalPages | Showing @Model.Admins.Count of @Model.TotalCount items
+                    </div>
+                }
+            }
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Auto-hide alerts after 5 seconds
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(function (alert) {
+                setTimeout(function () {
+                    const bsAlert = new bootstrap.Alert(alert);
+                    bsAlert.close();
+                }, 5000);
+            });
+        });
+    </script>
+}

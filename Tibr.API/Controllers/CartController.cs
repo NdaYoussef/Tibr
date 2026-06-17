@@ -1,7 +1,9 @@
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+using System.Threading.Tasks;
 using Tibr.Application.Dtos;
 using Tibr.Application.Services.CartServices;
+using Tibr.Application.Services.CategoryServices;
 
 namespace Tibr.API.Controllers
 {
@@ -9,8 +11,8 @@ namespace Tibr.API.Controllers
     [Route("api/[controller]")]
     public class CartController : ControllerBase
     {
+
         private readonly ICartService _cartService;
-        private const long HardcodedUserId = 1; // Temporary user ID until auth integration
 
         public CartController(ICartService cartService)
         {
@@ -20,7 +22,14 @@ namespace Tibr.API.Controllers
         [HttpGet]
         public async Task<IActionResult> GetCart()
         {
-            var result = await _cartService.GetCartByUserIdAsync(HardcodedUserId);
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out long currentUserId))
+            {
+                return Unauthorized(new { message = "Unauthorized: Missing user ID." });
+            }
+
+            var result = await _cartService.GetCartByUserIdAsync(currentUserId);
 
             if (result.IsFailure)
             {
@@ -37,8 +46,14 @@ namespace Tibr.API.Controllers
             {
                 return BadRequest(new { error = "Invalid cart request data." });
             }
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
 
-            var result = await _cartService.AddToCartAsync(HardcodedUserId, dto);
+            if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out long currentUserId))
+            {
+                return Unauthorized(new { message = "Unauthorized: Missing user ID." });
+            }
+
+            var result = await _cartService.AddToCartAsync(currentUserId, dto);
 
             if (result.IsFailure)
             {
@@ -51,7 +66,13 @@ namespace Tibr.API.Controllers
         [HttpDelete("items/{cartItemId:long}")]
         public async Task<IActionResult> RemoveFromCart(long cartItemId)
         {
-            var result = await _cartService.RemoveFromCartAsync(HardcodedUserId, cartItemId);
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out long currentUserId))
+            {
+                return Unauthorized(new { message = "Unauthorized: Missing user ID." });
+            }
+            var result = await _cartService.RemoveFromCartAsync(currentUserId, cartItemId);
 
             if (result.IsFailure)
             {
@@ -64,7 +85,13 @@ namespace Tibr.API.Controllers
         [HttpDelete]
         public async Task<IActionResult> ClearCart()
         {
-            var result = await _cartService.ClearCartAsync(HardcodedUserId);
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out long currentUserId))
+            {
+                return Unauthorized(new { message = "Unauthorized: Missing user ID." });
+            }
+            var result = await _cartService.ClearCartAsync(currentUserId);
 
             if (result.IsFailure)
             {

@@ -26,12 +26,12 @@ namespace Tibr.Application.Services.Auth
         public async Task<AuthResponse> Handle(AdminLoginCommand request, CancellationToken cancellationToken)
         {
             // Check if the user is an admin
-            var admin = await _context.Set<Admin>().FirstOrDefaultAsync(a => a.Email == request.Model.Email, cancellationToken);
+            var admin = await _context.Set<Domain.Entities.Admin>().FirstOrDefaultAsync(a => a.Email == request.Model.Email, cancellationToken);
 
             if (admin == null || admin.Status != "Active")
                 return new AuthResponse(false, "The login details are incorrect or account is inactive.", "The login details are incorrect or account is inactive.");
 
-            // For admin, we need to verify against the user's password
+           
             var user = await _context.Set<User>().FirstOrDefaultAsync(u => u.Email == request.Model.Email, cancellationToken);
 
             if (user == null || !BCrypt.Net.BCrypt.Verify(request.Model.Password, user.Password))
@@ -41,12 +41,12 @@ namespace Tibr.Application.Services.Auth
                 return new AuthResponse(false, "Please activate your account first via OTP code.", "Please activate your account first via OTP code.");
 
             // Create admin JWT token
-            var authClaims = new List<Claim>
+            var authClaims = new List<System.Security.Claims.Claim>
             {
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Email, user.Email),
-                new Claim(ClaimTypes.Name, admin.Name),
-                new Claim(ClaimTypes.Role, "Admin")
+                new System.Security.Claims.Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
+                new System.Security.Claims.Claim(ClaimTypes.Email, user.Email),
+                new System.Security.Claims.Claim(ClaimTypes.Name, admin.Name),
+                new System.Security.Claims.Claim(ClaimTypes.Role, "Admin")
             };
 
             var authSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(_configuration["JWT:Secret"]!));
