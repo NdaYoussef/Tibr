@@ -1,6 +1,9 @@
 using Mapster;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
+using Tibr.Application;
+using Tibr.Application.Interfaces;
+using Tibr.Application.Services.Email;
 using Tibr.Infrastructure;
 using Tibr.Infrastructure.Contexts;
 using Tibr.Infrastructure.Seeds;
@@ -20,12 +23,17 @@ namespace Tibr.MVC
             builder.Services.AddControllersWithViews();
             builder.Services.AddInfrastructure(builder.Configuration);
 
-            //// Add MediatR for CQRS pattern
-            //builder.Services.AddMediatR(cfg =>
-            //    cfg.RegisterServicesFromAssembly(typeof(Tibr.Application.Services.Auth.RegisterCommand).Assembly));
+            // Add MediatR for CQRS pattern
+            builder.Services.AddMediatR(cfg =>
+                cfg.RegisterServicesFromAssembly(typeof(Tibr.Application.Services.Auth.RegisterCommand).Assembly));
 
+            builder.Services.AddApplicationServices();
 
-            //builder.Services.AddApplicationServices();
+            // Register DbContext base class mapping for MediatR handlers
+            builder.Services.AddScoped<DbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
+            
+            // Register Email Service
+            builder.Services.AddTransient<IEmailService, EmailService>();
 
             TypeAdapterConfig.GlobalSettings.Scan(
                         typeof(Tibr.Application.Mappers.ProductMappingConfig).Assembly,
