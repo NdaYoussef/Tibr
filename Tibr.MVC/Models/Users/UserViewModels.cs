@@ -83,11 +83,13 @@ namespace Tibr.MVC.Models.Users
         [Required(ErrorMessage = "Phone number is required.")]
         [Phone(ErrorMessage = "Invalid phone number format.")]
         [StringLength(20, ErrorMessage = "Phone number cannot exceed 20 characters.")]
+        [RegularExpression(@"^(010|011|012|015)\d{8}$", ErrorMessage = "Phone number must start with 010, 011, 012, or 015 and be exactly 11 digits.")]
         public string Phone { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Password is required.")]
         [DataType(DataType.Password)]
         [StringLength(100, MinimumLength = 6, ErrorMessage = "Password must be at least 6 characters long.")]
+        [RegularExpression(@"^(?=.*[A-Z])(?=.*\d)(?=.*[^a-zA-Z\d]).+$", ErrorMessage = "Password must contain at least one uppercase letter, one number, and one special character.")]
         public string Password { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Please confirm your password.")]
@@ -129,6 +131,7 @@ namespace Tibr.MVC.Models.Users
         [Required(ErrorMessage = "Phone number is required.")]
         [Phone(ErrorMessage = "Invalid phone number format.")]
         [StringLength(20, ErrorMessage = "Phone number cannot exceed 20 characters.")]
+        [RegularExpression(@"^(010|011|012|015)\d{8}$", ErrorMessage = "Phone number must start with 010, 011, 012, or 015 and be exactly 11 digits.")]
         public string Phone { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Status is required.")]
