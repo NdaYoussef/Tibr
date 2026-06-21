@@ -40,7 +40,7 @@ public class Result<T> : Result
     public static Result<T> Success(T data) => new(data, true, null);
 
    
-    public  static Result<T> Failure(string errorMessage) => new(default, false, errorMessage);
+    public new static Result<T> Failure(string errorMessage) => new(default, false, errorMessage);
 
     public static implicit operator Result<T>(T data) => Success(data);
 }

@@ -6,7 +6,7 @@ namespace Tibr.Domain.Enums
 {
     public enum MetalType
     {
-        Gold=1,
+        Gold,
         Silver
     }
 }

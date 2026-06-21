@@ -62,6 +62,7 @@ namespace Tibr.Infrastructure
             services.AddScoped<ICartRepository, CartRepository>();
             services.AddScoped<ICartService, CartService>();
 
+<<<<<<< HEAD
 
             services.AddScoped<ITicketRepository, TicketRepository>();
             services.AddScoped<ITicketService, TicketService>();
@@ -75,6 +76,9 @@ namespace Tibr.Infrastructure
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IUserService, UserService>();
 
+=======
+            services.AddScoped<IAssetPriceRepository, AssetPriceRepository>();
+>>>>>>> investment-dev-back
 
             return services;
         }
