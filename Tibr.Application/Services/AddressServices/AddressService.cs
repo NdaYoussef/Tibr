@@ -21,6 +21,7 @@ namespace Tibr.Application.Services.AddressServices
             var dtos = addresses.Where(a=>a.IsDeleted==false).Select(a => new AddressDto
             {
                 Id = a.Id,
+                PostalCode=a.PostalCode,
                 City = a.City,
                 IsDefault = a.IsDefault,
                 FullAddress = $"{a.Building}, {a.Street}, {a.Area}, {a.City}"

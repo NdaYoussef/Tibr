@@ -8,6 +8,7 @@ namespace Tibr.Application.Dtos
     public class AddressDto
     {
         public long Id { get; set; }
+        public string PostalCode { get; set; }
         public string FullAddress { get; set; } = string.Empty;
         public string City { get; set; } = string.Empty;
         public bool IsDefault { get; set; }

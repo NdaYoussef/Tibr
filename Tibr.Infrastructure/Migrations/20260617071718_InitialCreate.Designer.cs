@@ -12,7 +12,7 @@ using Tibr.Infrastructure.Contexts;
 namespace Tibr.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260616102817_InitialCreate")]
+    [Migration("20260617071718_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -1218,6 +1218,9 @@ namespace Tibr.Infrastructure.Migrations
                     b.Property<string>("Number")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
 
                     b.Property<string>("Type")
                         .IsRequired()
