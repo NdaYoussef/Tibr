@@ -2,9 +2,8 @@
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Tibr.Application.Services.AdminManagement;
+using Tibr.Infrastructure.Services.Admin;
 using Tibr.MVC.Models;
-using static Tibr.Application.Services.AdminManagement.AdminManagement;
 
 namespace Tibr.MVC.Controllers
 {
