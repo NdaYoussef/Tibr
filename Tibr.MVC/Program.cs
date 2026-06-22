@@ -41,7 +41,6 @@ namespace Tibr.MVC
             builder.Services.AddHttpClient<IPaymentGateway, PaymobPaymentGateway>();
             builder.Services.AddHttpClient<IMarketPriceService, MarketPriceService>();
 
-
             TypeAdapterConfig.GlobalSettings.Scan(
                         typeof(Tibr.Application.Mappers.ProductMappingConfig).Assembly,
                         typeof(Tibr.MVC.Mapping.DashboardMappingConfig).Assembly);
