@@ -57,6 +57,11 @@ namespace Tibr.Infrastructure.Contexts
         public DbSet<Withdraw> Withdraws { get; set; }
         public DbSet<Review> Reviews { get; set; }
 
+        // Chat entities
+        public DbSet<ChatConversation> ChatConversations { get; set; }
+        public DbSet<ChatMessage> ChatMessages { get; set; }
+        public DbSet<ChatOrderProposal> ChatOrderProposals { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -377,6 +382,30 @@ namespace Tibr.Infrastructure.Contexts
                 .WithMany(u => u.Reviews)
                 .HasForeignKey(r => r.UserId)
                 .OnDelete(DeleteBehavior.Restrict);
+
+            #endregion
+
+            #region Chat Module Relationships
+
+            modelBuilder.Entity<ChatConversation>()
+                .HasKey(c => c.Id);
+
+            modelBuilder.Entity<ChatMessage>()
+                .HasOne(cm => cm.Conversation)
+                .WithMany(c => c.Messages)
+                .HasForeignKey(cm => cm.ConversationId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ChatOrderProposal>()
+                .HasOne(p => p.Conversation)
+                .WithMany()
+                .HasForeignKey(p => p.ConversationId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<ChatOrderProposal>()
+                .Property(p => p.Status)
+                .HasConversion<string>()
+                .HasMaxLength(20);
 
             #endregion
         }

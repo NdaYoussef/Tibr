@@ -5,6 +5,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 using Tibr.Application.InfrastructureContracts;
+using Tibr.Application.Services.AiChatServices;
 using Tibr.Application.Services.CartServices;
 using Tibr.Application.Services.CategoryServices;
 using Tibr.Application.Services.FavoriteServices;
@@ -12,9 +13,11 @@ using Tibr.Application.Services.ProductServices;
 using Tibr.Application.Services.SuppoertServices;
 using Tibr.Application.Services.SupportServices;
 using Tibr.Domain.IRepositories;
+using Tibr.Infrastructure.Config;
 using Tibr.Infrastructure.Contexts;
 using Tibr.Infrastructure.Queries;
 using Tibr.Infrastructure.Repositories;
+using Tibr.Infrastructure.Services;
 
 namespace Tibr.Infrastructure
 {
@@ -24,6 +27,10 @@ namespace Tibr.Infrastructure
         {
             services.AddDbContext<ApplicationDbContext>(options =>
                 options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"))
+            );
+
+            services.AddScoped<DbContext>(provider =>
+                provider.GetRequiredService<ApplicationDbContext>()
             );
 
             // Mapster
@@ -55,6 +62,20 @@ namespace Tibr.Infrastructure
             services.AddScoped<ICartService, CartService>();
 
             services.AddScoped<IAssetPriceRepository, AssetPriceRepository>();
+
+            services.AddSingleton<IVectorStoreService, InMemoryVectorStoreService>();
+            services.AddHostedService<ChatSeedHostedService>();
+
+            services.AddHttpClient<GeminiProviderService>();
+            services.AddHttpClient<OpenAiProviderService>();
+            services.AddHttpClient<XaiProviderService>();
+            services.AddSingleton<IAiProviderService, CompositeAiProvider>();
+
+            services.AddScoped<IChatOrderProposalService, ChatOrderProposalService>();
+
+            services.Configure<AiChatSettings>(
+                configuration.GetSection(AiChatSettings.SectionName)
+            );
 
             return services;
         }
