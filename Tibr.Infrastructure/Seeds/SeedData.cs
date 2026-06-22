@@ -1,7 +1,10 @@
-﻿using Microsoft.EntityFrameworkCore;
+
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Tibr.Domain.Entities;
 using Tibr.Infrastructure.Contexts;
+using Tibr.Infrastructure.Exceptions;
+
 
 namespace Tibr.Infrastructure.Seeds
 {

@@ -17,7 +17,7 @@
 </div>
 
 <!-- ══════════════════════════════════════════════
-     INVENTORY STAT CARDS
+     STAT CARDS
 ══════════════════════════════════════════════ -->
 <div class="prod-stats-strip reveal">
     <div class="pstat-card">
@@ -55,6 +55,7 @@
 ══════════════════════════════════════════════ -->
 <div class="filter-card reveal">
     <form asp-action="Inventory" method="get" class="filter-form-row">
+
         <div class="filter-search-wrap">
             <i class="fa-solid fa-magnifying-glass"></i>
             <input type="text" name="search" value="@Model.SearchKeyword"
@@ -62,24 +63,32 @@
                    class="filter-input filter-search" />
         </div>
 
+        <!-- Metal type chips -->
         <div class="metal-chips">
             <span class="chip-label">Metal:</span>
-            <a asp-action="Inventory" asp-route-search="@Model.SearchKeyword"
+            <a asp-action="Inventory"
+               asp-route-search="@Model.SearchKeyword"
                asp-route-stockLevel="@Model.StockFilter"
                class="chip @(string.IsNullOrEmpty(Model.MetalTypeFilter) ? "chip-active" : "")">All</a>
-            <a asp-action="Inventory" asp-route-search="@Model.SearchKeyword"
-               asp-route-metalType="Gold" asp-route-stockLevel="@Model.StockFilter"
-               class="chip chip-gold @(Model.MetalTypeFilter == "Gold" ? "chip-active" : "")">
+            <a asp-action="Inventory"
+                   asp-route-search="@Model.SearchKeyword"
+                   asp-route-metalType="Gold"
+                   asp-route-stockLevel="@Model.StockFilter"
+                   class="chip chip-gold @(Model.MetalTypeFilter == "Gold" ? "chip-active" : "")">
                 <i class="fa-solid fa-coins"></i> Gold
             </a>
-            <a asp-action="Inventory" asp-route-search="@Model.SearchKeyword"
-               asp-route-metalType="Silver" asp-route-stockLevel="@Model.StockFilter"
-               class="chip chip-silver @(Model.MetalTypeFilter == "Silver" ? "chip-active" : "")">
+            <a asp-action="Inventory"
+                   asp-route-search="@Model.SearchKeyword"
+                   asp-route-metalType="Silver"
+                   asp-route-stockLevel="@Model.StockFilter"
+                   class="chip chip-silver @(Model.MetalTypeFilter == "Silver" ? "chip-active" : "")">
                 <i class="fa-solid fa-circle-dot"></i> Silver
             </a>
         </div>
 
-        <select name="stockFilter" class="filter-input filter-select">
+        <!-- FIX: name="stockLevel" matches the controller parameter.
+             This is the same fix you already applied — applied consistently here. -->
+        <select name="stockLevel" class="filter-input filter-select">
             <option value="">All Stock Levels</option>
             <option value="ok" selected="@(Model.StockFilter == "ok")">In Stock</option>
             <option value="low" selected="@(Model.StockFilter == "low")">Low Stock (≤5)</option>
@@ -89,7 +98,7 @@
         <button type="submit" class="btn-tibr btn-tibr-gold btn-sm">
             <i class="fa-solid fa-filter"></i> Filter
         </button>
-        <a asp-action="Inventory" class="btn-tibr btn-tibr-outline btn-sm">
+        <a asp-action="Inventory" class="btn-tibr btn-tibr-outline btn-sm" title="Reset filters">
             <i class="fa-solid fa-rotate-left"></i>
         </a>
     </form>
@@ -106,7 +115,7 @@
         </h3>
         <span class="inv-last-updated">
             <i class="fa-solid fa-clock"></i>
-            Last updated: @DateTime.Now.ToString("HH:mm, dd MMM yyyy")
+            Updated: @DateTime.Now.ToString("HH:mm, dd MMM yyyy")
         </span>
     </div>
 
@@ -123,7 +132,7 @@
                     <th>Stock Value</th>
                     <th>Current Stock</th>
                     <th>Status</th>
-                    <th style="width:220px">Update Stock</th>
+                    <th style="width:200px">Update Stock</th>
                 </tr>
             </thead>
             <tbody>
@@ -171,11 +180,10 @@
                         <td>
                             <div class="stock-display">
                                 <span class="stock-number @p.StockStatusClass">@p.Stock</span>
-                                <span class="stock-label-sm">@p.StockStatusLabel</span>
-                                <!-- Visual stock bar -->
+                                <span class="stock-label-sm ">@p.StockStatusLabel</span>
                                 <div class="inv-stock-bar">
                                     <div class="inv-stock-fill @p.StockStatusClass"
-                                         style="width:@Math.Min(100,(int)(p.Stock / 100.0 * 100))%">
+                                         style="width:@(p.Stock > 0 ? Math.Min(100, (int)(p.Stock * 2)) : 0)%">
                                     </div>
                                 </div>
                             </div>
@@ -187,7 +195,6 @@
                             </span>
                         </td>
                         <td>
-                            <!-- Inline quick-update form -->
                             <form asp-controller="Product" asp-action="UpdateStock"
                                   method="post" class="stock-update-form">
                                 @Html.AntiForgeryToken()
@@ -196,7 +203,7 @@
                                     <input type="number" name="NewStock"
                                            value="@p.Stock" min="0"
                                            class="filter-input stock-input"
-                                           placeholder="New qty" />
+                                           placeholder="Qty" />
                                     <button type="submit" class="btn-tibr btn-tibr-gold btn-sm">
                                         <i class="fa-solid fa-floppy-disk"></i>
                                         Save
@@ -229,7 +236,7 @@
                        class="pag-btn"><i class="fa-solid fa-chevron-left"></i></a>
                 }
                 @for (int i = Math.Max(1, Model.PageNumber - 2);
-                         i <= Math.Min(Model.TotalPages, Model.PageNumber + 2); i++)
+                                         i <= Math.Min(Model.TotalPages, Model.PageNumber + 2); i++)
                 {
                     <a asp-action="Inventory"
                        asp-route-pageNumber="@i"

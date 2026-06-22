@@ -1,4 +1,6 @@
+
 ﻿@model AdminListViewModel
+
 @{
     ViewData["Title"] = "Admin Management";
     var totalPages = Math.Ceiling((double)Model.TotalCount / Model.PageSize);
@@ -184,4 +186,6 @@
             });
         });
     </script>
+
 }
+

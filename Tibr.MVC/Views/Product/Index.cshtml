@@ -5,9 +5,6 @@
     ViewData["PageTitle"] = "Products Management";
 }
 
-<!-- ══════════════════════════════════════════════
-     PAGE HEADER
-══════════════════════════════════════════════ -->
 <div class="page-header">
     <div>
         <h1 class="page-title">Products Management</h1>
@@ -17,6 +14,10 @@
         <a asp-action="Inventory" class="btn-tibr btn-tibr-outline">
             <i class="fa-solid fa-boxes-stacked"></i>
             Inventory
+        </a>
+        <a asp-controller="Category" asp-action="Index" class="btn-tibr btn-tibr-outline">
+            <i class="fa-solid fa-tags"></i>
+            Categories
         </a>
         <a asp-action="Create" class="btn-tibr btn-tibr-gold">
             <i class="fa-solid fa-plus"></i>
@@ -69,7 +70,7 @@
         <div class="filter-search-wrap">
             <i class="fa-solid fa-magnifying-glass"></i>
             <input type="text" name="search" value="@Model.SearchKeyword"
-                   placeholder="Search by name or metal type..."
+                   placeholder="Search by name..."
                    class="filter-input filter-search" />
         </div>
 
@@ -80,54 +81,60 @@
                asp-route-search="@Model.SearchKeyword"
                asp-route-status="@Model.StatusFilter"
                asp-route-categoryId="@Model.CategoryIdFilter"
+               asp-route-sortBy="@Model.SortBy"
                class="chip @(string.IsNullOrEmpty(Model.MetalTypeFilter) ? "chip-active" : "")">All</a>
             <a asp-action="Index"
-               asp-route-search="@Model.SearchKeyword"
-               asp-route-metalType="Gold"
-               asp-route-status="@Model.StatusFilter"
-               asp-route-categoryId="@Model.CategoryIdFilter"
-               class="chip chip-gold @(Model.MetalTypeFilter == "Gold" ? "chip-active" : "")">
+                   asp-route-search="@Model.SearchKeyword"
+                   asp-route-metalType="Gold"
+                   asp-route-status="@Model.StatusFilter"
+                   asp-route-categoryId="@Model.CategoryIdFilter"
+                   asp-route-sortBy="@Model.SortBy"
+                   class="chip chip-gold @(Model.MetalTypeFilter == "Gold" ? "chip-active" : "")">
                 <i class="fa-solid fa-coins"></i> Gold
             </a>
             <a asp-action="Index"
-               asp-route-search="@Model.SearchKeyword"
-               asp-route-metalType="Silver"
-               asp-route-status="@Model.StatusFilter"
-               asp-route-categoryId="@Model.CategoryIdFilter"
-               class="chip chip-silver @(Model.MetalTypeFilter == "Silver" ? "chip-active" : "")">
+                   asp-route-search="@Model.SearchKeyword"
+                   asp-route-metalType="Silver"
+                   asp-route-status="@Model.StatusFilter"
+                   asp-route-categoryId="@Model.CategoryIdFilter"
+                   asp-route-sortBy="@Model.SortBy"
+                   class="chip chip-silver @(Model.MetalTypeFilter == "Silver" ? "chip-active" : "")">
                 <i class="fa-solid fa-circle-dot"></i> Silver
             </a>
         </div>
 
-        <!-- Dropdowns -->
+        <!-- Status -->
         <select name="status" class="filter-input filter-select">
             <option value="">All Statuses</option>
-            <option value="Active" selected="@(Model.StatusFilter == "Active" ? "selected" : "")">Active</option>
-            <option value="Inactive" selected="@(Model.StatusFilter == "Inactive" ? "selected" : "")">Inactive</option>
+            <option value="Active" selected="@(Model.StatusFilter == "Active")">Active</option>
+            <option value="Inactive" selected="@(Model.StatusFilter == "Inactive")">Inactive</option>
         </select>
 
+        <!-- Category -->
         <select name="categoryId" class="filter-input filter-select">
             <option value="">All Categories</option>
             @foreach (var cat in Model.CategoryOptions)
             {
                 <option value="@cat.Value"
-                        selected="@(Model.CategoryIdFilter?.ToString() == cat.Value ? "selected" : "")">
+                        selected="@(Model.CategoryIdFilter?.ToString() == cat.Value)">
                     @cat.Text
                 </option>
             }
         </select>
 
+        <!-- Sort — FIX: "popularity" removed — causes EF translation error in service -->
         <select name="sortBy" class="filter-input filter-select">
-            <option value="newest"     selected="@(Model.SortBy == "newest"     ? "selected" : "")">Newest</option>
-            <option value="price_asc"  selected="@(Model.SortBy == "price_asc"  ? "selected" : "")">Price ↑</option>
-            <option value="price_desc" selected="@(Model.SortBy == "price_desc" ? "selected" : "")">Price ↓</option>
-            <option value="popularity" selected="@(Model.SortBy == "popularity" ? "selected" : "")">Popular</option>
+            <option value="newest" selected="@(Model.SortBy == "newest")">Newest</option>
+            <option value="price_asc" selected="@(Model.SortBy == "price_asc")">Price ↑</option>
+            <option value="price_desc" selected="@(Model.SortBy == "price_desc")">Price ↓</option>
+            <option value="weight_asc" selected="@(Model.SortBy == "weight_asc")">Weight ↑</option>
+            <option value="weight_desc" selected="@(Model.SortBy == "weight_desc")">Weight ↓</option>
         </select>
 
         <button type="submit" class="btn-tibr btn-tibr-gold btn-sm">
             <i class="fa-solid fa-filter"></i> Filter
         </button>
-        <a asp-action="Index" class="btn-tibr btn-tibr-outline btn-sm">
+        <a asp-action="Index" class="btn-tibr btn-tibr-outline btn-sm" title="Reset filters">
             <i class="fa-solid fa-rotate-left"></i>
         </a>
     </form>
@@ -151,27 +158,28 @@
                     <th style="width:70px">Image</th>
                     <th>Name</th>
                     <th>Metal</th>
-                    <th>Purity</th>
                     <th>Weight</th>
                     <th>Buy Price</th>
                     <th>Sell Price</th>
                     <th>Margin</th>
                     <th>Stock</th>
                     <th>Status</th>
-                    <th style="width:100px">Actions</th>
+                    <th style="width:90px">Actions</th>
                 </tr>
             </thead>
             <tbody>
                 @if (!Model.Products.Any())
                 {
                     <tr>
-                        <td colspan="12" class="empty-row">
+                        <td colspan="11" class="empty-row">
                             <i class="fa-solid fa-box-open"></i>
-                            No products found
+                            No products found — try adjusting the filters
                         </td>
                     </tr>
                 }
-                @{ int rowNum = (Model.PageNumber - 1) * Model.PageSize + 1; }
+                @{
+                    int rowNum = (Model.PageNumber - 1) * Model.PageSize + 1;
+                }
                 @foreach (var p in Model.Products)
                 {
                     <tr class="table-row-anim product-row">
@@ -201,7 +209,6 @@
                                 @p.MetalType
                             </span>
                         </td>
-                        <td class="text-muted-sm">@p.Purity</td>
                         <td class="text-muted-sm">@p.Weight g</td>
                         <td class="text-muted-sm">@p.BuyPrice.ToString("N2") EGP</td>
                         <td><strong class="price-cell">@p.SellPrice.ToString("N2") EGP</strong></td>
@@ -215,7 +222,8 @@
                                 <span class="stock-num @p.StockStatusClass">@p.Stock</span>
                                 <span class="stock-bar-wrap">
                                     <span class="stock-bar @p.StockStatusClass"
-                                          style="width: @Math.Min(100, (int)(p.Stock / 100.0 * 100))%"></span>
+                                          style="width:@Math.Min(100, p.Stock > 0 ? (int)Math.Min(100, p.Stock * 2) : 0)%">
+                                    </span>
                                 </span>
                             </div>
                         </td>
@@ -228,12 +236,12 @@
                         <td>
                             <div class="action-btns">
                                 <a asp-action="Edit" asp-route-id="@p.Id"
-                                   class="btn-icon-sm" title="Edit">
+                                       class="btn-icon-sm" title="Edit">
                                     <i class="fa-solid fa-pen-to-square"></i>
                                 </a>
                                 <form asp-action="Delete" asp-route-id="@p.Id"
                                       method="post" class="d-inline"
-                                      onsubmit="return confirm('Delete @Html.Raw(p.Name.Replace("'","\'"))?');">
+                                      onsubmit="return confirm('Delete this product? This cannot be undone.');">
                                     @Html.AntiForgeryToken()
                                     <button type="submit" class="btn-icon-sm btn-icon-danger" title="Delete">
                                         <i class="fa-solid fa-trash-can"></i>
@@ -257,40 +265,47 @@
                 of @Model.TotalCount products
             </span>
             <div class="pag-controls">
+                <!-- Previous -->
                 @if (Model.HasPrevious)
                 {
                     <a asp-action="Index"
                        asp-route-pageNumber="@(Model.PageNumber - 1)"
+                       asp-route-pageSize="@Model.PageSize"
                        asp-route-search="@Model.SearchKeyword"
                        asp-route-metalType="@Model.MetalTypeFilter"
                        asp-route-status="@Model.StatusFilter"
                        asp-route-sortBy="@Model.SortBy"
-                       class="pag-btn">
-                        <i class="fa-solid fa-chevron-left"></i>
-                    </a>
+                       asp-route-categoryId="@(Model.CategoryIdFilter.HasValue? Model.CategoryIdFilter.ToString() : null)"
+                       class="pag-btn"><i class="fa-solid fa-chevron-left"></i></a>
                 }
+
+                <!-- Page numbers -->
                 @for (int i = Math.Max(1, Model.PageNumber - 2);
                          i <= Math.Min(Model.TotalPages, Model.PageNumber + 2); i++)
                 {
                     <a asp-action="Index"
                        asp-route-pageNumber="@i"
+                       asp-route-pageSize="@Model.PageSize"
                        asp-route-search="@Model.SearchKeyword"
                        asp-route-metalType="@Model.MetalTypeFilter"
                        asp-route-status="@Model.StatusFilter"
                        asp-route-sortBy="@Model.SortBy"
+                       asp-route-categoryId="@(Model.CategoryIdFilter.HasValue ? Model.CategoryIdFilter.ToString() : null)"
                        class="pag-btn @(i == Model.PageNumber ? "pag-active" : "")">@i</a>
                 }
+
+                <!-- Next -->
                 @if (Model.HasNext)
                 {
                     <a asp-action="Index"
                        asp-route-pageNumber="@(Model.PageNumber + 1)"
+                       asp-route-pageSize="@Model.PageSize"
                        asp-route-search="@Model.SearchKeyword"
                        asp-route-metalType="@Model.MetalTypeFilter"
                        asp-route-status="@Model.StatusFilter"
                        asp-route-sortBy="@Model.SortBy"
-                       class="pag-btn">
-                        <i class="fa-solid fa-chevron-right"></i>
-                    </a>
+                       asp-route-categoryId="@(Model.CategoryIdFilter.HasValue? Model.CategoryIdFilter.ToString() : null)"
+                       class="pag-btn"><i class="fa-solid fa-chevron-right"></i></a>
                 }
             </div>
         </div>

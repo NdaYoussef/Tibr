@@ -12,7 +12,7 @@ using Tibr.Infrastructure.Contexts;
 namespace Tibr.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260621070124_InitialCreate")]
+    [Migration("20260622083838_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />

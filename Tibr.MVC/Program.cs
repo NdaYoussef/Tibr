@@ -11,6 +11,7 @@ using Tibr.Infrastructure.Contexts;
 using Tibr.Infrastructure.Seeds;
 using Tibr.Infrastructure.Services;
 
+
 namespace Tibr.MVC
 {
     public class Program
@@ -39,6 +40,7 @@ namespace Tibr.MVC
             builder.Services.AddTransient<IEmailService, EmailService>();
             builder.Services.AddHttpClient<IPaymentGateway, PaymobPaymentGateway>();
             builder.Services.AddHttpClient<IMarketPriceService, MarketPriceService>();
+
 
             TypeAdapterConfig.GlobalSettings.Scan(
                         typeof(Tibr.Application.Mappers.ProductMappingConfig).Assembly,

@@ -1,0 +1,177 @@
+﻿@model Tibr.MVC.Models.Support.SupportListViewModel
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Support Tickets";
+    ViewData["PageTitle"] = "Support";
+}
+
+<div class="page-header">
+    <div>
+        <h1 class="page-title">Support Tickets</h1>
+        <p class="page-sub">Manage customer support requests and resolve issues</p>
+    </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     STAT CARDS
+══════════════════════════════════════════════ -->
+<div class="support-stats reveal">
+    <a asp-action="Index" class="sstat-card @(string.IsNullOrEmpty(Model.StatusFilter) ? "sstat-active" : "")">
+        <div class="sstat-icon"><i class="fa-solid fa-ticket"></i></div>
+        <div class="sstat-body">
+            <span class="sstat-num">@Model.TotalAll</span>
+            <span class="sstat-lbl">All Tickets</span>
+        </div>
+    </a>
+    <a asp-action="Index" asp-route-status="Open"
+           class="sstat-card @(Model.StatusFilter == "Open" ? "sstat-active sstat-open" : "")">
+        <div class="sstat-icon open-icon"><i class="fa-solid fa-circle-dot"></i></div>
+        <div class="sstat-body">
+            <span class="sstat-num">@Model.TotalOpen</span>
+            <span class="sstat-lbl">Open</span>
+        </div>
+        @if (Model.TotalOpen > 0)
+        {
+            <span class="sstat-badge">@Model.TotalOpen</span>
+        }
+    </a>
+    <a asp-action="Index" asp-route-status="Pending"
+           class="sstat-card @(Model.StatusFilter == "Pending" ? "sstat-active sstat-pending" : "")">
+        <div class="sstat-icon pending-icon"><i class="fa-solid fa-hourglass-half"></i></div>
+        <div class="sstat-body">
+            <span class="sstat-num">@Model.TotalPending</span>
+            <span class="sstat-lbl">In Progress</span>
+        </div>
+    </a>
+    <a asp-action="Index" asp-route-status="Resolved"
+           class="sstat-card @(Model.StatusFilter == "Resolved" ? "sstat-active sstat-resolved" : "")">
+        <div class="sstat-icon resolved-icon"><i class="fa-solid fa-circle-check"></i></div>
+        <div class="sstat-body">
+            <span class="sstat-num">@Model.TotalResolved</span>
+            <span class="sstat-lbl">Resolved</span>
+        </div>
+    </a>
+    <a asp-action="Index" asp-route-status="Closed"
+           class="sstat-card @(Model.StatusFilter == "Closed" ? "sstat-active sstat-closed" : "")">
+        <div class="sstat-icon closed-icon"><i class="fa-solid fa-lock"></i></div>
+        <div class="sstat-body">
+            <span class="sstat-num">@Model.TotalClosed</span>
+            <span class="sstat-lbl">Closed</span>
+        </div>
+    </a>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     SEARCH BAR
+══════════════════════════════════════════════ -->
+<div class="filter-card reveal">
+    <form asp-action="Index" method="get" class="filter-form-row">
+        <input type="hidden" name="status" value="@Model.StatusFilter" />
+        <div class="filter-search-wrap" style="flex:1">
+            <i class="fa-solid fa-magnifying-glass"></i>
+            <input type="text" name="search" value="@Model.SearchKeyword"
+                   placeholder="Search by subject, customer name, or ticket number..."
+                   class="filter-input filter-search" />
+        </div>
+        <button type="submit" class="btn-tibr btn-tibr-gold btn-sm">
+            <i class="fa-solid fa-magnifying-glass"></i> Search
+        </button>
+        <a asp-action="Index" class="btn-tibr btn-tibr-outline btn-sm" title="Reset">
+            <i class="fa-solid fa-rotate-left"></i>
+        </a>
+    </form>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     TICKET LIST TABLE
+══════════════════════════════════════════════ -->
+<div class="table-card reveal">
+    <div class="table-card-header">
+        <h3 class="chart-title">
+            @(string.IsNullOrEmpty(Model.StatusFilter) ? "All Tickets" : Model.StatusFilter + " Tickets")
+            <span class="table-count-badge">@Model.Filtered.Count() tickets</span>
+        </h3>
+        @if (!string.IsNullOrEmpty(Model.SearchKeyword))
+        {
+            <span class="search-result-note">
+                <i class="fa-solid fa-filter"></i>
+                Results for "@Model.SearchKeyword"
+            </span>
+        }
+    </div>
+
+    <div class="table-responsive">
+        <table class="tibr-table support-table">
+            <thead>
+                <tr>
+                    <th style="width:110px">Ticket #</th>
+                    <th>Subject</th>
+                    <th>Customer</th>
+                    <th style="width:130px">Status</th>
+                    <th style="width:110px">Created</th>
+                    <th style="width:90px">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if (!Model.Filtered.Any())
+                {
+                    <tr>
+                        <td colspan="6" class="empty-row">
+                            <i class="fa-solid fa-ticket"></i>
+                            @(string.IsNullOrEmpty(Model.SearchKeyword)
+                                ? "No tickets found"
+                                : $"No results for \"{Model.SearchKeyword}\"")
+                        </td>
+                    </tr>
+                }
+                @foreach (var t in Model.Filtered)
+                {
+                    <tr class="table-row-anim support-row @t.StatusClass"
+                        onclick="window.location='@Url.Action("Details", new { id = t.Id })'">
+                        <td>
+                            <span class="ticket-num">@t.TicketNumber</span>
+                        </td>
+                        <td>
+                            <div class="ticket-subject-cell">
+                                <span class="ticket-subject">@t.Subject</span>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="customer-cell">
+                                <div class="customer-avatar">@t.CustomerName.FirstOrDefault()</div>
+                                <span>@t.CustomerName</span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="status-badge @t.StatusBadgeClass">
+                                <span class="status-dot"></span>
+                                @t.StatusLabel
+                            </span>
+                        </td>
+                        <td>
+                            <span class="date-cell" title="@t.CreatedAt.ToString("dd/MM/yyyy HH:mm")">
+                                @t.TimeAgo
+                            </span>
+                        </td>
+                        <td onclick="event.stopPropagation()">
+                            <div class="action-btns">
+                                <a asp-action="Details" asp-route-id="@t.Id"
+                                       class="btn-icon-sm" title="View ticket">
+                                    <i class="fa-solid fa-eye"></i>
+                                </a>
+                                <form asp-action="Delete" asp-route-id="@t.Id"
+                                      method="post" class="d-inline"
+                                      onsubmit="return confirm('Delete ticket @t.TicketNumber? This cannot be undone.');">
+                                    @Html.AntiForgeryToken()
+                                    <button type="submit" class="btn-icon-sm btn-icon-danger" title="Delete">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

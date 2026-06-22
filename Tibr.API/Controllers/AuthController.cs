@@ -71,6 +71,15 @@ namespace Tibr.API.Controllers
             return Ok(result);
         }
 
+        [HttpPost("admin-login")]
+        [AllowAnonymous]
+        public async Task<IActionResult> AdminLogin([FromBody] LoginRequestData model)
+        {
+            var result = await _mediator.Send(new AdminLoginCommand(model));
+            if (!result.IsSuccess) return Unauthorized(result);
+            return Ok(result);
+        }
+
         [HttpPost("forgot-password")]
         [AllowAnonymous]
         public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequestData model)

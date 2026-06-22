@@ -15,7 +15,7 @@ namespace Tibr.MVC.Controllers
             ICategoryService categoryService,
             ILogger<CategoryController> logger)
         {
-            _categoryService = categoryService;
+            _categoryService = categoryService; 
             _logger = logger;
         }
 

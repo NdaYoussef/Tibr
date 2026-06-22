@@ -1,10 +1,8 @@
-﻿using MediatR;
+using MediatR;
 using Microsoft.EntityFrameworkCore;
-using System;
-using System.Collections.Generic;
-using System.Text;
+using Tibr.Domain.Entities;
 
-namespace Tibr.Infrastructure.Services.Admin
+namespace Tibr.Application.Services.AdminManagement
 {
     // Get all admins with pagination and filtering
     public record GetAllAdminsQuery(int PageNumber = 1, int PageSize = 10, string? SearchTerm = null, string SortBy = "Name", bool SortDescending = false)

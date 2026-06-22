@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -15,35 +15,40 @@
         var showBack = ViewData["ShowBack"] as bool? ?? false;
         var headerTitle = ViewData["HeaderTitle"]?.ToString() ?? "Tibr";
         var headerBadge = ViewData["HeaderBadge"]?.ToString();
+        
+      
+        bool isAuthPage = controller == "AdminAuth";
     }
 
-    <!-- Dynamic Executive Top Header -->
-    <header class="main-header shadow-sm">
-        <div class="header-container">
-            <div class="d-flex align-items-center gap-2">
-                @if (showBack)
-                {
-                    <a href="javascript:history.back()" class="text-dark fs-4 me-2" style="line-height: 1;"><i class="bi bi-arrow-left"></i></a>
-                }
-                else
-                {
-                    <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=150&auto=format&fit=crop" class="circular-avatar me-2" alt="Profile" />
-                }
-                <span class="brand-title">@headerTitle</span>
+    @if (!isAuthPage)
+    {
+        <header class="main-header shadow-sm">
+            <div class="header-container">
+                <div class="d-flex align-items-center gap-2">
+                    @if (showBack)
+                    {
+                        <a href="javascript:history.back()" class="text-dark fs-4 me-2" style="line-height: 1;"><i class="bi bi-arrow-left"></i></a>
+                    }
+                    else
+                    {
+                        <img src="https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=150&auto=format&fit=crop" class="circular-avatar me-2" alt="Profile" />
+                    }
+                    <span class="brand-title">@headerTitle</span>
+                </div>
+                
+                <div class="d-flex align-items-center gap-3">
+                    @if (!string.IsNullOrEmpty(headerBadge))
+                    {
+                        <span class="pill-badge badge-gold-light">@headerBadge</span>
+                    }
+                    <a href="#" class="text-dark position-relative" style="line-height: 1;">
+                        <i class="bi bi-bell fs-5"></i>
+                        <span class="position-absolute top-0 start-100 translate-middle p-1 bg-warning border border-light rounded-circle"></span>
+                    </a>
+                </div>
             </div>
-            
-            <div class="d-flex align-items-center gap-3">
-                @if (!string.IsNullOrEmpty(headerBadge))
-                {
-                    <span class="pill-badge badge-gold-light">@headerBadge</span>
-                }
-                <a href="#" class="text-dark position-relative" style="line-height: 1;">
-                    <i class="bi bi-bell fs-5"></i>
-                    <span class="position-absolute top-0 start-100 translate-middle p-1 bg-warning border border-light rounded-circle"></span>
-                </a>
-            </div>
-        </div>
-    </header>
+        </header>
+    }
 
     <div class="main-content-layout container mt-4">
         <main role="main" class="pb-3">
@@ -65,25 +70,16 @@
         </main>
     </div>
 
-    <!-- Persistent Navigation Bar -->
-    <nav class="bottom-tab-bar">
-        <a asp-controller="Home" asp-action="Index" class="tab-item @(controller == "Home" ? "active" : "")">
-            <i class="bi bi-grid-fill"></i>
-            <span>Dashboard</span>
-        </a>
-        <a asp-controller="Users" asp-action="Index" class="tab-item @(controller == "Users" ? "active" : "")">
-            <i class="bi bi-people-fill"></i>
-            <span>Users</span>
-        </a>
-        <a asp-controller="Orders" asp-action="Index" class="tab-item @(controller == "Orders" ? "active" : "")">
-            <i class="bi bi-receipt"></i>
-            <span>Orders</span>
-        </a>
-        <a asp-controller="Settings" asp-action="Index" class="tab-item @(controller == "Settings" ? "active" : "")">
-            <i class="bi bi-gear-fill"></i>
-            <span>Settings</span>
-        </a>
-    </nav>
+    @if (!isAuthPage)
+    {
+        <nav class="bottom-tab-bar">
+            <a asp-controller="Home" asp-action="Index" class="tab-item @(controller == "Home" ? "active" : "")">
+                <i class="bi bi-grid-fill"></i>
+                <span>Dashboard</span>
+            </a>
+        </nav>
+    }
+
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>

@@ -1,0 +1,85 @@
+﻿@model Tibr.MVC.Models.PrintReportViewModel
+@{
+    Layout = null;  // ← standalone page, no sidebar/topbar
+}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>Tibr Report — @Model.ReportType</title>
+    <style>
+        body { font-family: 'Segoe UI', Arial, sans-serif; color: #111; margin: 0; padding: 32px; }
+        .header { display: flex; justify-content: space-between; align-items: center;
+                  margin-bottom: 24px; border-bottom: 3px solid #C5A028; padding-bottom: 16px; }
+        .logo   { font-size: 28px; font-weight: 700; color: #C5A028; }
+        .meta   { font-size: 13px; color: #666; text-align: right; }
+        .summary { display: grid; grid-template-columns: repeat(4,1fr); gap: 16px; margin-bottom: 28px; }
+        .sum-card  { border: 1px solid #e5e7eb; border-radius: 8px; padding: 16px; text-align: center; }
+        .sum-label { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: #888; }
+        .sum-val   { font-size: 22px; font-weight: 700; color: #C5A028; margin-top: 4px; }
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { background: #1a1a1a; color: #f2ca50; padding: 10px 12px; text-align: left;
+             font-size: 11px; text-transform: uppercase; letter-spacing: .06em; }
+        td { padding: 9px 12px; border-bottom: 1px solid #f0f0f0; }
+        tr:nth-child(even) td { background: #fafafa; }
+        .footer { margin-top: 32px; font-size: 11px; color: #aaa; text-align: center; }
+        @@media print { body { padding: 0; } }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div class="logo">Tibr Admin</div>
+    <div class="meta">
+        <div><strong>@Model.ReportType.ToUpper() REPORT</strong></div>
+        <div>@Model.FromDate.ToString("dd MMM yyyy") — @Model.ToDate.ToString("dd MMM yyyy")</div>
+        <div>Generated: @DateTime.Now.ToString("dd MMM yyyy HH:mm")</div>
+    </div>
+</div>
+
+<div class="summary">
+    <div class="sum-card">
+        <div class="sum-label">Revenue</div>
+        <div class="sum-val">@Model.Summary.TotalRevenue.ToString("N0") EGP</div>
+    </div>
+    <div class="sum-card">
+        <div class="sum-label">Orders</div>
+        <div class="sum-val">@Model.Summary.TotalOrders.ToString("N0")</div>
+    </div>
+    <div class="sum-card">
+        <div class="sum-label">Customers</div>
+        <div class="sum-val">@Model.Summary.TotalCustomers.ToString("N0")</div>
+    </div>
+    <div class="sum-card">
+        <div class="sum-label">Products</div>
+        <div class="sum-val">@Model.Summary.TotalProducts.ToString("N0")</div>
+    </div>
+</div>
+
+<table>
+    <thead>
+        <tr>
+            @foreach (var h in Model.TableHeaders)
+            {
+                <th>@h</th>
+            }
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var row in Model.TableRows)
+        {
+            <tr>
+                @foreach (var cell in row)
+                {
+                    <td>@cell</td>
+                }
+            </tr>
+        }
+    </tbody>
+</table>
+
+<div class="footer">Tibr Investment Platform — Confidential — @DateTime.Now.Year</div>
+
+<script>window.onload = function () { window.print(); };</script>
+</body>
+</html>

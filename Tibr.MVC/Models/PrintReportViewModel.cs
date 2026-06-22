@@ -11,4 +11,6 @@ namespace Tibr.MVC.Models
         public List<string> TableHeaders { get; set; } = [];
         public List<List<string>> TableRows { get; set; } = [];
     }
+
 }
+

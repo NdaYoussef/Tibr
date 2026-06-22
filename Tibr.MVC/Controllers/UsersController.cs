@@ -1,58 +1,29 @@
 using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
-using System.Net.Http;
-using System.Net.Http.Headers;
-using System.Net.Http.Json;
 using System.Text;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
+using MediatR;
+using Tibr.Application.Dtos;
+using Tibr.Application.Services.UserServices;
+using Tibr.Application.Services.Auth;
 using Tibr.MVC.Models.Users;
 
 namespace Tibr.MVC.Controllers
 {
     public class UsersController : Controller
     {
-        private readonly IHttpClientFactory _httpClientFactory;
+        private readonly IUserService _userService;
+        private readonly IMediator _mediator;
         private readonly ILogger<UsersController> _logger;
 
-        // In-memory fallback mock database for demonstration and testing when the backend API is offline
-        private static readonly List<UserListItemViewModel> MockUsers = new()
+        public UsersController(IUserService userService, IMediator mediator, ILogger<UsersController> logger)
         {
-            new() { Id = 1, FirstName = "Ahmad", LastName = "Al-Saeed", Email = "ahmad.saeed@tibr.com", Phone = "+962791234567", Status = "Active", OtpVerified = true, KycStatus = "Approved", CreatedAt = DateTime.Now.AddDays(-60) },
-            new() { Id = 2, FirstName = "Sarah", LastName = "Smith", Email = "sarah.smith@tibr.com", Phone = "+12025550143", Status = "Active", OtpVerified = true, KycStatus = "Pending", CreatedAt = DateTime.Now.AddDays(-30) },
-            new() { Id = 3, FirstName = "John", LastName = "Doe", Email = "john.doe@tibr.com", Phone = "+14155552671", Status = "Suspended", OtpVerified = true, KycStatus = "Rejected", CreatedAt = DateTime.Now.AddDays(-15) },
-            new() { Id = 4, FirstName = "Fatima", LastName = "Mansour", Email = "fatima.m@tibr.com", Phone = "+966501234567", Status = "Active", OtpVerified = false, KycStatus = "Pending", CreatedAt = DateTime.Now.AddDays(-5) },
-            new() { Id = 5, FirstName = "Liam", LastName = "Johnson", Email = "liam.j@tibr.com", Phone = "+442079460192", Status = "Active", OtpVerified = true, KycStatus = "Approved", CreatedAt = DateTime.Now.AddDays(-45) }
-        };
-
-        private static readonly List<UserOrderHistoryItemViewModel> MockOrders = new()
-        {
-            new() { OrderId = 101, OrderNumber = "TIBR-9821-01", TotalAmount = 249.99m, OrderStatus = "Delivered", PaymentStatus = "Paid", CreatedAt = DateTime.Now.AddDays(-40) },
-            new() { OrderId = 102, OrderNumber = "TIBR-9821-02", TotalAmount = 89.50m, OrderStatus = "Shipped", PaymentStatus = "Paid", CreatedAt = DateTime.Now.AddDays(-10) },
-            new() { OrderId = 103, OrderNumber = "TIBR-3310-01", TotalAmount = 1200.00m, OrderStatus = "Processing", PaymentStatus = "Paid", CreatedAt = DateTime.Now.AddDays(-2) },
-            new() { OrderId = 104, OrderNumber = "TIBR-1102-05", TotalAmount = 45.00m, OrderStatus = "Cancelled", PaymentStatus = "Refunded", CreatedAt = DateTime.Now.AddDays(-1) }
-        };
-
-        public UsersController(IHttpClientFactory httpClientFactory, ILogger<UsersController> logger)
-        {
-            _httpClientFactory = httpClientFactory;
+            _userService = userService;
+            _mediator = mediator;
             _logger = logger;
-        }
-
-        // Helper to create and authorize HttpClient with Bearer Token
-        private HttpClient GetApiClient()
-        {
-            var client = _httpClientFactory.CreateClient("TibrApi");
-            var token = Request.Cookies["JwtToken"]; // Read token from client browser cookie
-            if (!string.IsNullOrEmpty(token))
-            {
-                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", token);
-            }
-            return client;
         }
 
         // GET: Users
@@ -61,55 +32,29 @@ namespace Tibr.MVC.Controllers
             ViewData["HeaderTitle"] = "User Directory";
             ViewData["ShowBack"] = false;
             const int pageSize = 5;
-            var client = GetApiClient();
-            List<UserListItemViewModel> usersList;
 
-            try
+            var result = await _userService.GetUsersAsync(searchQuery, statusFilter, kycStatusFilter);
+            if (result.IsFailure)
             {
-                // Construct URL with query parameters for the API
-                var queryParams = $"?searchQuery={searchQuery}&statusFilter={statusFilter}&kycStatusFilter={kycStatusFilter}";
-                var response = await client.GetAsync($"users{queryParams}");
-
-                if (response.IsSuccessStatusCode)
-                {
-                    usersList = await response.Content.ReadFromJsonAsync<List<UserListItemViewModel>>() ?? [];
-                }
-                else
-                {
-                    _logger.LogWarning($"API returned error code {response.StatusCode}. Falling back to simulated local database.");
-                    usersList = [.. MockUsers];
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to connect to API. Falling back to simulated local database.");
-                usersList = [.. MockUsers];
+                TempData["ErrorMessage"] = result.ErrorMessage;
+                return View(new UserListViewModel());
             }
 
-            // Client-side filtering logic (applied on API list or Mock data)
-            var query = usersList.AsQueryable();
-
-            if (!string.IsNullOrWhiteSpace(searchQuery))
+            var usersList = (result.Data ?? Enumerable.Empty<UserListItemDto>()).Select(u => new UserListItemViewModel
             {
-                var lowerSearch = searchQuery.ToLower();
-                query = query.Where(u => u.FirstName.ToLower().Contains(lowerSearch) || 
-                                         u.LastName.ToLower().Contains(lowerSearch) || 
-                                         u.Email.ToLower().Contains(lowerSearch) || 
-                                         u.Phone.Contains(lowerSearch));
-            }
+                Id = u.Id,
+                FirstName = u.FirstName,
+                LastName = u.LastName,
+                Email = u.Email,
+                Phone = u.Phone,
+                Status = u.Status,
+                OtpVerified = u.OtpVerified,
+                KycStatus = u.KycStatus,
+                CreatedAt = u.CreatedAt
+            }).ToList();
 
-            if (!string.IsNullOrWhiteSpace(statusFilter))
-            {
-                query = query.Where(u => u.Status.Equals(statusFilter, StringComparison.OrdinalIgnoreCase));
-            }
-
-            if (!string.IsNullOrWhiteSpace(kycStatusFilter))
-            {
-                query = query.Where(u => u.KycStatus.Equals(kycStatusFilter, StringComparison.OrdinalIgnoreCase));
-            }
-
-            var totalItems = query.Count();
-            var paginatedUsers = query.OrderByDescending(u => u.CreatedAt)
+            var totalItems = usersList.Count;
+            var paginatedUsers = usersList.OrderByDescending(u => u.CreatedAt)
                                       .Skip((page - 1) * pageSize)
                                       .Take(pageSize)
                                       .ToList();
@@ -133,47 +78,37 @@ namespace Tibr.MVC.Controllers
         {
             ViewData["HeaderTitle"] = "User Details";
             ViewData["ShowBack"] = true;
-            var client = GetApiClient();
-            UserDetailsViewModel? userDetails = null;
 
-            try
+            var result = await _userService.GetByIdAsync(id);
+            if (result.IsFailure)
             {
-                var response = await client.GetAsync($"users/{id}");
-                if (response.IsSuccessStatusCode)
-                {
-                    userDetails = await response.Content.ReadFromJsonAsync<UserDetailsViewModel>();
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Failed to retrieve details from API for user {id}. Using simulated database.");
+                TempData["ErrorMessage"] = result.ErrorMessage;
+                return RedirectToAction(nameof(Index));
             }
 
-            if (userDetails == null)
+            var u = result.Data!;
+            var userDetails = new UserDetailsViewModel
             {
-                var mockUser = MockUsers.FirstOrDefault(u => u.Id == id);
-                if (mockUser == null)
+                Id = u.Id,
+                FirstName = u.FirstName,
+                LastName = u.LastName,
+                Email = u.Email,
+                Phone = u.Phone,
+                Status = u.Status,
+                OtpVerified = u.OtpVerified,
+                KycStatus = u.KycStatus,
+                CreatedAt = u.CreatedAt,
+                UpdatedAt = u.UpdatedAt,
+                Orders = u.Orders.Select(o => new UserOrderHistoryItemViewModel
                 {
-                    return NotFound($"User with ID {id} was not found.");
-                }
-
-                // Map mock data
-                userDetails = new UserDetailsViewModel
-                {
-                    Id = mockUser.Id,
-                    FirstName = mockUser.FirstName,
-                    LastName = mockUser.LastName,
-                    Email = mockUser.Email,
-                    Phone = mockUser.Phone,
-                    Status = mockUser.Status,
-                    OtpVerified = mockUser.OtpVerified,
-                    KycStatus = mockUser.KycStatus,
-                    CreatedAt = mockUser.CreatedAt,
-                    UpdatedAt = mockUser.CreatedAt.AddDays(2),
-                    // Pull sample orders associated with user ID
-                    Orders = id == 1 ? [MockOrders[0], MockOrders[1]] : id == 2 ? [MockOrders[2]] : [MockOrders[3]]
-                };
-            }
+                    OrderId = o.OrderId,
+                    OrderNumber = o.OrderNumber,
+                    TotalAmount = o.TotalAmount,
+                    OrderStatus = o.OrderStatus,
+                    PaymentStatus = o.PaymentStatus,
+                    CreatedAt = o.CreatedAt
+                }).ToList()
+            };
 
             return View(userDetails);
         }
@@ -197,43 +132,32 @@ namespace Tibr.MVC.Controllers
                 return View(model);
             }
 
-            var client = GetApiClient();
+            var requestData = new RegisterRequestData(
+                model.FirstName,
+                model.LastName,
+                model.Email,
+                model.Phone,
+                model.Password,
+                model.ConfirmPassword
+            );
+
             try
             {
-                // Trigger register endpoint on API
-                var response = await client.PostAsJsonAsync("auth/register", model);
-                if (response.IsSuccessStatusCode)
+                var result = await _mediator.Send(new RegisterCommand(requestData));
+                if (result.IsSuccess)
                 {
-                    TempData["SuccessMessage"] = "User created successfully via API.";
+                    TempData["SuccessMessage"] = "User created successfully. OTP code sent to user email.";
                     return RedirectToAction(nameof(Index));
                 }
                 else
                 {
-                    var error = await response.Content.ReadAsStringAsync();
-                    ModelState.AddModelError("", $"API Registration Error: {error}");
+                    ModelState.AddModelError("", result.MessageEN ?? "Registration failed.");
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "API User registration failed. Simulating local insert.");
-                
-                // Simulated fallback
-                var newId = MockUsers.Max(u => u.Id) + 1;
-                MockUsers.Add(new UserListItemViewModel
-                {
-                    Id = newId,
-                    FirstName = model.FirstName,
-                    LastName = model.LastName,
-                    Email = model.Email,
-                    Phone = model.Phone,
-                    Status = "Active",
-                    OtpVerified = false,
-                    KycStatus = "Pending",
-                    CreatedAt = DateTime.Now
-                });
-
-                TempData["SuccessMessage"] = "User created successfully (Simulated Fallback).";
-                return RedirectToAction(nameof(Index));
+                _logger.LogError(ex, "Failed to create user in DB.");
+                ModelState.AddModelError("", $"Failed to create user: {ex.Message}");
             }
 
             return View(model);
@@ -244,54 +168,25 @@ namespace Tibr.MVC.Controllers
         {
             ViewData["HeaderTitle"] = "Edit User Profile";
             ViewData["ShowBack"] = true;
-            var client = GetApiClient();
-            UserEditViewModel? editModel = null;
 
-            try
+            var result = await _userService.GetByIdAsync(id);
+            if (result.IsFailure)
             {
-                var response = await client.GetAsync($"users/{id}");
-                if (response.IsSuccessStatusCode)
-                {
-                    var details = await response.Content.ReadFromJsonAsync<UserDetailsViewModel>();
-                    if (details != null)
-                    {
-                        editModel = new UserEditViewModel
-                        {
-                            Id = details.Id,
-                            FirstName = details.FirstName,
-                            LastName = details.LastName,
-                            Email = details.Email,
-                            Phone = details.Phone,
-                            Status = details.Status,
-                            KycStatus = details.KycStatus
-                        };
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"API edit GET failed for user {id}. Using mock database.");
+                TempData["ErrorMessage"] = result.ErrorMessage;
+                return RedirectToAction(nameof(Index));
             }
 
-            if (editModel == null)
+            var details = result.Data!;
+            var editModel = new UserEditViewModel
             {
-                var mockUser = MockUsers.FirstOrDefault(u => u.Id == id);
-                if (mockUser == null)
-                {
-                    return NotFound();
-                }
-
-                editModel = new UserEditViewModel
-                {
-                    Id = mockUser.Id,
-                    FirstName = mockUser.FirstName,
-                    LastName = mockUser.LastName,
-                    Email = mockUser.Email,
-                    Phone = mockUser.Phone,
-                    Status = mockUser.Status,
-                    KycStatus = mockUser.KycStatus
-                };
-            }
+                Id = details.Id,
+                FirstName = details.FirstName,
+                LastName = details.LastName,
+                Email = details.Email,
+                Phone = details.Phone,
+                Status = details.Status,
+                KycStatus = details.KycStatus
+            };
 
             return View(editModel);
         }
@@ -311,72 +206,41 @@ namespace Tibr.MVC.Controllers
                 return View(model);
             }
 
-            var client = GetApiClient();
-            try
+            var updateDto = new UpdateUserDto
             {
-                var response = await client.PutAsJsonAsync($"users/{id}", model);
-                if (response.IsSuccessStatusCode)
-                {
-                    TempData["SuccessMessage"] = "User updated successfully via API.";
-                    return RedirectToAction(nameof(Index));
-                }
-                
-                ModelState.AddModelError("", "API failed to process updating details.");
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"API edit PUT failed for user {id}. Simulating update.");
-                
-                var mockUser = MockUsers.FirstOrDefault(u => u.Id == id);
-                if (mockUser != null)
-                {
-                    mockUser.FirstName = model.FirstName;
-                    mockUser.LastName = model.LastName;
-                    mockUser.Email = model.Email;
-                    mockUser.Phone = model.Phone;
-                    mockUser.Status = model.Status;
-                    mockUser.KycStatus = model.KycStatus;
+                Id = model.Id,
+                FirstName = model.FirstName,
+                LastName = model.LastName,
+                Email = model.Email,
+                Phone = model.Phone,
+                Status = model.Status,
+                KycStatus = model.KycStatus
+            };
 
-                    TempData["SuccessMessage"] = "User updated successfully (Simulated Fallback).";
-                    return RedirectToAction(nameof(Index));
-                }
-                return NotFound();
+            var result = await _userService.UpdateAsync(id, updateDto);
+            if (result.IsSuccess)
+            {
+                TempData["SuccessMessage"] = "User updated successfully.";
+                return RedirectToAction(nameof(Index));
             }
 
+            ModelState.AddModelError("", result.ErrorMessage);
             return View(model);
         }
 
-        // POST: Users/ToggleStatus/5 (AJAX Preferred)
+        // POST: Users/ToggleStatus/5 (AJAX)
         [HttpPost]
         public async Task<IActionResult> ToggleStatus(long id)
         {
-            var client = GetApiClient();
-            try
+            var result = await _userService.ToggleStatusAsync(id);
+            if (result.IsSuccess)
             {
-                var response = await client.PostAsync($"users/{id}/toggle-status", null);
-                if (response.IsSuccessStatusCode)
-                {
-                    var newStatus = await response.Content.ReadAsStringAsync();
-                    return Json(new { success = true, status = newStatus });
-                }
+                return Json(new { success = true, status = result.Data });
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Failed to toggle user {id} status via API. Applying mock update.");
-            }
-
-            // Fallback mock logic
-            var user = MockUsers.FirstOrDefault(u => u.Id == id);
-            if (user != null)
-            {
-                user.Status = user.Status == "Active" ? "Suspended" : "Active";
-                return Json(new { success = true, status = user.Status, message = "Status toggled (Simulated)." });
-            }
-
-            return Json(new { success = false, message = "User not found." });
+            return Json(new { success = false, message = result.ErrorMessage });
         }
 
-        // POST: Users/UpdateKycStatus (AJAX Preferred)
+        // POST: Users/UpdateKycStatus (AJAX)
         [HttpPost]
         public async Task<IActionResult> UpdateKycStatus(long id, string kycStatus)
         {
@@ -385,29 +249,12 @@ namespace Tibr.MVC.Controllers
                 return Json(new { success = false, message = "KYC status is empty." });
             }
 
-            var client = GetApiClient();
-            try
+            var result = await _userService.UpdateKycStatusAsync(id, kycStatus);
+            if (result.IsSuccess)
             {
-                var response = await client.PostAsJsonAsync($"users/{id}/kyc-status", new { status = kycStatus });
-                if (response.IsSuccessStatusCode)
-                {
-                    return Json(new { success = true, kycStatus });
-                }
+                return Json(new { success = true, kycStatus = result.Data });
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Failed to update KYC status for user {id}. Applying mock update.");
-            }
-
-            // Fallback mock logic
-            var user = MockUsers.FirstOrDefault(u => u.Id == id);
-            if (user != null)
-            {
-                user.KycStatus = kycStatus;
-                return Json(new { success = true, kycStatus, message = "KYC status updated (Simulated)." });
-            }
-
-            return Json(new { success = false, message = "User not found." });
+            return Json(new { success = false, message = result.ErrorMessage });
         }
 
         // POST: Users/Delete/5
@@ -415,78 +262,22 @@ namespace Tibr.MVC.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> DeleteConfirmed(long id)
         {
-            var client = GetApiClient();
-            try
+            var result = await _userService.DeleteAsync(id);
+            if (result.IsSuccess)
             {
-                var response = await client.DeleteAsync($"users/{id}");
-                if (response.IsSuccessStatusCode)
-                {
-                    TempData["SuccessMessage"] = "User deleted successfully via API.";
-                    return RedirectToAction(nameof(Index));
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, $"Failed to delete user {id} from API. Applying mock delete.");
-            }
-
-            var user = MockUsers.FirstOrDefault(u => u.Id == id);
-            if (user != null)
-            {
-                MockUsers.Remove(user);
-                TempData["SuccessMessage"] = "User deleted successfully (Simulated).";
+                TempData["SuccessMessage"] = "User deleted successfully.";
                 return RedirectToAction(nameof(Index));
             }
 
-            return NotFound();
+            TempData["ErrorMessage"] = result.ErrorMessage;
+            return RedirectToAction(nameof(Index));
         }
 
         // GET: Users/Export
         public async Task<IActionResult> Export(string? searchQuery, string? statusFilter, string? kycStatusFilter)
         {
-            var client = GetApiClient();
-            List<UserListItemViewModel> usersList;
-
-            try
-            {
-                var queryParams = $"?searchQuery={searchQuery}&statusFilter={statusFilter}&kycStatusFilter={kycStatusFilter}";
-                var response = await client.GetAsync($"users{queryParams}");
-                if (response.IsSuccessStatusCode)
-                {
-                    usersList = await response.Content.ReadFromJsonAsync<List<UserListItemViewModel>>() ?? [];
-                }
-                else
-                {
-                    usersList = [.. MockUsers];
-                }
-            }
-            catch
-            {
-                usersList = [.. MockUsers];
-            }
-
-            // Apply filters to export data
-            var query = usersList.AsQueryable();
-
-            if (!string.IsNullOrWhiteSpace(searchQuery))
-            {
-                var lowerSearch = searchQuery.ToLower();
-                query = query.Where(u => u.FirstName.ToLower().Contains(lowerSearch) || 
-                                         u.LastName.ToLower().Contains(lowerSearch) || 
-                                         u.Email.ToLower().Contains(lowerSearch));
-            }
-
-            if (!string.IsNullOrWhiteSpace(statusFilter))
-            {
-                query = query.Where(u => u.Status.Equals(statusFilter, StringComparison.OrdinalIgnoreCase));
-            }
-
-            if (!string.IsNullOrWhiteSpace(kycStatusFilter))
-            {
-                query = query.Where(u => u.KycStatus.Equals(kycStatusFilter, StringComparison.OrdinalIgnoreCase));
-            }
-
-            var usersToExport = query.ToList();
+            var result = await _userService.GetUsersAsync(searchQuery, statusFilter, kycStatusFilter);
+            List<UserListItemDto> usersToExport = result.IsSuccess && result.Data != null ? result.Data.ToList() : [];
 
             // Generate CSV
             var csvBuilder = new StringBuilder();
@@ -498,12 +289,12 @@ namespace Tibr.MVC.Controllers
             }
 
             var csvData = Encoding.UTF8.GetBytes(csvBuilder.ToString());
-            var result = new FileContentResult(csvData, "text/csv")
+            var fileResult = new FileContentResult(csvData, "text/csv")
             {
                 FileDownloadName = $"Tibr_Users_Export_{DateTime.Now:yyyyMMdd_HHmmss}.csv"
             };
 
-            return result;
+            return fileResult;
         }
     }
 }

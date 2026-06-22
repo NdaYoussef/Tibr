@@ -1,9 +1,9 @@
-﻿using MapsterMapper;
-using MediatR;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Tibr.Infrastructure.Services.Admin;
+using MediatR;
+using Tibr.Application.Services.AdminManagement;
 using Tibr.MVC.Models;
+using MapsterMapper;
 
 namespace Tibr.MVC.Controllers
 {
