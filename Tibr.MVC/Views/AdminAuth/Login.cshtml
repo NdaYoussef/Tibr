@@ -1,4 +1,4 @@
-@model LoginViewModel
+﻿@model LoginViewModel
 @{
     ViewData["Title"] = "Admin Login";
 }
@@ -27,20 +27,20 @@
                     <form method="post" class="needs-validation" novalidate>
                         <div class="mb-3">
                             <label for="Email" class="form-label">Email Address</label>
-                            <input type="email" class="form-control" id="Email" name="Email" 
+                            <input type="email" class="form-control" id="Email" name="Email"
                                    asp-for="Email" placeholder="Enter your email" required>
                             <span asp-validation-for="Email" class="text-danger small"></span>
                         </div>
 
                         <div class="mb-3">
                             <label for="Password" class="form-label">Password</label>
-                            <input type="password" class="form-control" id="Password" name="Password" 
+                            <input type="password" class="form-control" id="Password" name="Password"
                                    asp-for="Password" placeholder="Enter your password" required>
                             <span asp-validation-for="Password" class="text-danger small"></span>
                         </div>
 
                         <div class="mb-3 form-check">
-                            <input type="checkbox" class="form-check-input" id="RememberMe" name="RememberMe" 
+                            <input type="checkbox" class="form-check-input" id="RememberMe" name="RememberMe"
                                    asp-for="RememberMe">
                             <label class="form-check-label" for="RememberMe">
                                 Remember me for 30 days

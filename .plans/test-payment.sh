@@ -153,7 +153,7 @@ else
     "owner": 0,
     "order": {
       "id": 88888,
-      "special_reference": "$ORDER_ID"
+      "merchant_order_id": "payment:1:$ORDER_ID:$(date +%s)"
     },
     "source_data": {
       "pan": "1234",

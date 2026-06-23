@@ -1,4 +1,6 @@
+
 @model EditAdminViewModel
+
 @{
     ViewData["Title"] = $"Edit Admin - {Model.Email}";
 }
@@ -117,3 +119,4 @@
         await Html.RenderPartialAsync("_ValidationScriptsPartial");
     }
 }
+

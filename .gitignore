@@ -20,3 +20,4 @@ project.fragment.lock.json
 artifacts/
 
 Tibr.API/appsettings.json
+Tibr.API/appsettings.Development.json

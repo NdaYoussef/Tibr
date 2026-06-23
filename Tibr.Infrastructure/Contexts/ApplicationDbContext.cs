@@ -24,6 +24,22 @@ namespace Tibr.Infrastructure.Contexts
         public DbSet<Ticket> Tickets { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
 
+        // Investment & Wallet entities
+        public DbSet<Wallet> Wallets { get; set; }
+        public DbSet<WalletTransaction> WalletTransactions { get; set; }
+        public DbSet<Deposit> Deposits { get; set; }
+        public DbSet<AssetPrice> AssetPrices { get; set; }
+        public DbSet<OrdersInvestment> OrdersInvestments { get; set; }
+        public DbSet<OrderCondition> OrderConditions { get; set; }
+        public DbSet<Reservation> Reservations { get; set; }
+        public DbSet<Trade> Trades { get; set; }
+        public DbSet<Transaction> Transactions { get; set; }
+        public DbSet<Alert> Alerts { get; set; }
+        public DbSet<DeliveryRequest> DeliveryRequests { get; set; }
+        public DbSet<Address> Addresses { get; set; }
+        public DbSet<Withdraw> Withdraws { get; set; }
+        public DbSet<Review> Reviews { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);
@@ -109,8 +125,185 @@ namespace Tibr.Infrastructure.Contexts
             modelBuilder.Entity<Product>().Property(p => p.Weight).HasPrecision(18, 3);
             modelBuilder.Entity<Product>().Property(p => p.Purity).HasPrecision(10, 4);
             modelBuilder.Entity<Product>().Property(p => p.Stock).HasPrecision(18, 4);
+
+            modelBuilder.Entity<Product>().Property(p => p.MetalType)
+                .HasConversion<string>()
+                .HasMaxLength(20);
+            modelBuilder.Entity<Product>().Property(p => p.Status)
+                .HasConversion<string>()
+                .HasMaxLength(20);
+
+            #region Investment Module Relationships
+
+            modelBuilder.Entity<Wallet>()
+                .HasOne<User>()
+                .WithMany(u => u.Wallets)
+                .HasForeignKey(w => w.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<WalletTransaction>()
+                .HasOne(wt => wt.Wallet)
+                .WithMany(w => w.Transactions)
+                .HasForeignKey(wt => wt.WalletId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Deposit>()
+                .HasOne<User>()
+                .WithMany(u => u.Deposits)
+                .HasForeignKey(d => d.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<OrdersInvestment>()
+                .HasOne<User>()
+                .WithMany(u => u.InvestmentOrders)
+                .HasForeignKey(o => o.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<OrderCondition>()
+                .HasOne(oc => oc.Order)
+                .WithMany(o => o.Conditions)
+                .HasForeignKey(oc => oc.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Reservation>()
+                .HasOne(r => r.Wallet)
+                .WithMany()
+                .HasForeignKey(r => r.WalletId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Reservation>()
+                .HasOne(r => r.Order)
+                .WithMany()
+                .HasForeignKey(r => r.OrderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Trade>()
+                .HasOne(t => t.Order)
+                .WithMany(o => o.Trades)
+                .HasForeignKey(t => t.OrderId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Transaction>()
+                .HasOne(t => t.Trade)
+                .WithMany()
+                .HasForeignKey(t => t.TradeId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<Alert>()
+                .HasOne(a => a.Order)
+                .WithMany()
+                .HasForeignKey(a => a.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<DeliveryRequest>()
+                .HasOne(dr => dr.Address)
+                .WithMany()
+                .HasForeignKey(dr => dr.AddressId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            modelBuilder.Entity<DeliveryRequest>()
+                .HasOne<User>()
+                .WithMany(u => u.DeliveryRequests)
+                .HasForeignKey(dr => dr.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Address>()
+                .HasOne<User>()
+                .WithMany(u => u.Addresses)
+                .HasForeignKey(a => a.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            #endregion
+
+            #region Investment Module Decimal Precision
+
+            modelBuilder.Entity<Wallet>()
+                .Property(x => x.Balance).HasPrecision(18, 4);
+
+            modelBuilder.Entity<Wallet>()
+                .Property(x => x.ReservedBalance).HasPrecision(18, 4);
+
+            modelBuilder.Entity<WalletTransaction>()
+                .Property(x => x.Amount).HasPrecision(18, 4);
+
+            modelBuilder.Entity<Deposit>()
+                .Property(x => x.Amount).HasPrecision(18, 2);
+
+            modelBuilder.Entity<AssetPrice>()
+                .Property(x => x.BuyPrice).HasPrecision(18, 4);
+
+            modelBuilder.Entity<AssetPrice>()
+                .Property(x => x.SellPrice).HasPrecision(18, 4);
+
+            modelBuilder.Entity<OrdersInvestment>()
+                .Property(x => x.Quantity).HasPrecision(18, 4);
+
+            modelBuilder.Entity<OrdersInvestment>()
+                .Property(x => x.RequestedPrice).HasPrecision(18, 4);
+
+            modelBuilder.Entity<OrdersInvestment>()
+                .Property(x => x.CurrentPrice).HasPrecision(18, 4);
+
+            modelBuilder.Entity<OrderCondition>()
+                .Property(x => x.TargetValue).HasPrecision(18, 4);
+
+            modelBuilder.Entity<Reservation>()
+                .Property(x => x.Amount).HasPrecision(18, 4);
+
+            modelBuilder.Entity<Trade>()
+                .Property(x => x.Quantity).HasPrecision(18, 4);
+
+            modelBuilder.Entity<Trade>()
+                .Property(x => x.ExecutedPrice).HasPrecision(18, 4);
+
+            modelBuilder.Entity<Trade>()
+                .Property(x => x.TotalAmount).HasPrecision(18, 2);
+
+            modelBuilder.Entity<Transaction>()
+                .Property(x => x.Amount).HasPrecision(18, 2);
+
+            modelBuilder.Entity<DeliveryRequest>()
+                .Property(x => x.Quantity).HasPrecision(18, 4);
+
+            #endregion
+
+            #region Withdraw and Review
+
+            modelBuilder.Entity<Withdraw>()
+                .Property(w => w.Amount).HasPrecision(18, 2);
+
+            modelBuilder.Entity<Withdraw>()
+                .Property(w => w.Type)
+                .HasConversion<string>()
+                .HasMaxLength(20);
+
+            modelBuilder.Entity<Review>()
+                .HasIndex(r => new { r.OrderId, r.UserId })
+                .IsUnique();
+
+            modelBuilder.Entity<Withdraw>()
+                .HasOne(w => w.User)
+                .WithMany(u => u.Withdraws)
+                .HasForeignKey(w => w.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Review>()
+                .HasOne(r => r.Order)
+                .WithMany(o => o.Reviews)
+                .HasForeignKey(r => r.OrderId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Review>()
+                .HasOne(r => r.User)
+                .WithMany(u => u.Reviews)
+                .HasForeignKey(r => r.UserId)
+                .OnDelete(DeleteBehavior.Restrict);
+
+            #endregion
+
             modelBuilder.Entity<Product>().Property(p => p.MetalType).HasConversion<string>().HasMaxLength(20);
             modelBuilder.Entity<Product>().Property(p => p.Status).HasConversion<string>().HasMaxLength(20);
+
         }
     }
 }

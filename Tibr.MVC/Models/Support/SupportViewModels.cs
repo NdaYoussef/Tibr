@@ -24,7 +24,7 @@ namespace Tibr.MVC.Models.Support
     public class SupportRowViewModel
     {
         public long Id { get; set; }
-        public string TicketNumber { get; set; } = string.Empty;  
+        public string TicketNumber { get; set; } = string.Empty;
         public string Subject { get; set; } = string.Empty;
         public string CustomerName { get; set; } = string.Empty;
         public long CustomerId { get; set; }
@@ -32,7 +32,7 @@ namespace Tibr.MVC.Models.Support
         // Status comes from SupportResponse.Status as string ("Open", "Pending" etc.)
         public string Status { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
-        public int ReplyCount { get; set; }  
+        public int ReplyCount { get; set; }
 
         // UI helpers
         public string StatusClass => Status switch

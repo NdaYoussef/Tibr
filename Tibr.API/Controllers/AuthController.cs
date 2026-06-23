@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Authorization;
+﻿using System.Security.Claims;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Tibr.Application.Dtos;
 using MediatR;
@@ -14,6 +15,35 @@ namespace Tibr.API.Controllers
     {
         private readonly IMediator _mediator;
         public AuthController(IMediator mediator) => _mediator = mediator;
+
+        [HttpGet("profile")]
+        public async Task<IActionResult> GetProfile()
+        {
+            var userId = GetUserId();
+            if (userId is null) return Unauthorized();
+            var result = await _mediator.Send(new GetProfileQuery(userId.Value));
+            return Ok(result);
+        }
+
+        [HttpPut("profile")]
+        public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileDto dto)
+        {
+            var userId = GetUserId();
+            if (userId is null) return Unauthorized();
+            var result = await _mediator.Send(new UpdateProfileCommand(userId.Value, dto));
+            if (!result.IsSuccess) return BadRequest(result);
+            return Ok(result);
+        }
+
+        [HttpPut("change-password")]
+        public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordDto dto)
+        {
+            var userId = GetUserId();
+            if (userId is null) return Unauthorized();
+            var result = await _mediator.Send(new ChangePasswordCommand(userId.Value, dto));
+            if (!result.IsSuccess) return BadRequest(result);
+            return Ok(result);
+        }
 
         [HttpPost("register")]
         [AllowAnonymous]
@@ -82,6 +112,14 @@ namespace Tibr.API.Controllers
 
             if (!result.IsSuccess) return BadRequest(result);
             return Ok(result);
+        }
+
+        private long? GetUserId()
+        {
+            var claim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (claim is null || !long.TryParse(claim.Value, out var userId))
+                return null;
+            return userId;
         }
     }
 }
