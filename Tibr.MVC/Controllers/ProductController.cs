@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
 using Tibr.Application.Dtos.Common;
 using Tibr.Application.Dtos.ProductDto;
+using Tibr.Application.Services.AdminServices;
 using Tibr.Application.Services.CategoryServices;
 using Tibr.Application.Services.ProductServices;
 using Tibr.Domain.Enums;
@@ -14,17 +15,20 @@ namespace Tibr.MVC.Controllers
     {
         private readonly IProductService _productService;
         private readonly ICategoryService _categoryService;
+        private readonly IAdminService _adminService;
         private readonly IWebHostEnvironment _env;
         private readonly ILogger<ProductController> _logger;
 
         public ProductController(
             IProductService productService,
             ICategoryService categoryService,
+            IAdminService adminService,
             IWebHostEnvironment env,
             ILogger<ProductController> logger)
         {
             _productService = productService;
             _categoryService = categoryService;
+            _adminService = adminService;
             _env = env;
             _logger = logger;
         }
@@ -173,7 +177,7 @@ namespace Tibr.MVC.Controllers
                 vm.CategoryOptions = await GetCategorySelectList();
                 return View(vm);
             }
-
+            _adminService.InvalidateDashboardCache();
             TempData["Success"] = $"Product \"{vm.Name}\" created successfully.";
             return RedirectToAction(nameof(Index));
         }
@@ -277,7 +281,7 @@ namespace Tibr.MVC.Controllers
                 vm.CategoryOptions = await GetCategorySelectList();
                 return View(vm);
             }
-
+            _adminService.InvalidateDashboardCache();
             TempData["Success"] = $"Product \"{vm.Name}\" updated successfully.";
             return RedirectToAction(nameof(Index));
         }
@@ -288,6 +292,10 @@ namespace Tibr.MVC.Controllers
         public async Task<IActionResult> Delete(long id)
         {
             var result = await _productService.DeleteProductAsync(id);
+
+            if (result.IsSuccess)
+                _adminService.InvalidateDashboardCache();
+
 
             TempData[result.IsSuccess ? "Success" : "Error"] =
                 result.IsSuccess ? "Product deleted successfully." : result.ErrorMessage;
@@ -379,6 +387,9 @@ namespace Tibr.MVC.Controllers
             }
 
             var result = await _productService.UpdateStockAsync(vm.Id, vm.NewStock);
+
+            if (result.IsSuccess)
+                _adminService.InvalidateDashboardCache();
 
             TempData[result.IsSuccess ? "Success" : "Error"] =
                 result.IsSuccess
