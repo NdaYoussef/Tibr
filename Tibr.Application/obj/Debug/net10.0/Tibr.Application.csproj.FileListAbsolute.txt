@@ -1,0 +1,16 @@
+H:\Tibr\Tibr\Tibr.Application\bin\Debug\net10.0\Tibr.Application.deps.json
+H:\Tibr\Tibr\Tibr.Application\bin\Debug\net10.0\Tibr.Application.dll
+H:\Tibr\Tibr\Tibr.Application\bin\Debug\net10.0\Tibr.Application.pdb
+H:\Tibr\Tibr\Tibr.Application\bin\Debug\net10.0\Tibr.Domain.dll
+H:\Tibr\Tibr\Tibr.Application\bin\Debug\net10.0\Tibr.Domain.pdb
+H:\Tibr\Tibr\Tibr.Application\obj\Debug\net10.0\Tibr.Application.csproj.AssemblyReference.cache
+H:\Tibr\Tibr\Tibr.Application\obj\Debug\net10.0\Tibr.Application.GeneratedMSBuildEditorConfig.editorconfig
+H:\Tibr\Tibr\Tibr.Application\obj\Debug\net10.0\Tibr.Application.AssemblyInfoInputs.cache
+H:\Tibr\Tibr\Tibr.Application\obj\Debug\net10.0\Tibr.Application.AssemblyInfo.cs
+H:\Tibr\Tibr\Tibr.Application\obj\Debug\net10.0\Tibr.Application.csproj.CoreCompileInputs.cache
+H:\Tibr\Tibr\Tibr.Application\obj\Debug\net10.0\Tibr.Application.sourcelink.json
+H:\Tibr\Tibr\Tibr.Application\obj\Debug\net10.0\Tibr.App.DA901C47.Up2Date
+H:\Tibr\Tibr\Tibr.Application\obj\Debug\net10.0\Tibr.Application.dll
+H:\Tibr\Tibr\Tibr.Application\obj\Debug\net10.0\refint\Tibr.Application.dll
+H:\Tibr\Tibr\Tibr.Application\obj\Debug\net10.0\Tibr.Application.pdb
+H:\Tibr\Tibr\Tibr.Application\obj\Debug\net10.0\ref\Tibr.Application.dll
