@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Tibr.API")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+80e67de94958e4322d1b65a013636c95bee05b61")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+871239b9baa3a116ed9b4aa0fd30681c41ce7040")]
 [assembly: System.Reflection.AssemblyProductAttribute("Tibr.API")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Tibr.API")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

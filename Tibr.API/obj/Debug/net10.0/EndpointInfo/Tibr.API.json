@@ -2256,6 +2256,91 @@
         }
       }
     },
+    "/api/strategies": {
+      "get": {
+        "tags": [
+          "Strategies"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InvestmentOrderDto"
+                  }
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InvestmentOrderDto"
+                  }
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/InvestmentOrderDto"
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "tags": [
+          "Strategies"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateStrategyFormDto"
+              }
+            },
+            "text/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateStrategyFormDto"
+              }
+            },
+            "application/*+json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateStrategyFormDto"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "text/plain": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvestmentOrderDto"
+                }
+              },
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvestmentOrderDto"
+                }
+              },
+              "text/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InvestmentOrderDto"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/Support": {
       "get": {
         "tags": [
@@ -2781,6 +2866,12 @@
               "null",
               "string"
             ]
+          },
+          "language": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -2799,6 +2890,12 @@
             "format": "int64"
           },
           "intent": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "language": {
             "type": "string"
           }
         }
@@ -3102,6 +3199,56 @@
               "string"
             ],
             "format": "int32"
+          }
+        }
+      },
+      "CreateStrategyFormDto": {
+        "required": [
+          "asset",
+          "side",
+          "quantity",
+          "operator",
+          "targetPriceEgp",
+          "executionType"
+        ],
+        "type": "object",
+        "properties": {
+          "asset": {
+            "type": "string"
+          },
+          "side": {
+            "type": "string"
+          },
+          "quantity": {
+            "minimum": 0.0001,
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "operator": {
+            "type": "string"
+          },
+          "targetPriceEgp": {
+            "minimum": 0.01,
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "executionType": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         }
       },
@@ -4088,6 +4235,9 @@
     },
     {
       "name": "Review"
+    },
+    {
+      "name": "Strategies"
     },
     {
       "name": "Support"

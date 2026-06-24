@@ -1,0 +1,4 @@
+2026-06-24 15:41:20.584 [Information] System.Net.Http.HttpClient.IPaymentGateway.LogicalHandler: Start processing HTTP request POST https://accept.paymob.com/v1/intention/
+2026-06-24 15:41:20.585 [Information] System.Net.Http.HttpClient.IPaymentGateway.ClientHandler: Sending HTTP request POST https://accept.paymob.com/v1/intention/
+2026-06-24 15:41:22.825 [Information] System.Net.Http.HttpClient.IPaymentGateway.ClientHandler: Received HTTP response headers after 2239.7307ms - 201
+2026-06-24 15:41:22.826 [Information] System.Net.Http.HttpClient.IPaymentGateway.LogicalHandler: End processing HTTP request after 2241.8964ms - 201

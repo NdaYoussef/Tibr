@@ -1238,6 +1238,52 @@
     "ReturnTypes": []
   },
   {
+    "ContainingType": "Tibr.API.Controllers.StrategiesController",
+    "Method": "GetAll",
+    "RelativePath": "api/strategies",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "System.Collections.Generic.List\u00601[[Tibr.Application.Dtos.InvestmentOrderDto, Tibr.Application, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Tibr.API.Controllers.StrategiesController",
+    "Method": "Create",
+    "RelativePath": "api/strategies",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "Tibr.Application.Dtos.CreateStrategyFormDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "Tibr.Application.Dtos.InvestmentOrderDto",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
     "ContainingType": "Tibr.API.Controllers.SupportController",
     "Method": "GetAll",
     "RelativePath": "api/Support",
