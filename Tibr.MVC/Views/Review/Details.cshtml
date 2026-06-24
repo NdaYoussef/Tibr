@@ -1,0 +1,105 @@
+﻿@model Tibr.MVC.Models.Reviews.ReviewDetailViewModel
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Review Details";
+    ViewData["ShowBack"] = true;
+}
+
+<div class="page-header reveal">
+    <div class="d-flex align-items-center gap-3">
+        <a asp-action="Index" class="btn-tibr btn-tibr-outline btn-sm">
+            <i class="fa-solid fa-arrow-left"></i>
+        </a>
+        <div>
+            <h1 class="page-title">Review Details</h1>
+            <p class="page-sub">Viewing full feedback for Order #@Model.OrderNumber</p>
+        </div>
+    </div>
+</div>
+
+<div class="row reveal">
+    <div class="col-lg-8 mx-auto">
+        <div class="card shadow-lg" style="background: var(--bg-card); border: none; border-top: 3px solid var(--gold);">
+            <div class="card-body p-4">
+                <div class="d-flex justify-content-between align-items-start mb-4">
+                    <div class="d-flex align-items-center gap-3">
+                        <div class="rounded-circle bg-dark d-flex align-items-center justify-content-center" style="width: 56px; height: 56px; border: 1px solid var(--gold);">
+                            <span class="text-gold h4 mb-0">@Model.UserFullName[0]</span>
+                        </div>
+                        <div>
+                            <h4 class="text-dark mb-0">@Model.UserFullName</h4>
+                            <p class="text-muted mb-0">@Model.UserEmail</p>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <div class="h2 mb-0" style="color: var(--gold); letter-spacing: 2px;">@Model.StarDisplay</div>
+                        <span class="badge @(Model.Value >= 4 ? "badge-success" : Model.Value == 3 ? "badge-warning" : "badge-danger")">
+                            @Model.Value / 5 Rating
+                        </span>
+                    </div>
+                </div>
+
+                <hr class="border-secondary opacity-25 mb-4">
+
+                <div class="mb-5">
+                    <h6 class="text-muted text-uppercase small fw-bold mb-3" style="letter-spacing: 1px;">Customer Feedback</h6>
+                    <div class="p-4 rounded-3" style="background: var(--bg-card-2); border-left: 4px solid var(--gold-light);">
+                        <p class="text-dark fs-5 mb-0" style="line-height: 1.6; font-style: italic;">
+                            @if (string.IsNullOrEmpty(Model.Description))
+                            {
+                                <span class="text-muted">No written comment was provided for this review.</span>
+                            }
+                            else
+                            {
+                                @Model.Description
+                            }
+                        </p>
+                    </div>
+                </div>
+
+                <div class="row g-4 mb-4">
+                    <div class="col-sm-6">
+                        <div class="p-3 rounded border border-secondary border-opacity-25">
+                            <label class="text-muted small d-block mb-1">Related Order</label>
+                            <a href="/Orders/Details/@Model.OrderId" class="text-gold fw-bold h5">#@Model.OrderNumber</a>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="p-3 rounded border border-secondary border-opacity-25">
+                            <label class="text-muted small d-block mb-1">Submitted On</label>
+                            <span class="text-dark fw-bold h5">@Model.CreatedAt.ToString("MMMM dd, yyyy")</span>
+                            <div class="text-muted small">@Model.CreatedAt.ToString("HH:mm tt")</div>
+                        </div>
+                    </div>
+                    @if (Model.UpdatedAt.HasValue)
+                    {
+                        <div class="col-12">
+                            <div class="p-3 rounded border border-secondary border-opacity-25 bg-opacity-10 bg-info">
+                                <i class="fa-solid fa-pen-to-square text-info me-2"></i>
+                                <span class="text-muted small">Last updated by customer on <strong>@Model.UpdatedAt.Value.ToString("MMM dd, yyyy HH:mm")</strong></span>
+                            </div>
+                        </div>
+                    }
+                </div>
+
+                <div class="d-flex justify-content-between align-items-center mt-5 pt-3 border-top border-secondary border-opacity-25">
+                    <a asp-action="Index" class="btn-tibr btn-tibr-outline">
+                        <i class="fa-solid fa-chevron-left me-2"></i>Back to List
+                    </a>
+                    
+                    <form asp-action="Delete" asp-route-id="@Model.Id" method="post" onsubmit="return confirm('CRITICAL: Are you sure you want to permanently delete this customer review? This action cannot be undone.');">
+                        <button type="submit" class="btn-tibr btn-tibr-danger px-4">
+                            <i class="fa-solid fa-trash me-2"></i>Delete Review
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .text-gold { color: var(--gold); text-decoration: none; }
+    .text-gold:hover { color: var(--gold-light); }
+    .bg-dark { background-color: var(--bg-dark) !important; }
+</style>
