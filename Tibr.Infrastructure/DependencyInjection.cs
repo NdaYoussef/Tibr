@@ -69,6 +69,7 @@ namespace Tibr.Infrastructure
             services.AddHttpClient<GeminiProviderService>();
             services.AddHttpClient<OpenAiProviderService>();
             services.AddHttpClient<XaiProviderService>();
+            services.AddHttpClient<HuggingFaceProviderService>();
             services.AddSingleton<IAiProviderService, CompositeAiProvider>();
 
             services.AddScoped<IChatOrderProposalService, ChatOrderProposalService>();

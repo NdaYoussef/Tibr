@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Logging;
+using Tibr.Application.Interfaces;
 using Tibr.Domain.Entities;
 using Tibr.Domain.Enums;
 using Tibr.Domain.IRepositories;
@@ -15,7 +17,10 @@ namespace Tibr.Application.Services.ResolutionServices
         private readonly IGenericRepository<Wallet, long> _walletRepo;
         private readonly IGenericRepository<WalletTransaction, long> _walletTransactionRepo;
         private readonly IGenericRepository<Reservation, long> _reservationRepo;
+        private readonly IGenericRepository<User, long> _userRepo;
         private readonly IAssetPriceService _assetPriceService;
+        private readonly IEmailService _emailService;
+        private readonly ILogger<ResolutionService> _logger;
 
         public ResolutionService(
             IGenericRepository<OrdersInvestment, long> orderRepo,
@@ -25,7 +30,10 @@ namespace Tibr.Application.Services.ResolutionServices
             IGenericRepository<Wallet, long> walletRepo,
             IGenericRepository<WalletTransaction, long> walletTransactionRepo,
             IGenericRepository<Reservation, long> reservationRepo,
-            IAssetPriceService assetPriceService)
+            IGenericRepository<User, long> userRepo,
+            IAssetPriceService assetPriceService,
+            IEmailService emailService,
+            ILogger<ResolutionService> logger)
         {
             _orderRepo = orderRepo;
             _conditionRepo = conditionRepo;
@@ -34,27 +42,43 @@ namespace Tibr.Application.Services.ResolutionServices
             _walletRepo = walletRepo;
             _walletTransactionRepo = walletTransactionRepo;
             _reservationRepo = reservationRepo;
+            _userRepo = userRepo;
             _assetPriceService = assetPriceService;
+            _emailService = emailService;
+            _logger = logger;
         }
 
         public async Task EvaluateAsync()
         {
             var now = DateTime.UtcNow;
 
-            var orders = _orderRepo.GetAll(o =>
-                (o.Status == OrderStatus.Pending || o.Status == OrderStatus.Triggered)
+            var pendingOrders = _orderRepo.GetAll(o =>
+                o.Status == OrderStatus.Pending
                 && !o.IsDeleted
+                && o.ExecutionMode == ExecutionMode.Strategy)
+                .ToList();
+
+            // Expire stale orders first
+            foreach (var order in pendingOrders.Where(o => o.ExpiryDate.HasValue && o.ExpiryDate.Value <= now))
+            {
+                if (TryTransitionStatus(order, OrderStatus.Expired))
+                {
+                    await ReleaseReservationAsync(order);
+                    await _orderRepo.SaveChangesAsync();
+                    await NotifyExpiredAsync(order);
+                }
+            }
+
+            // Re-load to get fresh state after expiry updates
+            var activeOrders = _orderRepo.GetAll(o =>
+                o.Status == OrderStatus.Pending
+                && !o.IsDeleted
+                && o.ExecutionMode == ExecutionMode.Strategy
                 && (o.ExpiryDate == null || o.ExpiryDate > now))
                 .ToList();
 
-            foreach (var order in orders)
+            foreach (var order in activeOrders)
             {
-                if (order.ExpiryDate.HasValue && order.ExpiryDate.Value <= now)
-                {
-                    await ExpireOrderAsync(order);
-                    continue;
-                }
-
                 var priceResult = await _assetPriceService.GetCurrentPriceAsync(order.AssetType);
                 if (priceResult.IsFailure || priceResult.Data is null)
                     continue;
@@ -70,28 +94,74 @@ namespace Tibr.Application.Services.ResolutionServices
                     switch (order.ExecutionType)
                     {
                         case ExecutionType.AutoExecute:
-                            await ExecuteOrderAsync(order, currentPrice);
+                            await TryAutoExecuteAsync(order, currentPrice);
                             break;
                         case ExecutionType.AlertOnly:
-                            await TriggerOrderAsync(order, currentPrice);
+                            await TryFireAlertAsync(order, currentPrice);
                             break;
                         case ExecutionType.AlertAndExecute:
-                            await ExecuteOrderAsync(order, currentPrice);
+                            await TryAutoExecuteAsync(order, currentPrice);
                             break;
                     }
                 }
             }
         }
 
-        private async Task ExecuteOrderAsync(OrdersInvestment order, decimal executedPrice)
+        private bool TryTransitionStatus(OrdersInvestment order, OrderStatus newStatus)
         {
-            order.Status = OrderStatus.Executed;
-            order.CurrentPrice = executedPrice;
+            var allowed = newStatus switch
+            {
+                OrderStatus.Triggered => order.Status == OrderStatus.Pending,
+                OrderStatus.Executed => order.Status == OrderStatus.Pending || order.Status == OrderStatus.Triggered,
+                OrderStatus.Expired => order.Status == OrderStatus.Pending,
+                OrderStatus.Cancelled => order.Status == OrderStatus.Pending,
+                _ => false
+            };
+
+            if (!allowed) return false;
+
+            order.Status = newStatus;
+            return true;
+        }
+
+        private async Task TryFireAlertAsync(OrdersInvestment order, decimal currentPrice)
+        {
+            if (!TryTransitionStatus(order, OrderStatus.Triggered))
+            {
+                _logger.LogWarning("Strategy {OrderId} already triggered, skipping alert", order.Id);
+                return;
+            }
+
+            order.CurrentPrice = currentPrice;
             await _orderRepo.UpdateAsync(order);
+            await _orderRepo.SaveChangesAsync();
+
+            await NotifyTriggeredAsync(order, currentPrice);
+        }
+
+        private async Task TryAutoExecuteAsync(OrdersInvestment order, decimal currentPrice)
+        {
+            if (!TryTransitionStatus(order, OrderStatus.Executed))
+            {
+                _logger.LogWarning("Strategy {OrderId} already executed, skipping", order.Id);
+                return;
+            }
 
             var totalAmount = order.OrderType == OrderType.Buy
-                ? order.Quantity * executedPrice
-                : order.Quantity * executedPrice;
+                ? order.Quantity * currentPrice
+                : order.Quantity * currentPrice;
+
+            if (totalAmount > StrategyDefaults.MaxAutoAmountEgp)
+            {
+                order.Status = OrderStatus.Cancelled;
+                await _orderRepo.UpdateAsync(order);
+                await _orderRepo.SaveChangesAsync();
+                await NotifyLimitExceededAsync(order, totalAmount);
+                return;
+            }
+
+            order.CurrentPrice = currentPrice;
+            await _orderRepo.UpdateAsync(order);
 
             var trade = new Trade
             {
@@ -100,7 +170,7 @@ namespace Tibr.Application.Services.ResolutionServices
                 AssetType = order.AssetType,
                 Side = order.OrderType == OrderType.Buy ? TradeSide.Buy : TradeSide.Sell,
                 Quantity = order.Quantity,
-                ExecutedPrice = executedPrice,
+                ExecutedPrice = currentPrice,
                 TotalAmount = totalAmount,
                 ExecutedAt = DateTime.UtcNow,
                 CreatedAt = DateTime.UtcNow,
@@ -188,21 +258,12 @@ namespace Tibr.Application.Services.ResolutionServices
             }
 
             await _orderRepo.SaveChangesAsync();
+
+            await NotifyExecutedAsync(order, totalAmount);
         }
 
-        private async Task TriggerOrderAsync(OrdersInvestment order, decimal currentPrice)
+        private async Task ReleaseReservationAsync(OrdersInvestment order)
         {
-            order.Status = OrderStatus.Triggered;
-            order.CurrentPrice = currentPrice;
-            await _orderRepo.UpdateAsync(order);
-            await _orderRepo.SaveChangesAsync();
-        }
-
-        private async Task ExpireOrderAsync(OrdersInvestment order)
-        {
-            order.Status = OrderStatus.Expired;
-            await _orderRepo.UpdateAsync(order);
-
             var reservation = _reservationRepo.GetAll(r => r.OrderId == order.Id && r.Status == ReservationStatus.Active).FirstOrDefault();
             if (reservation is not null)
             {
@@ -219,6 +280,102 @@ namespace Tibr.Application.Services.ResolutionServices
 
             await _orderRepo.SaveChangesAsync();
         }
+
+        private async Task NotifyTriggeredAsync(OrdersInvestment order, decimal currentPrice)
+        {
+            try
+            {
+                var user = await _userRepo.GetByIdAsync(order.UserId);
+                if (user is null) return;
+
+                var assetLabel = order.AssetType == AssetType.Gold ? "Gold" : "Silver";
+                var sideLabel = order.OrderType == OrderType.Buy ? "buy" : "sell";
+                var subject = $"Tibr Strategy Alert — {assetLabel} target price reached";
+                var body = $@"
+                    <h2>Your strategy has been triggered!</h2>
+                    <p>Your {sideLabel} strategy for {order.Quantity:F4}g of {assetLabel} was triggered at {currentPrice:N2} EGP/g.</p>
+                    <p>Log in to Tibr to review and execute your strategy manually.</p>
+                    <p><a href='{GetBaseUrl()}'>Go to Tibr</a></p>
+                ";
+                await _emailService.SendEmailAsync(user.Email, subject, body);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send trigger notification for order {OrderId}", order.Id);
+            }
+        }
+
+        private async Task NotifyExecutedAsync(OrdersInvestment order, decimal totalAmount)
+        {
+            try
+            {
+                var user = await _userRepo.GetByIdAsync(order.UserId);
+                if (user is null) return;
+
+                var assetLabel = order.AssetType == AssetType.Gold ? "Gold" : "Silver";
+                var sideLabel = order.OrderType == OrderType.Buy ? "bought" : "sold";
+                var subject = $"Tibr Execution — {sideLabel} {order.Quantity:F4}g of {assetLabel}";
+                var body = $@"
+                    <h2>Strategy executed successfully</h2>
+                    <p>We've {sideLabel} <strong>{order.Quantity:F4}g</strong> of {assetLabel} on your behalf.</p>
+                    <p>Total amount: <strong>{totalAmount:N2} EGP</strong></p>
+                    <p><a href='{GetBaseUrl()}'>View in Tibr</a></p>
+                ";
+                await _emailService.SendEmailAsync(user.Email, subject, body);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send execution notification for order {OrderId}", order.Id);
+            }
+        }
+
+        private async Task NotifyExpiredAsync(OrdersInvestment order)
+        {
+            try
+            {
+                var user = await _userRepo.GetByIdAsync(order.UserId);
+                if (user is null) return;
+
+                var assetLabel = order.AssetType == AssetType.Gold ? "Gold" : "Silver";
+                var subject = $"Tibr — Strategy for {assetLabel} has expired";
+                var body = $@"
+                    <h2>Your strategy has expired</h2>
+                    <p>Your strategy for {assetLabel} expired without reaching its target price.</p>
+                    <p>You can create a new strategy from your Tibr dashboard.</p>
+                    <p><a href='{GetBaseUrl()}'>Go to Tibr</a></p>
+                ";
+                await _emailService.SendEmailAsync(user.Email, subject, body);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send expiry notification for order {OrderId}", order.Id);
+            }
+        }
+
+        private async Task NotifyLimitExceededAsync(OrdersInvestment order, decimal totalAmount)
+        {
+            try
+            {
+                var user = await _userRepo.GetByIdAsync(order.UserId);
+                if (user is null) return;
+
+                var assetLabel = order.AssetType == AssetType.Gold ? "Gold" : "Silver";
+                var subject = $"Tibr — Strategy cancelled, limit exceeded";
+                var body = $@"
+                    <h2>Strategy cancelled</h2>
+                    <p>Your strategy for {assetLabel} was cancelled because the amount ({totalAmount:N2} EGP) exceeds the auto-execute limit of {StrategyDefaults.MaxAutoAmountEgp:N2} EGP.</p>
+                    <p>Please review and execute manually from your Tibr dashboard.</p>
+                    <p><a href='{GetBaseUrl()}'>Go to Tibr</a></p>
+                ";
+                await _emailService.SendEmailAsync(user.Email, subject, body);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to send limit notification for order {OrderId}", order.Id);
+            }
+        }
+
+        private static string GetBaseUrl() => "http://localhost:5151";
 
         private static bool ConditionsMet(List<OrderCondition> conditions, decimal currentPrice)
         {

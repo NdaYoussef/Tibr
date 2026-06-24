@@ -10,6 +10,7 @@ namespace Tibr.Infrastructure.Services
         private readonly GeminiProviderService _gemini;
         private readonly OpenAiProviderService _openAi;
         private readonly XaiProviderService _xai;
+        private readonly HuggingFaceProviderService _huggingFace;
         private readonly AiChatSettings _settings;
         private readonly ILogger<CompositeAiProvider> _logger;
 
@@ -17,12 +18,14 @@ namespace Tibr.Infrastructure.Services
             GeminiProviderService gemini,
             OpenAiProviderService openAi,
             XaiProviderService xai,
+            HuggingFaceProviderService huggingFace,
             IOptions<AiChatSettings> settings,
             ILogger<CompositeAiProvider> logger)
         {
             _gemini = gemini;
             _openAi = openAi;
             _xai = xai;
+            _huggingFace = huggingFace;
             _settings = settings.Value;
             _logger = logger;
         }
@@ -45,12 +48,27 @@ namespace Tibr.Infrastructure.Services
 
         public Task<List<float[]>> EmbedBatchAsync(List<string> texts)
         {
-            return _gemini.EmbedBatchAsync(texts);
+            var provider = _settings.EmbeddingProvider.ToLowerInvariant();
+            _logger.LogDebug("CompositeAiProvider routing embedding to {Provider}", provider);
+
+            return provider switch
+            {
+                "huggingface" => _huggingFace.EmbedBatchAsync(texts),
+                "openai" => _openAi.EmbedBatchAsync(texts),
+                _ => _gemini.EmbedBatchAsync(texts)
+            };
         }
 
         public Task<float[]> EmbedAsync(string text)
         {
-            return _gemini.EmbedAsync(text);
+            var provider = _settings.EmbeddingProvider.ToLowerInvariant();
+
+            return provider switch
+            {
+                "huggingface" => _huggingFace.EmbedAsync(text),
+                "openai" => _openAi.EmbedAsync(text),
+                _ => _gemini.EmbedAsync(text)
+            };
         }
     }
 }

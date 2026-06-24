@@ -8,6 +8,7 @@ namespace Tibr.Application.Services.AiChatServices
         PortfolioRead = 4,
         Planner = 5,
         Agentic = 6,
-        OutOfScope = 7
+        ConditionalOrder = 7,
+        OutOfScope = 8
     }
 }

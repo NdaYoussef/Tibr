@@ -2,6 +2,7 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Tibr.API.BackgroundServices;
 using Tibr.Application;
 using Tibr.Application.Interfaces;
 using Tibr.Application.Services.Email;
@@ -91,6 +92,7 @@ namespace Tibr.API
 
             builder.Services.AddHttpClient<IMarketPriceService, MarketPriceService>();
             builder.Services.AddHostedService<AssetPriceBackgroundService>();
+            builder.Services.AddHostedService<ResolutionBackgroundService>();
 
             var app = builder.Build();
 

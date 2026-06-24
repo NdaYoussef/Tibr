@@ -2,6 +2,7 @@ using Microsoft.EntityFrameworkCore;
 using Tibr.Application.Dtos;
 using Tibr.Application.Dtos.ChatDtos;
 using Tibr.Application.Services.AssetPriceServices;
+using Tibr.Application.Services.InvestmentOrderServices;
 using Tibr.Application.Services.WalletServices;
 using Tibr.Domain.Entities;
 using Tibr.Domain.Enums;
@@ -17,6 +18,7 @@ namespace Tibr.Application.Services.AiChatServices
         private readonly IAssetPriceService _priceService;
         private readonly IGenericRepository<Trade, long> _tradeRepo;
         private readonly IChatOrderProposalService _proposalService;
+        private readonly IInvestmentOrderService _investmentOrderService;
         private readonly GoalParser _goalParser;
 
         public ChatRouter(
@@ -26,6 +28,7 @@ namespace Tibr.Application.Services.AiChatServices
             IAssetPriceService priceService,
             IGenericRepository<Trade, long> tradeRepo,
             IChatOrderProposalService proposalService,
+            IInvestmentOrderService investmentOrderService,
             GoalParser goalParser)
         {
             _aiProvider = aiProvider;
@@ -34,6 +37,7 @@ namespace Tibr.Application.Services.AiChatServices
             _priceService = priceService;
             _tradeRepo = tradeRepo;
             _proposalService = proposalService;
+            _investmentOrderService = investmentOrderService;
             _goalParser = goalParser;
         }
 
@@ -176,9 +180,9 @@ namespace Tibr.Application.Services.AiChatServices
         public async Task<(string Reply, object? ToolCallRequest)> HandleAgenticAsync(string userPrompt, long userId, long conversationId)
         {
             var systemPrompt = "You are an order assistant for Tibr, a fractional gold investment app. "
-                + "If the user wants to buy or sell gold or silver, use the propose_order tool. "
-                + "If the phrasing implies a conditional order ('when price drops below', 'if it reaches'), "
-                + "explain that conditional orders aren't supported yet and offer to place at the current price instead.";
+                + "If the user wants to buy or sell gold or silver now, use the propose_order tool. "
+                + "If the phrasing implies a conditional order (e.g., 'when price drops below', 'if it reaches'), "
+                + "do NOT use propose_order — the conditional_order intent handles that separately.";
 
             var history = new List<Message> { new("user", userPrompt) };
             var tools = new List<object> { Tools.OrderBuilderTool.FunctionDeclaration };
@@ -191,6 +195,27 @@ namespace Tibr.Application.Services.AiChatServices
             }
 
             return (response.Content ?? "I can help you buy or sell gold and silver. What would you like to do?", null);
+        }
+
+        public async Task<(string Reply, object? ToolCallRequest)> HandleConditionalOrderAsync(string userPrompt, long userId)
+        {
+            var systemPrompt = "You are a strategy assistant for Tibr, a fractional gold investment app. "
+                + "If the user wants to set a conditional order (buy/sell when price reaches a target), "
+                + "use the create_strategy_order tool. Capture asset, side (buy/sell), operator (greater_than/less_than), "
+                + "target_price_egp, execution_type (alert_only/auto_execute), quantity_grams, and expires_in_days.";
+
+            var history = new List<Message> { new("user", userPrompt) };
+            var tools = new List<object> { Tools.OrderBuilderTool.CreateStrategyFunctionDeclaration };
+            var response = await _aiProvider.ChatAsync(systemPrompt, history, tools);
+
+            if (response.ToolCalls is { Count: > 0 })
+            {
+                var call = response.ToolCalls[0];
+                return ("", call);
+            }
+
+            return (response.Content ?? "I can help you set conditional orders for gold and silver. "
+                + "For example: 'buy 10g of gold when price drops below 8000 EGP/g'.", null);
         }
 
         public async Task<string> HandlePlannerAsync(string userPrompt, long userId)
