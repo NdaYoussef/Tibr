@@ -69,6 +69,7 @@ namespace Tibr.Application.Services.InvestmentOrderServices
                 CreatedAt = DateTime.UtcNow,
             };
             await _orderRepository.AddAsync(order);
+            await _orderRepository.SaveChangesAsync();
 
             foreach (var c in dto.Conditions)
             {
@@ -81,6 +82,7 @@ namespace Tibr.Application.Services.InvestmentOrderServices
                     CreatedAt = DateTime.UtcNow,
                 });
             }
+            await _conditionRepository.SaveChangesAsync();
 
             var reserveResult = await _walletService.ReserveAsync(wallet.Id, order.Id, reserveAmount);
             if (reserveResult.IsFailure)

@@ -1,5 +1,8 @@
+using System.Text.Json;
+using Tibr.Application.Dtos;
 using Tibr.Application.Dtos.ChatDtos;
 using Tibr.Application.Services.AssetPriceServices;
+using Tibr.Application.Services.InvestmentOrderServices;
 using Tibr.Application.Services.WalletServices;
 using Tibr.Domain.Entities;
 using Tibr.Domain.Enums;
@@ -16,6 +19,7 @@ namespace Tibr.Application.Services.AiChatServices
         private readonly IGenericRepository<ChatMessage, long> _messageRepo;
         private readonly IChatOrderProposalService _proposalService;
         private readonly IProposalResolutionClassifier _resolutionClassifier;
+        private readonly IInvestmentOrderService _investmentOrderService;
         private const int ContextWindowSize = 10;
 
         public ChatService(
@@ -27,10 +31,12 @@ namespace Tibr.Application.Services.AiChatServices
             IGenericRepository<ChatConversation, long> conversationRepo,
             IGenericRepository<ChatMessage, long> messageRepo,
             IChatOrderProposalService proposalService,
-            IProposalResolutionClassifier resolutionClassifier)
+            IProposalResolutionClassifier resolutionClassifier,
+            IInvestmentOrderService investmentOrderService)
         {
             _classifier = new IntentClassifier(aiProvider);
-            _router = new ChatRouter(aiProvider, vectorStore, walletService, priceService, tradeRepo, proposalService, new GoalParser(aiProvider));
+            _router = new ChatRouter(aiProvider, vectorStore, walletService, priceService, tradeRepo, proposalService, investmentOrderService, new GoalParser(aiProvider));
+            _investmentOrderService = investmentOrderService;
             _conversationRepo = conversationRepo;
             _messageRepo = messageRepo;
             _proposalService = proposalService;
@@ -184,6 +190,7 @@ namespace Tibr.Application.Services.AiChatServices
                     "price" => await _router.HandlePriceAsync(message),
                     "portfolio_read" => await _router.HandlePortfolioReadAsync(message, userId),
                     "agentic" => await HandleAgenticAsync(message, userId, conversationId),
+                    "conditional_order" => await HandleConditionalOrderAsync(message, userId, conversationId),
                     "planner" => await _router.HandlePlannerAsync(message, userId),
                     _ => _router.HandleOutOfScope()
                 };
@@ -199,11 +206,74 @@ namespace Tibr.Application.Services.AiChatServices
                 Intent.Price => await _router.HandlePriceAsync(message),
                 Intent.PortfolioRead => await _router.HandlePortfolioReadAsync(message, userId),
                 Intent.Agentic => await HandleAgenticAsync(message, userId, conversationId),
+                Intent.ConditionalOrder => await HandleConditionalOrderAsync(message, userId, conversationId),
                 Intent.Planner => await _router.HandlePlannerAsync(message, userId),
                 _ => _router.HandleOutOfScope()
             };
 
             return (reply, classification.Intent.ToString());
+        }
+
+        private async Task<string> HandleConditionalOrderAsync(string message, long userId, long conversationId)
+        {
+            var (reply, toolCall) = await _router.HandleConditionalOrderAsync(message, userId);
+
+            if (toolCall is not null)
+            {
+                var tc = (ToolCall)toolCall;
+                if (tc.FunctionName == "create_strategy_order")
+                {
+                    using var doc = JsonDocument.Parse(tc.Arguments);
+                    var root = doc.RootElement;
+
+                    var assetStr = root.GetProperty("asset").GetString()!;
+                    var sideStr = root.GetProperty("side").GetString()!;
+                    var operatorStr = root.GetProperty("operator").GetString()!;
+                    var targetPrice = root.GetProperty("target_price_egp").GetDecimal();
+                    var execTypeStr = root.GetProperty("execution_type").GetString()!;
+                    var quantity = root.GetProperty("quantity_grams").GetDecimal();
+                    var expiresInDays = root.TryGetProperty("expires_in_days", out var e)
+                        ? e.GetInt32() : 30;
+
+                    var assetType = assetStr == "silver" ? AssetType.Silver : AssetType.Gold;
+                    var orderType = sideStr == "buy" ? OrderType.Buy : OrderType.Sell;
+                    var conditionOp = operatorStr == "greater_than"
+                        ? ConditionOperator.GreaterThan : ConditionOperator.LessThan;
+                    var executionType = execTypeStr == "auto_execute"
+                        ? ExecutionType.AutoExecute : ExecutionType.AlertOnly;
+
+                    var dto = new CreateStrategyOrderDto
+                    {
+                        AssetType = assetType,
+                        OrderType = orderType,
+                        ExecutionType = executionType,
+                        Quantity = quantity,
+                        ExpiryDate = DateTime.UtcNow.AddDays(expiresInDays),
+                        Conditions =
+                        [
+                            new OrderConditionDto
+                            {
+                                ConditionType = ConditionType.PriceTarget,
+                                Operator = conditionOp,
+                                TargetValue = targetPrice
+                            }
+                        ]
+                    };
+
+                    var result = await _investmentOrderService.CreateStrategyOrderAsync(userId, dto);
+
+                    if (result.IsFailure)
+                        return result.ErrorMessage ?? "Could not create strategy order.";
+
+                    var opLabel = operatorStr == "greater_than" ? "rises above" : "drops below";
+                    var execLabel = execTypeStr == "auto_execute" ? "automatically executed" : "you'll be alerted";
+
+                    return $"✅ Strategy created! I'll {sideStr} {quantity:F4}g of {assetStr} when the price {opLabel} {targetPrice:N2} EGP/g. "
+                        + $"It expires in {expiresInDays} days and will be {execLabel}.";
+                }
+            }
+
+            return reply;
         }
 
         private async Task<string> HandleAgenticAsync(string message, long userId, long conversationId)

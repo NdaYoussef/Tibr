@@ -17,9 +17,10 @@ namespace Tibr.Application.Services.AiChatServices
             - "portfolio_read": questions about the user's own holdings or profitability (ANALYZE only, no action)
             - "planner": user wants to set a savings goal or simulate a scenario
             - "agentic": requests to buy/sell/trade gold or silver NOW. Examples: "buy 10g gold", "sell my silver", "place an order", "make a trade", "sell profitable fractions", "execute an order"
+            - "conditional_order": user wants to set a condition on a future price before buying or selling. Examples: "buy when gold drops below 8000", "sell silver if it reaches 140", "set a strategy for gold", "alert me when gold hits 8500"
             - "out_of_scope": anything unrelated to gold, investment, or Tibr
 
-            Priority rule: if the user asks to execute, perform, or make a trade/order, classify as "agentic", not "portfolio_read". The phrase "profitable fractions" in context of selling is agentic, not a portfolio query.
+            Priority rule: if the user asks to execute, perform, or make a trade/order, classify as "agentic", not "portfolio_read". The phrase "profitable fractions" in context of selling is agentic, not a portfolio query. If the user mentions a future price condition, classify as "conditional_order", not "agentic".
 
             Return format:
             {
@@ -64,6 +65,7 @@ namespace Tibr.Application.Services.AiChatServices
                     "portfolio_read" => Intent.PortfolioRead,
                     "planner" => Intent.Planner,
                     "agentic" => Intent.Agentic,
+                    "conditional_order" => Intent.ConditionalOrder,
                     _ => Intent.OutOfScope,
                 };
 

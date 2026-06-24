@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Tibr.Domain")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+462ecb4513f198e2f2205f3e539e2702b5a52bd8")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+80e67de94958e4322d1b65a013636c95bee05b61")]
 [assembly: System.Reflection.AssemblyProductAttribute("Tibr.Domain")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Tibr.Domain")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

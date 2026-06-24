@@ -72,7 +72,8 @@ namespace Tibr.Infrastructure.Services
                 };
             }
 
-            var request = new HttpRequestMessage(HttpMethod.Post, "https://api.openai.com/v1/chat/completions");
+            var chatUrl = $"{_settings.ChatBaseUrl}/chat/completions";
+            var request = new HttpRequestMessage(HttpMethod.Post, chatUrl);
             request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _settings.ChatApiKey);
             request.Content = JsonContent.Create(body, options: JsonOpts);
 
@@ -117,7 +118,8 @@ namespace Tibr.Infrastructure.Services
 
         public async Task<List<float[]>> EmbedBatchAsync(List<string> texts)
         {
-            var request = new HttpRequestMessage(HttpMethod.Post, "https://api.openai.com/v1/embeddings");
+            var embedUrl = $"{_settings.ChatBaseUrl}/embeddings";
+            var request = new HttpRequestMessage(HttpMethod.Post, embedUrl);
             request.Headers.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue("Bearer", _settings.ChatApiKey);
 
             var body = new

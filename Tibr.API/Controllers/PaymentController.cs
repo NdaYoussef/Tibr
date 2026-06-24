@@ -21,7 +21,8 @@ public class PaymentController : ControllerBase
         IPaymentGateway gateway,
         PaymentService paymentService,
         ILogger<PaymentController> logger,
-        IOptions<PaymobSettings> settings)
+        IOptions<PaymobSettings> settings
+    )
     {
         _gateway = gateway;
         _paymentService = paymentService;
@@ -31,7 +32,8 @@ public class PaymentController : ControllerBase
 
     [HttpPost("initiate")]
     public async Task<ActionResult<PaymentInitiateResponse>> Initiate(
-        [FromBody] CreatePaymentRequest request)
+        [FromBody] CreatePaymentRequest request
+    )
     {
         var result = await _paymentService.InitiateOrderPaymentAsync(request.OrderId, request);
 
@@ -44,17 +46,43 @@ public class PaymentController : ControllerBase
     [HttpPost("callback/processed"), AllowAnonymous]
     public async Task<ActionResult> Callback(
         [FromBody] JsonElement payload,
-        [FromQuery] string hmac)
+        [FromQuery] string hmac
+    )
     {
-        var rawBody = payload.GetRawText();
+        _logger.LogInformation("=== PAYMENT CALLBACK RECEIVED ===");
+        _logger.LogInformation("Timestamp: {Timestamp}", DateTime.UtcNow.ToString("O"));
+        _logger.LogInformation("HMAC Signature: {Hmac}", hmac);
 
+        var rawBody = payload.GetRawText();
+        _logger.LogInformation("Raw Payload Body: {Payload}", rawBody);
+
+        _logger.LogInformation("Verifying HMAC signature...");
         if (!_gateway.VerifyWebhook(rawBody, hmac))
         {
-            _logger.LogWarning("Paymob callback received with invalid HMAC.");
+            _logger.LogWarning("❌ HMAC VERIFICATION FAILED for callback");
+            _logger.LogWarning("Expected HMAC validation failed. Raw body: {Body}", rawBody);
             return Unauthorized("Invalid HMAC signature.");
         }
 
-        await _paymentService.HandlePaymentCallbackAsync(rawBody);
+        _logger.LogInformation("✓ HMAC Verification PASSED");
+        _logger.LogInformation("Processing callback payload...");
+
+        try
+        {
+            await _paymentService.HandlePaymentCallbackAsync(rawBody);
+            _logger.LogInformation("✓ Callback processed successfully");
+            _logger.LogInformation("=== END PAYMENT CALLBACK ===");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(
+                ex,
+                "❌ Error processing payment callback. Exception: {Exception}",
+                ex.Message
+            );
+            _logger.LogError("Stack Trace: {StackTrace}", ex.StackTrace);
+            throw;
+        }
 
         return Ok();
     }
@@ -65,7 +93,8 @@ public class PaymentController : ControllerBase
         _logger.LogInformation(
             "Paymob response callback: QueryString={Query}, Success={Success}",
             Request.QueryString,
-            success);
+            success
+        );
 
         var merchantOrderId = Request.Query["merchant_order_id"].ToString();
         var status = success ? "success" : "failed";
