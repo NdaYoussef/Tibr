@@ -41,18 +41,15 @@ namespace Tibr.Application.Services.AiChatServices
             _goalParser = goalParser;
         }
 
-        public (string Reply, string Source) HandleOutOfScope() =>
-            ("I can only help with gold and silver investment topics on Tibr. "
-            + "Feel free to ask about your portfolio, gold prices, or how Tibr works.",
-            "system");
+        public (string Reply, string Source) HandleOutOfScope(string language) =>
+            (SystemMessages.OutOfScope(language), "system");
 
-        public async Task<(string Reply, string Source)> HandleFaqAsync(string userPrompt)
+        public async Task<(string Reply, string Source)> HandleFaqAsync(string userPrompt, string language)
         {
             var result = await _vectorStore.SearchFaqAsync(userPrompt);
 
             if (result.Hits.Count == 0)
-                return ("I don't have a specific answer for that. "
-                    + "Try rephrasing or contact Tibr support.", "system");
+                return (SystemMessages.FaqNoAnswers(language), "system");
 
             if (result.IsDirectHit)
                 return (result.Hits[0].Entry.Answer, "system");
@@ -74,22 +71,22 @@ namespace Tibr.Application.Services.AiChatServices
             var response = await _aiProvider.ChatAsync(system, history);
             if (response.Content is not null)
                 return (response.Content, "ai");
-            return ("Sorry, I could not generate an answer.", "system");
+            return (SystemMessages.FaqGenFailed(language), "system");
         }
 
-        public async Task<(string Reply, string Source)> HandleFactsAsync(string userPrompt)
+        public async Task<(string Reply, string Source)> HandleFactsAsync(string userPrompt, string language)
         {
             var facts = await _vectorStore.SearchFactsAsync(userPrompt);
             var priceResult = await _priceService.GetCurrentPriceAsync(AssetType.Gold);
 
             var factsText = facts.Count > 0
                 ? string.Join("\n", facts.Select(f => $"- {f.Content}"))
-                : "No specific policy facts found.";
+                : SystemMessages.FactsNoFacts(language);
 
             var priceCtx = priceResult.IsSuccess && priceResult.Data is not null
                 ? $"Current gold price: buy at {priceResult.Data.BuyPrice:N2} EGP/g, "
                   + $"sell at {priceResult.Data.SellPrice:N2} EGP/g"
-                : "Price data temporarily unavailable.";
+                : SystemMessages.FactsPriceUnavailable(language);
 
             var system = "You are a helpful assistant for Tibr. "
                 + "Answer using ONLY the provided facts and price context. Be concise.";
@@ -102,19 +99,20 @@ namespace Tibr.Application.Services.AiChatServices
             var response = await _aiProvider.ChatAsync(system, history);
             if (response.Content is not null)
                 return (response.Content, "ai");
-            return ("Sorry, I could not generate an answer.", "system");
+            return (SystemMessages.FactsGenFailed(language), "system");
         }
 
-        public async Task<(string Reply, string Source)> HandlePriceAsync(string userPrompt)
+        public async Task<(string Reply, string Source)> HandlePriceAsync(string userPrompt, string language)
         {
             var priceResult = await _priceService.GetCurrentPriceAsync(AssetType.Gold);
 
             if (!priceResult.IsSuccess || priceResult.Data is null)
-                return ("I'm unable to fetch the current gold price right now. Please try again later.", "system");
+                return (SystemMessages.PriceUnavailable(language), "system");
 
             var p = priceResult.Data;
-            var priceCtx = $"Current gold price: buy at {p.BuyPrice:N2} EGP/g, "
-                + $"sell at {p.SellPrice:N2} EGP/g (as of {p.CreatedAt:HH:mm} UTC)";
+            var priceCtx = language == "ar"
+                ? $"سعر الذهب الحالي: شراء بسعر {p.BuyPrice:N2} جنيها للجرام، بيع بسعر {p.SellPrice:N2} جنيها للجرام (حتى {p.CreatedAt:HH:mm} UTC)"
+                : $"Current gold price: buy at {p.BuyPrice:N2} EGP/g, sell at {p.SellPrice:N2} EGP/g (as of {p.CreatedAt:HH:mm} UTC)";
 
             var system = "You are a helpful assistant for Tibr. "
                 + "Answer the user's price-related question using the provided price context. Be concise.";
@@ -130,7 +128,7 @@ namespace Tibr.Application.Services.AiChatServices
             return (priceCtx, "system");
         }
 
-        public async Task<(string Reply, string Source)> HandlePortfolioReadAsync(string userPrompt, long userId)
+        public async Task<(string Reply, string Source)> HandlePortfolioReadAsync(string userPrompt, long userId, string language)
         {
             var balanceResult = await _walletService.GetBalancesAsync(userId);
             var priceResult = await _priceService.GetCurrentPriceAsync(AssetType.Gold);
@@ -183,10 +181,11 @@ namespace Tibr.Application.Services.AiChatServices
             var response = await _aiProvider.ChatAsync(system, history);
             if (response.Content is not null)
                 return (response.Content, "ai");
-            return ("Sorry, I could not analyze your portfolio.", "system");
+            return (SystemMessages.PortfolioGenFailed(language), "system");
         }
 
-        public async Task<(string Reply, object? ToolCallRequest, string Source)> HandleAgenticAsync(string userPrompt, long userId, long conversationId)
+        public async Task<(string Reply, object? ToolCallRequest, string Source)> HandleAgenticAsync(
+            string userPrompt, long userId, long conversationId, string language)
         {
             var systemPrompt = "You are an order assistant for Tibr, a fractional gold investment app. "
                 + "If the user wants to buy or sell gold or silver now, use the propose_order tool. "
@@ -205,10 +204,11 @@ namespace Tibr.Application.Services.AiChatServices
 
             if (response.Content is not null)
                 return (response.Content, null, "ai");
-            return ("I can help you buy or sell gold and silver. What would you like to do?", null, "system");
+            return (SystemMessages.AgenticFallback(language), null, "system");
         }
 
-        public async Task<(string Reply, object? ToolCallRequest, string Source)> HandleConditionalOrderAsync(string userPrompt, long userId)
+        public async Task<(string Reply, object? ToolCallRequest, string Source)> HandleConditionalOrderAsync(
+            string userPrompt, long userId, string language)
         {
             var systemPrompt = "You are a strategy assistant for Tibr, a fractional gold investment app. "
                 + "If the user wants to set a conditional order (buy/sell when price reaches a target), "
@@ -227,16 +227,15 @@ namespace Tibr.Application.Services.AiChatServices
 
             if (response.Content is not null)
                 return (response.Content, null, "ai");
-            return ("I can help you set conditional orders for gold and silver. "
-                + "For example: 'buy 10g of gold when price drops below 8000 EGP/g'.", null, "system");
+            return (SystemMessages.ConditionalFallback(language), null, "system");
         }
 
-        public async Task<(string Reply, string Source)> HandlePlannerAsync(string userPrompt, long userId)
+        public async Task<(string Reply, string Source)> HandlePlannerAsync(string userPrompt, long userId, string language)
         {
             var goal = await _goalParser.ParseAsync(userPrompt);
 
             if (goal.ClarificationNeeded)
-                return (goal.ClarificationQuestion ?? "Could you provide more details about your savings goal?", "system");
+                return (goal.ClarificationQuestion ?? SystemMessages.PlannerClarify(language), "system");
 
             var balanceResult = await _walletService.GetBalancesAsync(userId);
             var priceResult = await _priceService.GetCurrentPriceAsync(AssetType.Gold);
@@ -272,7 +271,7 @@ namespace Tibr.Application.Services.AiChatServices
             var adviceResponse = await _aiProvider.ChatAsync(advisePrompt, history);
             if (adviceResponse.Content is not null)
                 return (adviceResponse.Content, "ai");
-            return ("Here's your savings plan. Check back as you make progress!", "system");
+            return (SystemMessages.PlannerFallback(language), "system");
         }
     }
 }

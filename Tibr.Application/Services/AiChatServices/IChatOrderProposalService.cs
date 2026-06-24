@@ -8,11 +8,11 @@ namespace Tibr.Application.Services.AiChatServices
     {
         Task<Result<(OrderProposalDto Proposal, string Reply)>> BuildAsync(
             long userId, long conversationId, string action, string asset, string scope,
-            decimal? amountGrams, decimal? amountEgp);
+            decimal? amountGrams, decimal? amountEgp, string language);
 
         Task<ChatOrderProposal?> GetPendingAsync(long conversationId);
 
-        Task<Result<ChatResponseDto>> ConfirmAsync(long userId, long conversationId);
+        Task<Result<ChatResponseDto>> ConfirmAsync(long userId, long conversationId, string language);
 
         Task<Result> CancelAsync(long conversationId);
 

@@ -22,11 +22,14 @@ namespace Tibr.Application.Services.AiChatServices
 
             Priority rule: if the user asks to execute, perform, or make a trade/order, classify as "agentic", not "portfolio_read". The phrase "profitable fractions" in context of selling is agentic, not a portfolio query. If the user mentions a future price condition, classify as "conditional_order", not "agentic".
 
+            Also detect the language of the user's message. Use ISO 639-1 codes (e.g. "en" for English, "ar" for Arabic).
+
             Return format:
             {
               "intent": "<intent>",
               "confidence": <0.0-1.0>,
-              "reason": "<one sentence>"
+              "reason": "<one sentence>",
+              "language": "<ISO 639-1 code>"
             }
 
             Rules:
@@ -69,7 +72,14 @@ namespace Tibr.Application.Services.AiChatServices
                     _ => Intent.OutOfScope,
                 };
 
-                return new ClassificationResult(intent, confidence, reason);
+                var language = json.TryGetProperty("language", out var langEl)
+                    ? langEl.GetString() ?? "en"
+                    : "en";
+
+                return new ClassificationResult(intent, confidence, reason)
+                {
+                    Language = language
+                };
             }
             catch
             {
