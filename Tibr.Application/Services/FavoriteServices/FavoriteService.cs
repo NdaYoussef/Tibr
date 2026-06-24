@@ -20,7 +20,7 @@ namespace Tibr.Application.Services.FavoriteServices
             Console.WriteLine($"Checking if product {productId} is a favorite for user {userId}.");
             var favorite = await _favoriteRepository.GetByUniqueKeysAsync(userId, productId);
 
-            var isFavorite = favorite.IsDeleted == false;
+            var isFavorite = favorite?.IsDeleted == false;
 
             return isFavorite;
         }
@@ -44,7 +44,7 @@ namespace Tibr.Application.Services.FavoriteServices
                 else
                 {
                     existingFavorite.IsDeleted = false;
-                    _favoriteRepository.UpdateIsDeleteAsync(existingFavorite);
+                    await _favoriteRepository.UpdateIsDeleteAsync(existingFavorite);
                     var restoreResult = await _favoriteRepository.SaveChangesAsync();
                     if (restoreResult <= 0)
                         return Result<string>.Failure("Failed to restore to favorites.");

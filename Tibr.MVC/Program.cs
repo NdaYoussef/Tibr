@@ -4,9 +4,13 @@ using Microsoft.EntityFrameworkCore;
 using Tibr.Application;
 using Tibr.Application.Interfaces;
 using Tibr.Application.Services.Email;
+using Tibr.Application.Services.MarketPriceService;
+using Tibr.Application.Services.PaymentServices;
 using Tibr.Infrastructure;
 using Tibr.Infrastructure.Contexts;
 using Tibr.Infrastructure.Seeds;
+using Tibr.Infrastructure.Services;
+
 
 namespace Tibr.MVC
 {
@@ -34,9 +38,11 @@ namespace Tibr.MVC
 
             // Register DbContext base class mapping for MediatR handlers
             builder.Services.AddScoped<DbContext>(provider => provider.GetRequiredService<ApplicationDbContext>());
-            
-            // Register Email Service
+
+            // ================= Services =================
             builder.Services.AddTransient<IEmailService, EmailService>();
+            builder.Services.AddHttpClient<IPaymentGateway, PaymobPaymentGateway>();
+            builder.Services.AddHttpClient< IMarketPriceService, MarketPriceService>();
 
             TypeAdapterConfig.GlobalSettings.Scan(
                         typeof(Tibr.Application.Mappers.ProductMappingConfig).Assembly,

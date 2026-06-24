@@ -14,5 +14,6 @@ namespace Tibr.Domain.Entities
         public virtual User User { get; set; } = null!;
         public virtual ICollection<OrderItem> OrderItems { get; set; } = [];
         public virtual ICollection<Payment> Payments { get; set; } = [];
+        public virtual ICollection<Review> Reviews { get; set; } = [];
     }
 }

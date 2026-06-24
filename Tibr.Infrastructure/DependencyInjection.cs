@@ -75,6 +75,7 @@ namespace Tibr.Infrastructure
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IUserService, UserService>();
 
+            services.AddScoped<IAssetPriceRepository, AssetPriceRepository>();
 
             return services;
         }
