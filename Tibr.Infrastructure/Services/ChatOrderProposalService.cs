@@ -46,7 +46,7 @@ namespace Tibr.Infrastructure.Services
 
         public async Task<Result<(OrderProposalDto Proposal, string Reply)>> BuildAsync(
             long userId, long conversationId, string action, string asset, string scope,
-            decimal? amountGrams, decimal? amountEgp)
+            decimal? amountGrams, decimal? amountEgp, string language)
         {
             var isSilver = string.Equals(asset, "silver", StringComparison.OrdinalIgnoreCase);
             var isBuy = string.Equals(action, "buy", StringComparison.OrdinalIgnoreCase);
@@ -54,7 +54,7 @@ namespace Tibr.Infrastructure.Services
 
             var priceResult = await _priceService.GetCurrentPriceAsync(assetType);
             if (priceResult.IsFailure || priceResult.Data is null)
-                return Result<(OrderProposalDto, string)>.Failure("Unable to fetch current price.");
+                return Result<(OrderProposalDto, string)>.Failure(SystemMessages.ProposalNoPrice(language));
 
             var price = priceResult.Data;
             var quotedPrice = isBuy ? price.SellPrice : price.BuyPrice;
@@ -70,13 +70,13 @@ namespace Tibr.Infrastructure.Services
                 else if (amountEgp.HasValue)
                     resolvedGrams = amountEgp.Value / quotedPrice;
                 else
-                    return Result<(OrderProposalDto, string)>.Failure("No amount specified.");
+                    return Result<(OrderProposalDto, string)>.Failure(SystemMessages.ProposalNoAmount(language));
             }
             else
             {
                 var balanceResult = await _walletService.GetBalancesAsync(userId);
                 if (balanceResult.IsFailure)
-                    return Result<(OrderProposalDto, string)>.Failure("Unable to fetch wallet balances.");
+                    return Result<(OrderProposalDto, string)>.Failure(SystemMessages.ProposalNoBalance(language));
 
                 if (isAllHoldings)
                 {
@@ -97,7 +97,7 @@ namespace Tibr.Infrastructure.Services
 
             if (resolvedGrams <= 0)
                 return Result<(OrderProposalDto, string)>.Failure(
-                    isBuy ? "Insufficient funds for purchase." : "No holdings available to sell.");
+                    isBuy ? SystemMessages.ProposalInsufficientFunds(language) : SystemMessages.ProposalNoHoldings(language));
 
             var estimatedTotal = resolvedGrams * quotedPrice;
 
@@ -124,8 +124,7 @@ namespace Tibr.Infrastructure.Services
             await _proposalRepo.AddAsync(entity);
             await _proposalRepo.SaveChangesAsync();
 
-            var reply = $"Proposed {action} of {resolvedGrams:F4}g {asset} at {quotedPrice:N2} EGP/g "
-                + $"(total: {estimatedTotal:N2} EGP). Reply 'confirm' or 'cancel'.";
+            var reply = SystemMessages.OrderProposal(language, action, resolvedGrams, asset, quotedPrice, estimatedTotal);
             return Result<(OrderProposalDto, string)>.Success((proposal, reply));
         }
 
@@ -138,18 +137,18 @@ namespace Tibr.Infrastructure.Services
                 .FirstOrDefault();
         }
 
-        public async Task<Result<ChatResponseDto>> ConfirmAsync(long userId, long conversationId)
+        public async Task<Result<ChatResponseDto>> ConfirmAsync(long userId, long conversationId, string language)
         {
             var proposal = await GetPendingAsync(conversationId);
             if (proposal is null)
-                return Result<ChatResponseDto>.Failure("No pending proposal found.");
+                return Result<ChatResponseDto>.Failure(SystemMessages.ProposalNoPending(language));
 
             if (proposal.ExpiresAt < DateTime.UtcNow)
             {
                 proposal.Status = ProposalStatus.Expired;
                 await _proposalRepo.UpdateAsync(proposal);
                 await _proposalRepo.SaveChangesAsync();
-                return Result<ChatResponseDto>.Failure("Proposal has expired. Please start a new order.");
+                return Result<ChatResponseDto>.Failure(SystemMessages.ProposalExpired(language));
             }
 
             var dto = System.Text.Json.JsonSerializer.Deserialize<OrderProposalDto>(proposal.ProposalJson);
@@ -169,13 +168,14 @@ namespace Tibr.Infrastructure.Services
                 await _proposalRepo.UpdateAsync(proposal);
                 await _proposalRepo.SaveChangesAsync();
 
-                var receipt = $"Order executed! Bought {dto.AmountGrams:F4}g {dto.Asset} "
-                    + $"at {dto.QuotedPricePerGram:N2} EGP/g.";
+                var receipt = SystemMessages.BuyReceipt(language, dto.AmountGrams ?? 0, dto.Asset, dto.QuotedPricePerGram);
                 return Result<ChatResponseDto>.Success(new ChatResponseDto
                 {
                     ConversationId = conversationId,
                     Reply = receipt,
-                    Intent = "Agentic"
+                    Intent = "Agentic",
+                    Source = "system",
+                    Language = language
                 });
             }
             else
@@ -189,13 +189,14 @@ namespace Tibr.Infrastructure.Services
                 await _proposalRepo.UpdateAsync(proposal);
                 await _proposalRepo.SaveChangesAsync();
 
-                var receipt = $"Order executed! Sold {dto.AmountGrams:F4}g {dto.Asset} "
-                    + $"at {dto.QuotedPricePerGram:N2} EGP/g.";
+                var receipt = SystemMessages.SellReceipt(language, dto.AmountGrams ?? 0, dto.Asset, dto.QuotedPricePerGram);
                 return Result<ChatResponseDto>.Success(new ChatResponseDto
                 {
                     ConversationId = conversationId,
                     Reply = receipt,
-                    Intent = "Agentic"
+                    Intent = "Agentic",
+                    Source = "system",
+                    Language = language
                 });
             }
         }

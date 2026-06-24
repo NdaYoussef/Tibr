@@ -45,6 +45,7 @@ namespace Tibr.Application.Services.AiChatServices
 
         public async Task<Result<ChatResponseDto>> SendMessageAsync(long userId, ChatRequestDto request)
         {
+            var language = request.Language ?? "en";
             ChatConversation conversation = null!;
 
             if (request.ConversationId.HasValue)
@@ -86,7 +87,7 @@ namespace Tibr.Application.Services.AiChatServices
                     switch (resolution)
                     {
                         case ProposalResolution.Confirm:
-                            var confirmResult = await _proposalService.ConfirmAsync(userId, conversation.Id);
+                            var confirmResult = await _proposalService.ConfirmAsync(userId, conversation.Id, language);
                             if (confirmResult.IsFailure)
                             {
                                 var errMsg = new ChatMessage
@@ -111,7 +112,7 @@ namespace Tibr.Application.Services.AiChatServices
 
                         case ProposalResolution.Cancel:
                             await _proposalService.CancelAsync(conversation.Id);
-                            var cancelReply = "Order cancelled. Anything else I can help with?";
+                            var cancelReply = SystemMessages.CancelReply(language);
                             var cancelMsg = new ChatMessage
                             {
                                 ConversationId = conversation.Id,
@@ -124,7 +125,9 @@ namespace Tibr.Application.Services.AiChatServices
                             {
                                 ConversationId = conversation.Id,
                                 Reply = cancelReply,
-                                Intent = "Agentic"
+                                Intent = "Agentic",
+                                Source = "system",
+                                Language = language
                             });
 
                         case ProposalResolution.Modify:
@@ -132,10 +135,9 @@ namespace Tibr.Application.Services.AiChatServices
                             break;
 
                         case ProposalResolution.Unrelated:
-                            var reminder = $"You have a pending order to {dto.Action} {dto.AmountGrams:F4}g {dto.Asset}. "
-                                + "Reply 'confirm' to proceed or 'cancel' to discard it.\n\n";
-                            var unrelatedResult = await ClassifyAndRouteAsync(request.Message, userId, conversation.Id);
-                            var combined = reminder + unrelatedResult;
+                            var reminder = SystemMessages.UnrelatedReminder(language, dto.Action, dto.AmountGrams ?? 0, dto.Asset);
+                            var (unrelatedReply, _, _, _) = await ClassifyAndRouteAsync(request.Message, userId, conversation.Id, requestLanguage: language);
+                            var combined = reminder + unrelatedReply;
                             var combinedMsg = new ChatMessage
                             {
                                 ConversationId = conversation.Id,
@@ -148,7 +150,9 @@ namespace Tibr.Application.Services.AiChatServices
                             {
                                 ConversationId = conversation.Id,
                                 Reply = combined,
-                                Intent = "Agentic"
+                                Intent = "Agentic",
+                                Source = "system",
+                                Language = language
                             });
                     }
                 }
@@ -160,7 +164,8 @@ namespace Tibr.Application.Services.AiChatServices
                 await _proposalService.ExpireAsync(conversation.Id);
             }
 
-            var (reply, intent) = await ClassifyAndRouteAsync(request.Message, userId, conversation.Id, request.Intent);
+            var (reply, intent, source, lang) = await ClassifyAndRouteAsync(
+                request.Message, userId, conversation.Id, request.Intent, request.Language);
 
             var assistantMessage = new ChatMessage
             {
@@ -175,48 +180,53 @@ namespace Tibr.Application.Services.AiChatServices
             {
                 ConversationId = conversation.Id,
                 Reply = reply,
-                Intent = intent
+                Intent = intent,
+                Source = source,
+                Language = lang
             });
         }
 
-        private async Task<(string Reply, string Intent)> ClassifyAndRouteAsync(string message, long userId, long conversationId, string? overrideIntent = null)
+        private async Task<(string Reply, string Intent, string Source, string Language)> ClassifyAndRouteAsync(
+            string message, long userId, long conversationId, string? overrideIntent = null, string? requestLanguage = null)
         {
             if (!string.IsNullOrWhiteSpace(overrideIntent))
             {
-                var overrideReply = overrideIntent.ToLowerInvariant() switch
+                var lang = requestLanguage ?? "en";
+                var (reply, source) = overrideIntent.ToLowerInvariant() switch
                 {
-                    "faq" => await _router.HandleFaqAsync(message),
-                    "facts" => await _router.HandleFactsAsync(message),
-                    "price" => await _router.HandlePriceAsync(message),
-                    "portfolio_read" => await _router.HandlePortfolioReadAsync(message, userId),
-                    "agentic" => await HandleAgenticAsync(message, userId, conversationId),
-                    "conditional_order" => await HandleConditionalOrderAsync(message, userId, conversationId),
-                    "planner" => await _router.HandlePlannerAsync(message, userId),
-                    _ => _router.HandleOutOfScope()
+                    "faq" => await _router.HandleFaqAsync(message, lang),
+                    "facts" => await _router.HandleFactsAsync(message, lang),
+                    "price" => await _router.HandlePriceAsync(message, lang),
+                    "portfolio_read" => await _router.HandlePortfolioReadAsync(message, userId, lang),
+                    "agentic" => await HandleAgenticAsync(message, userId, conversationId, lang),
+                    "conditional_order" => await HandleConditionalOrderAsync(message, userId, conversationId, lang),
+                    "planner" => await _router.HandlePlannerAsync(message, userId, lang),
+                    _ => _router.HandleOutOfScope(lang)
                 };
-                return (overrideReply, overrideIntent);
+                return (reply, overrideIntent, source, lang);
             }
 
             var classification = await _classifier.ClassifyAsync(message);
+            var classifiedLang = requestLanguage ?? classification.Language;
 
-            var reply = classification.Intent switch
+            var (classifiedReply, classifiedSource) = classification.Intent switch
             {
-                Intent.Faq => await _router.HandleFaqAsync(message),
-                Intent.Facts => await _router.HandleFactsAsync(message),
-                Intent.Price => await _router.HandlePriceAsync(message),
-                Intent.PortfolioRead => await _router.HandlePortfolioReadAsync(message, userId),
-                Intent.Agentic => await HandleAgenticAsync(message, userId, conversationId),
-                Intent.ConditionalOrder => await HandleConditionalOrderAsync(message, userId, conversationId),
-                Intent.Planner => await _router.HandlePlannerAsync(message, userId),
-                _ => _router.HandleOutOfScope()
+                Intent.Faq => await _router.HandleFaqAsync(message, classifiedLang),
+                Intent.Facts => await _router.HandleFactsAsync(message, classifiedLang),
+                Intent.Price => await _router.HandlePriceAsync(message, classifiedLang),
+                Intent.PortfolioRead => await _router.HandlePortfolioReadAsync(message, userId, classifiedLang),
+                Intent.Agentic => await HandleAgenticAsync(message, userId, conversationId, classifiedLang),
+                Intent.ConditionalOrder => await HandleConditionalOrderAsync(message, userId, conversationId, classifiedLang),
+                Intent.Planner => await _router.HandlePlannerAsync(message, userId, classifiedLang),
+                _ => _router.HandleOutOfScope(classifiedLang)
             };
 
-            return (reply, classification.Intent.ToString());
+            return (classifiedReply, classification.Intent.ToString(), classifiedSource, classifiedLang);
         }
 
-        private async Task<string> HandleConditionalOrderAsync(string message, long userId, long conversationId)
+        private async Task<(string Reply, string Source)> HandleConditionalOrderAsync(string message, long userId, long conversationId, string language)
         {
-            var (reply, toolCall) = await _router.HandleConditionalOrderAsync(message, userId);
+            var (reply, toolCall, source) = await _router.HandleConditionalOrderAsync(message, userId, language);
 
             if (toolCall is not null)
             {
@@ -263,22 +273,21 @@ namespace Tibr.Application.Services.AiChatServices
                     var result = await _investmentOrderService.CreateStrategyOrderAsync(userId, dto);
 
                     if (result.IsFailure)
-                        return result.ErrorMessage ?? "Could not create strategy order.";
+                        return (result.ErrorMessage ?? SystemMessages.ConditionalCreateFailed(language), "system");
 
                     var opLabel = operatorStr == "greater_than" ? "rises above" : "drops below";
                     var execLabel = execTypeStr == "auto_execute" ? "automatically executed" : "you'll be alerted";
 
-                    return $"✅ Strategy created! I'll {sideStr} {quantity:F4}g of {assetStr} when the price {opLabel} {targetPrice:N2} EGP/g. "
-                        + $"It expires in {expiresInDays} days and will be {execLabel}.";
+                    return (SystemMessages.StrategyCreated(language, sideStr, quantity, assetStr, opLabel, targetPrice, expiresInDays, execLabel), "system");
                 }
             }
 
-            return reply;
+            return (reply, source);
         }
 
-        private async Task<string> HandleAgenticAsync(string message, long userId, long conversationId)
+        private async Task<(string Reply, string Source)> HandleAgenticAsync(string message, long userId, long conversationId, string language)
         {
-            var (reply, toolCall) = await _router.HandleAgenticAsync(message, userId, conversationId);
+            var (reply, toolCall, source) = await _router.HandleAgenticAsync(message, userId, conversationId, language);
 
             if (toolCall is not null)
             {
@@ -289,18 +298,18 @@ namespace Tibr.Application.Services.AiChatServices
                         Tibr.Application.Services.AiChatServices.Tools.OrderBuilderTool.ParseArgs(tc.Arguments);
 
                     var result = await _proposalService.BuildAsync(userId, conversationId,
-                        action, asset, scope, amountGrams, amountEgp);
+                        action, asset, scope, amountGrams, amountEgp, language);
 
                     if (result.IsFailure)
                     {
-                        return result.ErrorMessage ?? "Could not create order proposal.";
+                        return (result.ErrorMessage ?? SystemMessages.AgenticProposalFailed(language), "system");
                     }
 
-                    return result.Data.Reply;
+                    return (result.Data.Reply, "system");
                 }
             }
 
-            return reply;
+            return (reply, source);
         }
 
         public async Task<Result<List<ConversationSummaryDto>>> GetConversationsAsync(long userId)
