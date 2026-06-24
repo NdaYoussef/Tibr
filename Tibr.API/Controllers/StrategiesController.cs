@@ -19,6 +19,16 @@ namespace Tibr.API.Controllers
             _orderService = orderService;
         }
 
+        [HttpGet]
+        public async Task<ActionResult<List<InvestmentOrderDto>>> GetAll()
+        {
+            var userId = GetUserId();
+            if (userId is null) return Unauthorized();
+
+            var result = await _orderService.GetUserStrategiesAsync(userId.Value);
+            return Ok(result.Data);
+        }
+
         [HttpPost]
         public async Task<ActionResult<InvestmentOrderDto>> Create([FromBody] CreateStrategyFormDto dto)
         {

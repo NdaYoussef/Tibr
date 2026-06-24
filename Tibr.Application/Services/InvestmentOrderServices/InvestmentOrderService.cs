@@ -146,6 +146,43 @@ namespace Tibr.Application.Services.InvestmentOrderServices
             return Result<List<InvestmentOrderDto>>.Success(dtos);
         }
 
+        public async Task<Result<List<InvestmentOrderDto>>> GetUserStrategiesAsync(long userId)
+        {
+            var orders = _orderRepository.GetAll(o => o.UserId == userId && o.ExecutionMode == ExecutionMode.Strategy).ToList();
+
+            var dtos = orders.Select(o => new InvestmentOrderDto
+            {
+                Id = o.Id,
+                UserId = o.UserId,
+                AssetType = o.AssetType,
+                OrderType = o.OrderType,
+                ExecutionMode = o.ExecutionMode,
+                ExecutionType = o.ExecutionType,
+                Quantity = o.Quantity,
+                RequestedPrice = o.RequestedPrice,
+                CurrentPrice = o.CurrentPrice,
+                Status = o.Status,
+                ExpiryDate = o.ExpiryDate,
+                Conditions = o.Conditions.Select(c => new OrderConditionDto
+                {
+                    ConditionType = c.ConditionType,
+                    Operator = c.Operator,
+                    TargetValue = c.TargetValue
+                }).ToList(),
+                Trades = o.Trades.Select(t => new TradeDto
+                {
+                    Id = t.Id,
+                    Side = t.Side,
+                    Quantity = t.Quantity,
+                    ExecutedPrice = t.ExecutedPrice,
+                    TotalAmount = t.TotalAmount,
+                    ExecutedAt = t.ExecutedAt
+                }).ToList()
+            }).ToList();
+
+            return Result<List<InvestmentOrderDto>>.Success(dtos);
+        }
+
         public async Task<Result<InvestmentOrderDto>> GetOrderByIdAsync(long userId, long orderId)
         {
             var order = await _orderRepository.GetByIdAsync(orderId);
