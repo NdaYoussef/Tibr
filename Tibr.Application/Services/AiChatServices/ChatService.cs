@@ -134,8 +134,8 @@ namespace Tibr.Application.Services.AiChatServices
                         case ProposalResolution.Unrelated:
                             var reminder = $"You have a pending order to {dto.Action} {dto.AmountGrams:F4}g {dto.Asset}. "
                                 + "Reply 'confirm' to proceed or 'cancel' to discard it.\n\n";
-                            var unrelatedResult = await ClassifyAndRouteAsync(request.Message, userId, conversation.Id);
-                            var combined = reminder + unrelatedResult;
+                            var (unrelatedReply, _, _) = await ClassifyAndRouteAsync(request.Message, userId, conversation.Id);
+                            var combined = reminder + unrelatedReply;
                             var combinedMsg = new ChatMessage
                             {
                                 ConversationId = conversation.Id,
@@ -160,7 +160,7 @@ namespace Tibr.Application.Services.AiChatServices
                 await _proposalService.ExpireAsync(conversation.Id);
             }
 
-            var (reply, intent) = await ClassifyAndRouteAsync(request.Message, userId, conversation.Id, request.Intent);
+            var (reply, intent, source) = await ClassifyAndRouteAsync(request.Message, userId, conversation.Id, request.Intent);
 
             var assistantMessage = new ChatMessage
             {
@@ -175,15 +175,16 @@ namespace Tibr.Application.Services.AiChatServices
             {
                 ConversationId = conversation.Id,
                 Reply = reply,
-                Intent = intent
+                Intent = intent,
+                Source = source
             });
         }
 
-        private async Task<(string Reply, string Intent)> ClassifyAndRouteAsync(string message, long userId, long conversationId, string? overrideIntent = null)
+        private async Task<(string Reply, string Intent, string Source)> ClassifyAndRouteAsync(string message, long userId, long conversationId, string? overrideIntent = null)
         {
             if (!string.IsNullOrWhiteSpace(overrideIntent))
             {
-                var overrideReply = overrideIntent.ToLowerInvariant() switch
+                var (reply, source) = overrideIntent.ToLowerInvariant() switch
                 {
                     "faq" => await _router.HandleFaqAsync(message),
                     "facts" => await _router.HandleFactsAsync(message),
@@ -194,12 +195,12 @@ namespace Tibr.Application.Services.AiChatServices
                     "planner" => await _router.HandlePlannerAsync(message, userId),
                     _ => _router.HandleOutOfScope()
                 };
-                return (overrideReply, overrideIntent);
+                return (reply, overrideIntent, source);
             }
 
             var classification = await _classifier.ClassifyAsync(message);
 
-            var reply = classification.Intent switch
+            var (classifiedReply, classifiedSource) = classification.Intent switch
             {
                 Intent.Faq => await _router.HandleFaqAsync(message),
                 Intent.Facts => await _router.HandleFactsAsync(message),
@@ -211,12 +212,12 @@ namespace Tibr.Application.Services.AiChatServices
                 _ => _router.HandleOutOfScope()
             };
 
-            return (reply, classification.Intent.ToString());
+            return (classifiedReply, classification.Intent.ToString(), classifiedSource);
         }
 
-        private async Task<string> HandleConditionalOrderAsync(string message, long userId, long conversationId)
+        private async Task<(string Reply, string Source)> HandleConditionalOrderAsync(string message, long userId, long conversationId)
         {
-            var (reply, toolCall) = await _router.HandleConditionalOrderAsync(message, userId);
+            var (reply, toolCall, source) = await _router.HandleConditionalOrderAsync(message, userId);
 
             if (toolCall is not null)
             {
@@ -263,22 +264,22 @@ namespace Tibr.Application.Services.AiChatServices
                     var result = await _investmentOrderService.CreateStrategyOrderAsync(userId, dto);
 
                     if (result.IsFailure)
-                        return result.ErrorMessage ?? "Could not create strategy order.";
+                        return (result.ErrorMessage ?? "Could not create strategy order.", "system");
 
                     var opLabel = operatorStr == "greater_than" ? "rises above" : "drops below";
                     var execLabel = execTypeStr == "auto_execute" ? "automatically executed" : "you'll be alerted";
 
-                    return $"✅ Strategy created! I'll {sideStr} {quantity:F4}g of {assetStr} when the price {opLabel} {targetPrice:N2} EGP/g. "
-                        + $"It expires in {expiresInDays} days and will be {execLabel}.";
+                    return ($"✅ Strategy created! I'll {sideStr} {quantity:F4}g of {assetStr} when the price {opLabel} {targetPrice:N2} EGP/g. "
+                        + $"It expires in {expiresInDays} days and will be {execLabel}.", "system");
                 }
             }
 
-            return reply;
+            return (reply, source);
         }
 
-        private async Task<string> HandleAgenticAsync(string message, long userId, long conversationId)
+        private async Task<(string Reply, string Source)> HandleAgenticAsync(string message, long userId, long conversationId)
         {
-            var (reply, toolCall) = await _router.HandleAgenticAsync(message, userId, conversationId);
+            var (reply, toolCall, source) = await _router.HandleAgenticAsync(message, userId, conversationId);
 
             if (toolCall is not null)
             {
@@ -293,14 +294,14 @@ namespace Tibr.Application.Services.AiChatServices
 
                     if (result.IsFailure)
                     {
-                        return result.ErrorMessage ?? "Could not create order proposal.";
+                        return (result.ErrorMessage ?? "Could not create order proposal.", "system");
                     }
 
-                    return result.Data.Reply;
+                    return (result.Data.Reply, "system");
                 }
             }
 
-            return reply;
+            return (reply, source);
         }
 
         public async Task<Result<List<ConversationSummaryDto>>> GetConversationsAsync(long userId)

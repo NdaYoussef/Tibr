@@ -5,5 +5,6 @@ namespace Tibr.Application.Dtos.ChatDtos
         public string Reply { get; set; } = string.Empty;
         public long ConversationId { get; set; }
         public string Intent { get; set; } = string.Empty;
+        public string Source { get; set; } = "system";
     }
 }

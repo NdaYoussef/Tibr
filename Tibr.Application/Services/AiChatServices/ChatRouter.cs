@@ -41,20 +41,21 @@ namespace Tibr.Application.Services.AiChatServices
             _goalParser = goalParser;
         }
 
-        public string HandleOutOfScope() =>
-            "I can only help with gold and silver investment topics on Tibr. "
-            + "Feel free to ask about your portfolio, gold prices, or how Tibr works.";
+        public (string Reply, string Source) HandleOutOfScope() =>
+            ("I can only help with gold and silver investment topics on Tibr. "
+            + "Feel free to ask about your portfolio, gold prices, or how Tibr works.",
+            "system");
 
-        public async Task<string> HandleFaqAsync(string userPrompt)
+        public async Task<(string Reply, string Source)> HandleFaqAsync(string userPrompt)
         {
             var result = await _vectorStore.SearchFaqAsync(userPrompt);
 
             if (result.Hits.Count == 0)
-                return "I don't have a specific answer for that. "
-                    + "Try rephrasing or contact Tibr support.";
+                return ("I don't have a specific answer for that. "
+                    + "Try rephrasing or contact Tibr support.", "system");
 
             if (result.IsDirectHit)
-                return result.Hits[0].Entry.Answer;
+                return (result.Hits[0].Entry.Answer, "system");
 
             var context = string.Join(
                 "\n\n",
@@ -71,10 +72,12 @@ namespace Tibr.Application.Services.AiChatServices
             };
 
             var response = await _aiProvider.ChatAsync(system, history);
-            return response.Content ?? "Sorry, I could not generate an answer.";
+            if (response.Content is not null)
+                return (response.Content, "ai");
+            return ("Sorry, I could not generate an answer.", "system");
         }
 
-        public async Task<string> HandleFactsAsync(string userPrompt)
+        public async Task<(string Reply, string Source)> HandleFactsAsync(string userPrompt)
         {
             var facts = await _vectorStore.SearchFactsAsync(userPrompt);
             var priceResult = await _priceService.GetCurrentPriceAsync(AssetType.Gold);
@@ -97,15 +100,17 @@ namespace Tibr.Application.Services.AiChatServices
             };
 
             var response = await _aiProvider.ChatAsync(system, history);
-            return response.Content ?? "Sorry, I could not generate an answer.";
+            if (response.Content is not null)
+                return (response.Content, "ai");
+            return ("Sorry, I could not generate an answer.", "system");
         }
 
-        public async Task<string> HandlePriceAsync(string userPrompt)
+        public async Task<(string Reply, string Source)> HandlePriceAsync(string userPrompt)
         {
             var priceResult = await _priceService.GetCurrentPriceAsync(AssetType.Gold);
 
             if (!priceResult.IsSuccess || priceResult.Data is null)
-                return "I'm unable to fetch the current gold price right now. Please try again later.";
+                return ("I'm unable to fetch the current gold price right now. Please try again later.", "system");
 
             var p = priceResult.Data;
             var priceCtx = $"Current gold price: buy at {p.BuyPrice:N2} EGP/g, "
@@ -120,10 +125,12 @@ namespace Tibr.Application.Services.AiChatServices
             };
 
             var response = await _aiProvider.ChatAsync(system, history);
-            return response.Content ?? priceCtx;
+            if (response.Content is not null)
+                return (response.Content, "ai");
+            return (priceCtx, "system");
         }
 
-        public async Task<string> HandlePortfolioReadAsync(string userPrompt, long userId)
+        public async Task<(string Reply, string Source)> HandlePortfolioReadAsync(string userPrompt, long userId)
         {
             var balanceResult = await _walletService.GetBalancesAsync(userId);
             var priceResult = await _priceService.GetCurrentPriceAsync(AssetType.Gold);
@@ -174,10 +181,12 @@ namespace Tibr.Application.Services.AiChatServices
             };
 
             var response = await _aiProvider.ChatAsync(system, history);
-            return response.Content ?? "Sorry, I could not analyze your portfolio.";
+            if (response.Content is not null)
+                return (response.Content, "ai");
+            return ("Sorry, I could not analyze your portfolio.", "system");
         }
 
-        public async Task<(string Reply, object? ToolCallRequest)> HandleAgenticAsync(string userPrompt, long userId, long conversationId)
+        public async Task<(string Reply, object? ToolCallRequest, string Source)> HandleAgenticAsync(string userPrompt, long userId, long conversationId)
         {
             var systemPrompt = "You are an order assistant for Tibr, a fractional gold investment app. "
                 + "If the user wants to buy or sell gold or silver now, use the propose_order tool. "
@@ -191,13 +200,15 @@ namespace Tibr.Application.Services.AiChatServices
             if (response.ToolCalls is { Count: > 0 })
             {
                 var call = response.ToolCalls[0];
-                return ("", call);
+                return ("", call, "system");
             }
 
-            return (response.Content ?? "I can help you buy or sell gold and silver. What would you like to do?", null);
+            if (response.Content is not null)
+                return (response.Content, null, "ai");
+            return ("I can help you buy or sell gold and silver. What would you like to do?", null, "system");
         }
 
-        public async Task<(string Reply, object? ToolCallRequest)> HandleConditionalOrderAsync(string userPrompt, long userId)
+        public async Task<(string Reply, object? ToolCallRequest, string Source)> HandleConditionalOrderAsync(string userPrompt, long userId)
         {
             var systemPrompt = "You are a strategy assistant for Tibr, a fractional gold investment app. "
                 + "If the user wants to set a conditional order (buy/sell when price reaches a target), "
@@ -211,19 +222,21 @@ namespace Tibr.Application.Services.AiChatServices
             if (response.ToolCalls is { Count: > 0 })
             {
                 var call = response.ToolCalls[0];
-                return ("", call);
+                return ("", call, "system");
             }
 
-            return (response.Content ?? "I can help you set conditional orders for gold and silver. "
-                + "For example: 'buy 10g of gold when price drops below 8000 EGP/g'.", null);
+            if (response.Content is not null)
+                return (response.Content, null, "ai");
+            return ("I can help you set conditional orders for gold and silver. "
+                + "For example: 'buy 10g of gold when price drops below 8000 EGP/g'.", null, "system");
         }
 
-        public async Task<string> HandlePlannerAsync(string userPrompt, long userId)
+        public async Task<(string Reply, string Source)> HandlePlannerAsync(string userPrompt, long userId)
         {
             var goal = await _goalParser.ParseAsync(userPrompt);
 
             if (goal.ClarificationNeeded)
-                return goal.ClarificationQuestion ?? "Could you provide more details about your savings goal?";
+                return (goal.ClarificationQuestion ?? "Could you provide more details about your savings goal?", "system");
 
             var balanceResult = await _walletService.GetBalancesAsync(userId);
             var priceResult = await _priceService.GetCurrentPriceAsync(AssetType.Gold);
@@ -257,7 +270,9 @@ namespace Tibr.Application.Services.AiChatServices
 
             var history = new List<Message> { new("user", userPrompt) };
             var adviceResponse = await _aiProvider.ChatAsync(advisePrompt, history);
-            return adviceResponse.Content ?? "Here's your savings plan. Check back as you make progress!";
+            if (adviceResponse.Content is not null)
+                return (adviceResponse.Content, "ai");
+            return ("Here's your savings plan. Check back as you make progress!", "system");
         }
     }
 }
