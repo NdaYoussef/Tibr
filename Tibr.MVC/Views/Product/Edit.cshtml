@@ -54,13 +54,13 @@
                         <label asp-for="MetalType" class="form-label"></label>
                         <div class="metal-type-picker">
                             <label class="metal-pick-option">
-                                <input type="radio" asp-for="MetalType" value="1" />
+                                <input type="radio" asp-for="MetalType" value="0" />
                                 <span class="metal-pick-card gold-pick">
                                     <i class="fa-solid fa-coins"></i> Gold
                                 </span>
                             </label>
                             <label class="metal-pick-option">
-                                <input type="radio" asp-for="MetalType" value="2" />
+                                <input type="radio" asp-for="MetalType" value="1" />
                                 <span class="metal-pick-card silver-pick">
                                     <i class="fa-solid fa-circle-dot"></i> Silver
                                 </span>
@@ -182,7 +182,7 @@
             </div>
 
             <!-- Submit -->
-            <div class="form-section">
+            @* <div class="form-section">
                 <!-- Danger zone -->
                 <div class="danger-zone">
                     <div class="danger-zone-header">
@@ -200,7 +200,7 @@
                         </button>
                     </form>
                 </div>
-            </div>
+            </div> *@
 
             <div class="form-actions">
                 <button type="submit" class="btn-tibr btn-tibr-gold w-full">
