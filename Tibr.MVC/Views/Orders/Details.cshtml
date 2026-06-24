@@ -61,7 +61,7 @@
 }
 else
 {
-    <div class="executive-card shadow-sm bg-danger-subtle border-danger text-danger p-3 mb-4 d-flex align-items-center gap-3" style="background-color: #fef2f2;">
+    <div class="executive-card shadow-sm border-danger text-danger p-3 mb-4 d-flex align-items-center gap-3" style="background-color: rgba(239, 68, 68, 0.08); border-color: rgba(239, 68, 68, 0.25);">
         <i class="bi bi-x-octagon-fill fs-4"></i>
         <div>
             <h6 class="fw-bold mb-0">Acquisition Cancelled</h6>
@@ -157,7 +157,7 @@ else
             </span>
         </div>
         
-        <div class="p-3 d-flex justify-content-between align-items-center rounded bg-primary-subtle" style="background-color: #e0f2fe; color: #0369a1; font-weight: 700; font-size: 0.85rem; border: 1px solid rgba(3,105,161,0.1);">
+        <div class="p-3 d-flex justify-content-between align-items-center rounded bg-primary-subtle" style="font-weight: 700; font-size: 0.85rem; border: 1px solid transparent;">
             <span><i class="bi bi-credit-card-2-front me-2"></i> Amex •••• 9002</span>
             <span class="text-uppercase" style="letter-spacing: 0.5px;">PAID</span>
         </div>
@@ -167,7 +167,7 @@ else
 <!-- Estimated Arrival and Logs -->
 <div class="text-center mb-4">
     <span class="text-uppercase fw-bold text-muted d-block mb-1" style="font-size: 0.65rem; letter-spacing: 1px;">Estimated Arrival</span>
-    <h5 class="text-dark mb-0" style="font-weight: 700;">Oct 24, 2023 • 2:00 PM - 5:00 PM</h5>
+    <h5 class="mb-0" style="color: var(--text-primary); font-weight: 700;">Oct 24, 2023 • 2:00 PM - 5:00 PM</h5>
 </div>
 
 <!-- Logs expandable for admin audit -->
@@ -192,10 +192,10 @@ else
 <!-- Persistent Bottom Actions Drawer Drawer -->
 <div class="row g-2 mb-4">
     <div class="col-4">
-        <button type="button" class="btn btn-outline-gold w-100 py-3" style="font-weight: 700; font-size: 0.85rem; border-color: #cbd5e1; color: var(--text-dark);" data-bs-toggle="modal" data-bs-target="#updateStatusModal">Update</button>
+        <button type="button" class="btn btn-outline-gold w-100 py-3" style="font-weight: 700; font-size: 0.85rem;" data-bs-toggle="modal" data-bs-target="#updateStatusModal">Update</button>
     </div>
     <div class="col-4">
-        <button type="button" class="btn btn-outline-gold w-100 py-3" style="font-weight: 700; font-size: 0.85rem; border-color: #cbd5e1; color: var(--text-dark);" data-bs-toggle="modal" data-bs-target="#assignCourierModal">Assign</button>
+        <button type="button" class="btn btn-outline-gold w-100 py-3" style="font-weight: 700; font-size: 0.85rem;" data-bs-toggle="modal" data-bs-target="#assignCourierModal">Assign</button>
     </div>
     <div class="col-4">
         <a asp-action="Invoice" asp-route-id="@Model.Id" target="_blank" class="btn btn-gold w-100 py-3 d-flex align-items-center justify-content-center gap-1" style="font-weight: 700; font-size: 0.85rem;">
@@ -209,7 +209,7 @@ else
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content p-4 border-0" style="border-radius: 16px;">
             <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title font-bold text-dark"><i class="bi bi-sliders me-2 text-warning"></i> Process Order</h5>
+                <h5 class="modal-title font-bold text-white"><i class="bi bi-sliders me-2 text-warning"></i> Process Order</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form method="post" asp-action="UpdateStatus" asp-route-id="@Model.Id">
@@ -246,7 +246,7 @@ else
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content p-4 border-0" style="border-radius: 16px;">
             <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title font-bold text-dark"><i class="bi bi-truck me-2 text-warning"></i> Assign Courier</h5>
+                <h5 class="modal-title font-bold text-white"><i class="bi bi-truck me-2 text-warning"></i> Assign Courier</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form method="post" asp-action="AssignDelivery" asp-route-id="@Model.Id">

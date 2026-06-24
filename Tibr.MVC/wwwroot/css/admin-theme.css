@@ -1,4 +1,4 @@
-﻿/* ═══════════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════════════════
    TIBR ADMIN — Theme Variables
    Both light and dark themes defined here via [data-theme] selector.
    Place this BEFORE admin.css in _AdminLayout.cshtml so admin.css
@@ -63,9 +63,9 @@
     --border: rgba(255, 255, 255, 0.07);
     --border-strong: rgba(255, 255, 255, 0.12);
     /* Typography */
-    --text-primary: #e8e6e3;
-    --text-muted: #7a7a7a;
-    --text-sub: #555555;
+    --text-primary: #ffffff;
+    --text-muted: #b5b5b5;
+    --text-sub: #8e8e8e;
     /* Semantic — slightly softer for dark */
     --green: #22c55e;
     --blue: #3b82f6;
@@ -256,4 +256,20 @@ canvas {
 [data-theme="dark"] select.filter-input option {
     background-color: var(--bg-card);
     color: var(--text-primary);
+}
+
+/* ── Text Color Fixes for Light/Dark Mode Contrast ──────────────── */
+[data-theme="light"] .tibr-content .text-white:not(.btn):not(.badge):not(.pill-badge),
+[data-theme="light"] .executive-card .text-white:not(.btn):not(.badge):not(.pill-badge) {
+    color: var(--text-primary) !important;
+}
+
+[data-theme="dark"] .tibr-content .text-dark:not(.btn):not(.badge):not(.pill-badge),
+[data-theme="dark"] .executive-card .text-dark:not(.btn):not(.badge):not(.pill-badge) {
+    color: var(--text-primary) !important;
+}
+
+/* Map Bootstrap's text-muted to our responsive theme variable */
+.text-muted {
+    color: var(--text-muted) !important;
 }

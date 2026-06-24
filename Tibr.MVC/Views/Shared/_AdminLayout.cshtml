@@ -96,6 +96,11 @@
                     <i class="fa-solid fa-users"></i>
                     <span>Users</span>
                 </a>
+                <a asp-controller="Admin" asp-action="Index"
+                       class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" ? "active" : "")">
+                    <i class="fa-solid fa-user-shield"></i>
+                    <span>Admins</span>
+                </a>
                 <a asp-controller="Support" asp-action="Index"
                        class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Support" ? "active" : "")">
                     <i class="fa-solid fa-headset"></i>
@@ -128,7 +133,7 @@
                 <span>Settings</span>
             </a>
 
-            <a asp-controller="Auth" asp-action="Logout" class="nav-item nav-item-danger">
+            <a asp-controller="AdminAuth" asp-action="Logout" class="nav-item nav-item-danger">
                 <i class="fa-solid fa-right-from-bracket"></i>
                 <span>Logout</span>
             </a>

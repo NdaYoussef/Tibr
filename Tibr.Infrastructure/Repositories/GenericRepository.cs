@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using System.Linq.Expressions;
 using Tibr.Domain.Common.Classes;
 using Tibr.Domain.IRepositories;
@@ -24,12 +24,12 @@ namespace Tibr.Infrastructure.Repositories
             return await _dbSet.AsNoTracking().Where(t => !t.IsDeleted).ToListAsync();
         }
 
-        public async Task<TEntity?> GetByIdAsync(TId id)
+        public virtual async Task<TEntity?> GetByIdAsync(TId id)
         {
             return await _dbSet.FindAsync(id);
         }
 
-        public async Task<TEntity?> GetById(TId id)
+        public virtual async Task<TEntity?> GetById(TId id)
         {
             return await _dbSet.FindAsync(id);
         }

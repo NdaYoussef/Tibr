@@ -25,7 +25,10 @@ namespace Tibr.MVC
 
             // Add MediatR for CQRS pattern
             builder.Services.AddMediatR(cfg =>
-                cfg.RegisterServicesFromAssembly(typeof(Tibr.Application.Services.Auth.RegisterCommand).Assembly));
+            {
+                cfg.RegisterServicesFromAssembly(typeof(Tibr.Application.Services.Auth.RegisterCommand).Assembly);
+                cfg.RegisterServicesFromAssembly(typeof(Tibr.Infrastructure.DependencyInjection).Assembly);
+            });
 
             builder.Services.AddApplicationServices();
 

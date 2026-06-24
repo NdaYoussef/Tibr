@@ -1,118 +1,124 @@
 @model AdminViewModel
 @{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
     ViewData["Title"] = $"Admin Details - {Model.Name}";
+
+    var statusClass = "badge-inactive";
+    var statusLabel = "INACTIVE";
+    if (Model.Status == "Active")
+    {
+        statusClass = "badge-verified";
+        statusLabel = "ACTIVE";
+    }
 }
 
-<div class="container-fluid py-4">
-    <div class="row mb-4">
-        <div class="col-md-8">
-            <h1 class="h3 mb-0 text-gray-800">Admin Details</h1>
-        </div>
-        <div class="col-md-4 text-end">
-            <a href="@Url.Action("Index", "Admin")" class="btn btn-secondary">
-                <i class="fas fa-arrow-left"></i> Back to List
-            </a>
+<div class="mb-4">
+    <a asp-action="Index" class="btn btn-outline-gold px-3 py-2" style="font-weight: 600;">
+        <i class="bi bi-arrow-left me-1"></i> Back to Admins Directory
+    </a>
+</div>
+
+<div class="row">
+    <!-- Admin Profile Card -->
+    <div class="col-lg-4">
+        <div class="executive-card accent-top shadow-sm text-center py-4">
+            <div class="mb-3 position-relative d-inline-block">
+                <div class="rounded-circle border border-warning d-flex align-items-center justify-content-center bg-dark text-warning mx-auto" style="width: 80px; height: 80px; border-width: 2px !important;">
+                    <i class="fa-solid fa-user-shield" style="font-size: 2rem;"></i>
+                </div>
+            </div>
+            
+            <h3 class="mb-1 text-dark" style="font-size: 1.4rem;">@Model.Name</h3>
+            <p class="text-muted mb-3" style="font-size: 0.8rem;">Administrator ID: #@Model.Id</p>
+            
+            <div class="mb-4">
+                <span class="pill-badge @statusClass">@statusLabel</span>
+            </div>
+
+            <hr class="border-light my-3">
+            
+            <div class="text-start px-2">
+                <div class="mb-3">
+                    <label class="text-muted text-uppercase fw-semibold" style="font-size: 0.65rem; letter-spacing: 0.5px;">Email Address</label>
+                    <div class="text-dark fw-medium" style="font-size: 0.9rem;">
+                        <a href="mailto:@Model.Email" class="text-decoration-none text-dark">@Model.Email</a>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="text-muted text-uppercase fw-semibold" style="font-size: 0.65rem; letter-spacing: 0.5px;">System Role</label>
+                    <div class="text-dark fw-medium" style="font-size: 0.9rem;">Administrator</div>
+                </div>
+                <div class="mb-3">
+                    <label class="text-muted text-uppercase fw-semibold" style="font-size: 0.65rem; letter-spacing: 0.5px;">Registered Date</label>
+                    <div class="text-dark fw-medium" style="font-size: 0.9rem;">@Model.CreatedAt.ToString("MMMM dd, yyyy")</div>
+                </div>
+            </div>
+
+            <div class="mt-4">
+                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-gold w-100 py-2">
+                    <i class="bi bi-pencil-square me-1"></i> Edit Admin Profile
+                </a>
+            </div>
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-md-8">
-            <div class="card shadow">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-primary">
-                        <i class="fas fa-user-shield"></i> @Model.Name
-                    </h6>
-                </div>
-                <div class="card-body">
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Full Name</h6>
-                            <p>@Model.Name</p>
+    <!-- Security & System Metadata -->
+    <div class="col-lg-8">
+        <div class="executive-card accent-top shadow-sm p-4 text-white">
+            <h4 class="mb-4 text-dark" style="font-size: 1.15rem;"><i class="bi bi-shield-check me-2 text-warning"></i> Security & Metadata Profile</h4>
+            
+            <div class="list-group list-group-flush bg-transparent">
+                <div class="list-group-item bg-transparent text-white border-light py-3 px-0">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <span class="text-muted text-uppercase fw-semibold" style="font-size: 0.7rem;">Account Status</span>
                         </div>
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Email Address</h6>
-                            <p>
-                                <a href="mailto:@Model.Email">@Model.Email</a>
-                            </p>
+                        <div class="col-md-8">
+                            <span class="pill-badge @statusClass">@statusLabel</span>
                         </div>
-                    </div>
-
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Status</h6>
-                            <p>
-                                <span class="badge bg-@(Model.Status == "Active" ? "success" : "danger")">
-                                    @Model.Status
-                                </span>
-                            </p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Admin ID</h6>
-                            <p>@Model.Id</p>
-                        </div>
-                    </div>
-
-                    <hr />
-
-                    <div class="row mb-3">
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Created Date</h6>
-                            <p>@Model.CreatedAt.ToString("g")</p>
-                        </div>
-                        <div class="col-md-6">
-                            <h6 class="text-muted">Last Modified</h6>
-                            <p>@(Model.UpdatedAt?.ToString("g") ?? "Never")</p>
-                        </div>
-                    </div>
-
-                    <div class="d-flex gap-2 mt-4">
-                        <a href="@Url.Action("Edit", "Admin", new { id = Model.Id })" class="btn btn-warning">
-                            <i class="fas fa-edit"></i> Edit Admin
-                        </a>
-                        <a href="@Url.Action("Delete", "Admin", new { id = Model.Id })" class="btn btn-danger">
-                            <i class="fas fa-trash"></i> Delete Admin
-                        </a>
                     </div>
                 </div>
-            </div>
-        </div>
 
-        <div class="col-md-4">
-            <div class="card shadow">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-info">Admin Information</h6>
+                <div class="list-group-item bg-transparent text-white border-light py-3 px-0">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <span class="text-muted text-uppercase fw-semibold" style="font-size: 0.7rem;">Account Age</span>
+                        </div>
+                        <div class="col-md-8">
+                            <span class="fw-medium text-white">@((DateTime.UtcNow - Model.CreatedAt).Days) Days</span>
+                        </div>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <div class="list-group">
-                        <div class="list-group-item">
-                            <small class="text-muted d-block">Status</small>
-                            <span class="badge bg-@(Model.Status == "Active" ? "success" : "warning")">
-                                @Model.Status
+
+                <div class="list-group-item bg-transparent text-white border-light py-3 px-0">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <span class="text-muted text-uppercase fw-semibold" style="font-size: 0.7rem;">Last Modified</span>
+                        </div>
+                        <div class="col-md-8">
+                            <span class="fw-medium text-white">
+                                @(Model.UpdatedAt.HasValue ? Model.UpdatedAt.Value.ToString("MMMM dd, yyyy HH:mm") : "Never Modified")
                             </span>
                         </div>
-                        <div class="list-group-item">
-                            <small class="text-muted d-block">Account Age</small>
-                            <span>@((DateTime.UtcNow - Model.CreatedAt).Days) days</span>
+                    </div>
+                </div>
+
+                <div class="list-group-item bg-transparent text-white border-light py-3 px-0">
+                    <div class="row">
+                        <div class="col-md-4">
+                            <span class="text-muted text-uppercase fw-semibold" style="font-size: 0.7rem;">Audit log tracking</span>
                         </div>
-                        <div class="list-group-item">
-                            <small class="text-muted d-block">Last Modified</small>
-                            <span>@(Model.UpdatedAt.HasValue ? $"{(DateTime.UtcNow - Model.UpdatedAt.Value).Days} days ago" : "Never")</span>
+                        <div class="col-md-8">
+                            <span class="text-success fw-bold" style="font-size: 0.85rem;"><i class="bi bi-activity me-1"></i> Active Logging</span>
                         </div>
                     </div>
                 </div>
             </div>
-
-            <div class="card shadow mt-3">
-                <div class="card-header py-3">
-                    <h6 class="m-0 font-weight-bold text-success">Quick Actions</h6>
-                </div>
-                <div class="card-body">
-                    <a href="@Url.Action("Edit", "Admin", new { id = Model.Id })" class="btn btn-warning btn-sm w-100 mb-2">
-                        <i class="fas fa-edit"></i> Edit
-                    </a>
-                    <a href="@Url.Action("Index", "Admin")" class="btn btn-secondary btn-sm w-100">
-                        <i class="fas fa-list"></i> View All Admins
-                    </a>
+            
+            <div class="alert-tibr alert-tibr-success mt-4">
+                <i class="bi bi-info-circle-fill me-2 fs-5 text-warning"></i>
+                <div class="text-white">
+                    All actions executed by this administrator are audited and recorded for compliance and security reviews.
                 </div>
             </div>
         </div>
