@@ -58,7 +58,7 @@ namespace Tibr.Infrastructure.Services
             return new FaqRetrievalResult(results, isDirect);
         }
 
-        public async Task<List<FactEntry>> SearchFactsAsync(string query, float minScore = 0.4f)
+        public async Task<List<ScoredFact>> SearchFactsAsync(string query, int topK = 3, float minScore = 0.4f)
         {
             var queryVec = await _aiProvider.EmbedAsync(query);
 
@@ -66,7 +66,8 @@ namespace Tibr.Infrastructure.Services
                 .Select(f => (f, score: CosineSimilarity(queryVec, f.Vector)))
                 .Where(x => x.score > minScore)
                 .OrderByDescending(x => x.score)
-                .Select(x => x.f.Entry)
+                .Take(topK)
+                .Select(x => new ScoredFact(x.f.Entry, x.score))
                 .ToList();
         }
 

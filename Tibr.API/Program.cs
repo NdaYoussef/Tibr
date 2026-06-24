@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using Tibr.API.BackgroundServices;
 using Tibr.Application;
 using Tibr.Application.Interfaces;
+using Tibr.Application.Services.AiChatServices;
 using Tibr.Application.Services.Email;
 using Tibr.Application.Services.MarketPriceService;
 using Tibr.Application.Services.PaymentServices;
@@ -88,6 +89,11 @@ namespace Tibr.API
             builder.Services.Configure<PaymobSettings>(
                 configuration.GetSection(PaymobSettings.SectionName)
             );
+
+            var routingOptions = configuration
+                .GetSection(ChatRoutingOptions.SectionName)
+                .Get<ChatRoutingOptions>() ?? new ChatRoutingOptions();
+            builder.Services.AddSingleton(routingOptions);
             builder.Services.AddHttpClient<IPaymentGateway, PaymobPaymentGateway>();
 
             builder.Services.AddHttpClient<IMarketPriceService, MarketPriceService>();
