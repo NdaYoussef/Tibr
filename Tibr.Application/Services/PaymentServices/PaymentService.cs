@@ -20,7 +20,8 @@ public class PaymentService
         IGenericRepository<Order, long> orderRepo,
         IGenericRepository<Payment, long> paymentRepo,
         IDepositService depositService,
-        ILogger<PaymentService> logger)
+        ILogger<PaymentService> logger
+    )
     {
         _gateway = gateway;
         _orderRepo = orderRepo;
@@ -29,7 +30,10 @@ public class PaymentService
         _logger = logger;
     }
 
-    public async Task<Result<string>> InitiateOrderPaymentAsync(long orderId, CreatePaymentRequest request)
+    public async Task<Result<string>> InitiateOrderPaymentAsync(
+        long orderId,
+        CreatePaymentRequest request
+    )
     {
         var order = await _orderRepo.GetByIdAsync(orderId);
         if (order is null)
@@ -84,78 +88,222 @@ public class PaymentService
 
     public async Task HandlePaymentCallbackAsync(string rawBody)
     {
-        var data = _gateway.ExtractWebhookData(rawBody);
+        _logger.LogInformation("[PaymentService] HandlePaymentCallbackAsync called");
+        _logger.LogInformation("[PaymentService] Raw webhook body received: {Body}", rawBody);
 
-        var parts = data.SpecialReference.Split(':');
-        if (parts.Length < 2)
+        try
         {
-            _logger.LogWarning("Invalid special_reference format: {Ref}", data.SpecialReference);
-            return;
+            var data = _gateway.ExtractWebhookData(rawBody);
+            _logger.LogInformation("[PaymentService] Webhook data extracted successfully");
+            _logger.LogInformation("[PaymentService] Success: {Success}", data.Success);
+            _logger.LogInformation(
+                "[PaymentService] Special Reference: {SpecialReference}",
+                data.SpecialReference
+            );
+            _logger.LogInformation(
+                "[PaymentService] Payment Method: {PaymentMethod}",
+                data.PaymentMethod
+            );
+
+            var parts = data.SpecialReference.Split(':');
+            _logger.LogInformation(
+                "[PaymentService] Special reference parts count: {Count}",
+                parts.Length
+            );
+
+            if (parts.Length < 2)
+            {
+                _logger.LogWarning(
+                    "[PaymentService] ❌ Invalid special_reference format: {Ref} (expected at least 2 parts)",
+                    data.SpecialReference
+                );
+                return;
+            }
+
+            var entityType = parts[0];
+            _logger.LogInformation("[PaymentService] Entity Type: {Type}", entityType);
+
+            if (!long.TryParse(parts[1], out var entityId))
+            {
+                _logger.LogWarning(
+                    "[PaymentService] ❌ Invalid entity ID in special_reference: {Ref} (cannot parse: {Value})",
+                    data.SpecialReference,
+                    parts[1]
+                );
+                return;
+            }
+
+            _logger.LogInformation("[PaymentService] Entity ID: {EntityId}", entityId);
+
+            switch (entityType)
+            {
+                case "deposit":
+                    _logger.LogInformation(
+                        "[PaymentService] Processing DEPOSIT callback for ID: {DepositId}",
+                        entityId
+                    );
+                    await _depositService.HandleCallbackAsync(entityId, data.Success);
+                    _logger.LogInformation("[PaymentService] ✓ Deposit callback processed");
+                    break;
+
+                case "payment":
+                    _logger.LogInformation(
+                        "[PaymentService] Processing ORDER PAYMENT callback for PaymentId: {PaymentId}",
+                        entityId
+                    );
+                    await HandleOrderCallbackAsync(entityId, data);
+                    _logger.LogInformation("[PaymentService] ✓ Order payment callback processed");
+                    break;
+
+                default:
+                    _logger.LogWarning(
+                        "[PaymentService] ❌ Unknown entity type in special_reference: {Type}",
+                        entityType
+                    );
+                    break;
+            }
         }
-
-        var entityType = parts[0];
-        if (!long.TryParse(parts[1], out var entityId))
+        catch (Exception ex)
         {
-            _logger.LogWarning("Invalid entity ID in special_reference: {Ref}", data.SpecialReference);
-            return;
-        }
-
-        switch (entityType)
-        {
-            case "deposit":
-                await _depositService.HandleCallbackAsync(entityId, data.Success);
-                break;
-
-            case "payment":
-                await HandleOrderCallbackAsync(entityId, data);
-                break;
-
-            default:
-                _logger.LogWarning("Unknown entity type in special_reference: {Type}", entityType);
-                break;
+            _logger.LogError(
+                ex,
+                "[PaymentService] ❌ Error in HandlePaymentCallbackAsync: {Message}",
+                ex.Message
+            );
+            _logger.LogError("[PaymentService] Stack Trace: {StackTrace}", ex.StackTrace);
+            throw;
         }
     }
 
-    private async Task HandleOrderCallbackAsync(long paymentId, Dtos.Payment.PaymentWebhookData data)
+    private async Task HandleOrderCallbackAsync(
+        long paymentId,
+        Dtos.Payment.PaymentWebhookData data
+    )
     {
+        _logger.LogInformation(
+            "[PaymentService.HandleOrderCallback] Starting order payment callback for PaymentId: {PaymentId}",
+            paymentId
+        );
+
         var payment = await _paymentRepo.GetByIdAsync(paymentId);
         if (payment is null)
         {
-            _logger.LogWarning("Payment callback for non-existent PaymentId={PaymentId}", paymentId);
+            _logger.LogWarning(
+                "[PaymentService.HandleOrderCallback] ❌ Payment callback for non-existent PaymentId={PaymentId}",
+                paymentId
+            );
             return;
         }
+
+        _logger.LogInformation(
+            "[PaymentService.HandleOrderCallback] Payment found - Current Status: {Status}, OrderId: {OrderId}, UserId: {UserId}, Amount: {Amount}",
+            payment.Status,
+            payment.OrderId,
+            payment.UserId,
+            payment.Amount
+        );
 
         if (payment.Status == "Completed")
         {
-            _logger.LogInformation("Payment {PaymentId} already completed — skipping.", paymentId);
+            _logger.LogInformation(
+                "[PaymentService.HandleOrderCallback] ℹ Payment {PaymentId} already completed — skipping duplicate callback.",
+                paymentId
+            );
             return;
         }
 
+        _logger.LogInformation(
+            "[PaymentService.HandleOrderCallback] Webhook success status: {Success}",
+            data.Success
+        );
+        _logger.LogInformation(
+            "[PaymentService.HandleOrderCallback] Payment method: {Method}",
+            data.PaymentMethod
+        );
+
         if (data.Success)
         {
+            _logger.LogInformation(
+                "[PaymentService.HandleOrderCallback] ✓ Payment successful - Updating payment status to Completed"
+            );
             payment.Status = "Completed";
             payment.PaidAt = DateTime.UtcNow;
             payment.PaymentMethod = data.PaymentMethod;
             await _paymentRepo.UpdateAsync(payment);
+            _logger.LogInformation(
+                "[PaymentService.HandleOrderCallback] Payment updated: PaidAt={PaidAt}, Method={Method}",
+                payment.PaidAt,
+                payment.PaymentMethod
+            );
 
             var order = await _orderRepo.GetByIdAsync(payment.OrderId);
             if (order is not null)
             {
+                _logger.LogInformation(
+                    "[PaymentService.HandleOrderCallback] Order found - OrderId: {OrderId}, CurrentStatus: {Status}, PaymentStatus: {PaymentStatus}",
+                    order.Id,
+                    order.OrderStatus,
+                    order.PaymentStatus
+                );
+
                 order.PaymentStatus = "Paid";
                 order.OrderStatus = "Processing";
+                _logger.LogInformation(
+                    "[PaymentService.HandleOrderCallback] Updating order entity: OrderId={OrderId}, NewPaymentStatus={PaymentStatus}, NewOrderStatus={OrderStatus}",
+                    order.Id,
+                    order.PaymentStatus,
+                    order.OrderStatus
+                );
                 await _orderRepo.UpdateAsync(order);
+                _logger.LogInformation(
+                    "[PaymentService.HandleOrderCallback] ✓ Order entity update queued for OrderId={OrderId}",
+                    order.Id
+                );
+
+                _logger.LogInformation(
+                    "[PaymentService.HandleOrderCallback] ✓ Order updated - New PaymentStatus: {PaymentStatus}, OrderStatus: {OrderStatus}",
+                    order.PaymentStatus,
+                    order.OrderStatus
+                );
             }
             else
             {
-                _logger.LogWarning("Order with id {OrderId} not found during payment callback.", payment.OrderId);
+                _logger.LogWarning(
+                    "[PaymentService.HandleOrderCallback] ❌ Order with id {OrderId} not found during payment callback.",
+                    payment.OrderId
+                );
             }
         }
         else
         {
+            _logger.LogWarning(
+                "[PaymentService.HandleOrderCallback] ❌ Payment failed - Updating payment status to Failed"
+            );
             payment.Status = "Failed";
             await _paymentRepo.UpdateAsync(payment);
+            _logger.LogWarning(
+                "[PaymentService.HandleOrderCallback] Payment marked as Failed for PaymentId: {PaymentId}",
+                paymentId
+            );
         }
 
-        await _paymentRepo.SaveChangesAsync();
+        _logger.LogInformation(
+            "[PaymentService.HandleOrderCallback] Saving changes to database..."
+        );
+        var saveResult = await _paymentRepo.SaveChangesAsync();
+        _logger.LogInformation(
+            "[PaymentService.HandleOrderCallback] Database save completed, rows affected: {RowsAffected}",
+            saveResult
+        );
+        if (saveResult == 0)
+        {
+            _logger.LogWarning(
+                "[PaymentService.HandleOrderCallback] ⚠ No database rows were modified by SaveChangesAsync. This may indicate no tracked changes were applied."
+            );
+        }
+        _logger.LogInformation(
+            "[PaymentService.HandleOrderCallback] ✓ Database changes saved successfully"
+        );
+        _logger.LogInformation("[PaymentService.HandleOrderCallback] === END ORDER CALLBACK ===");
     }
 }

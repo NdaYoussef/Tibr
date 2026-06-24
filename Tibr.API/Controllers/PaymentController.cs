@@ -53,7 +53,7 @@ public class PaymentController : ControllerBase
             _logger.LogWarning("Paymob callback received with invalid HMAC.");
             return Unauthorized("Invalid HMAC signature.");
         }
-        
+
         await _paymentService.HandlePaymentCallbackAsync(rawBody);
 
         return Ok();
@@ -62,44 +62,30 @@ public class PaymentController : ControllerBase
     [HttpGet("callback/response"), AllowAnonymous]
     public ActionResult ResponseCallback([FromQuery] bool success)
     {
-        //_logger.LogInformation(
-        //    "Paymob response callback: QueryString={Query}, Success={Success}",
-        //    Request.QueryString,
-        //    success);
-
-        //var merchantOrderId = Request.Query["merchant_order_id"].ToString();
-        //var status = success ? "success" : "failed";
-
-        //var parts = merchantOrderId.Split(':');
-        //var entityType = parts.Length >= 1 ? parts[0] : null;
-        //var entityId = parts.Length >= 3 ? parts[2] : null;
-
-        //var routes = new Dictionary<string, string>
-        //{
-        //    ["payment"] = "/orders/{0}?payment={1}",
-        //    ["deposit"] = "/wallet?deposit={1}",
-        //};
-
-        //if (entityType is not null && routes.TryGetValue(entityType, out var template))
-        //{
-        //    var path = string.Format(template, entityId ?? "", status);
-        //    return Redirect($"{_settings.FrontendBaseUrl}{path}");
-        //}
-
-        //return Redirect($"{_settings.FrontendBaseUrl}/orders?payment={status}");
         _logger.LogInformation(
-        "Paymob response callback: QueryString={Query}, Success={Success}",
-        Request.QueryString,
-        success);
+            "Paymob response callback: QueryString={Query}, Success={Success}",
+            Request.QueryString,
+            success);
 
         var merchantOrderId = Request.Query["merchant_order_id"].ToString();
         var status = success ? "success" : "failed";
 
-        return Ok(new
+        var parts = merchantOrderId.Split(':');
+        var entityType = parts.Length >= 1 ? parts[0] : null;
+        var entityId = parts.Length >= 3 ? parts[2] : null;
+
+        var routes = new Dictionary<string, string>
         {
-            Success = success,
-            Status = status,
-            MerchantOrderId = merchantOrderId
-        });
+            ["payment"] = "/orders/{0}?payment={1}",
+            ["deposit"] = "/wallet?deposit={1}",
+        };
+
+        if (entityType is not null && routes.TryGetValue(entityType, out var template))
+        {
+            var path = string.Format(template, entityId ?? "", status);
+            return Redirect($"{_settings.FrontendBaseUrl}{path}");
+        }
+
+        return Redirect($"{_settings.FrontendBaseUrl}/orders?payment={status}");
     }
 }

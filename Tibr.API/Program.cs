@@ -2,6 +2,7 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using Tibr.API.BackgroundServices;
 using Tibr.Application;
 using Tibr.Application.Interfaces;
 using Tibr.Application.Services.Email;
@@ -20,96 +21,89 @@ namespace Tibr.API
         {
             var builder = WebApplication.CreateBuilder(args);
 
-            // ================= Logging =================
+            // Configure file logging
+            var logsPath = Path.Combine(AppContext.BaseDirectory, "Logs");
+            Directory.CreateDirectory(logsPath);
+
             builder.Logging.ClearProviders();
             builder.Logging.AddConsole();
+            builder.Logging.AddProvider(new FileLoggerProvider(logsPath));
 
-            // ================= Controllers =================
-            builder.Services.AddControllers()
-                .AddJsonOptions(opts =>
-                    opts.JsonSerializerOptions.Converters.Add(
-                        new System.Text.Json.Serialization.JsonStringEnumConverter()));
-
-            // ================= CORS =================
             builder.Services.AddCors(options =>
             {
-                options.AddPolicy("AllowAll", policy =>
-                {
-                    policy.AllowAnyOrigin()
-                          .AllowAnyHeader()
-                          .AllowAnyMethod();
-                });
+                options.AddPolicy(
+                    "AllowAll",
+                    policy =>
+                    {
+                        policy.AllowAnyOrigin().AllowAnyHeader().AllowAnyMethod();
+                    }
+                );
             });
+            builder.Services.AddControllers()
+                .AddJsonOptions(opts =>
+                    opts.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));
 
-            // ================= Database =================
-            builder.Services.AddDbContext<ApplicationDbContext>(options =>
-                options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
-
-            builder.Services.AddScoped<DbContext>(p =>
-                p.GetRequiredService<ApplicationDbContext>());
-
-            // ================= Services =================
-            builder.Services.AddTransient<IEmailService, EmailService>();
-            builder.Services.AddHttpClient<IPaymentGateway, PaymobPaymentGateway>();
-            builder.Services.AddHttpClient<IMarketPriceService, MarketPriceService>();
-            builder.Services.AddHostedService<AssetPriceBackgroundService>();
-
-            // ================= JWT =================
             var configuration = builder.Configuration;
 
-            builder.Services.AddAuthentication(options =>
-            {
-                options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
-                options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
-            })
-            .AddJwtBearer(options =>
-            {
-                options.TokenValidationParameters = new TokenValidationParameters
-                {
-                    ValidateIssuer = true,
-                    ValidateAudience = true,
-                    ValidAudience = configuration["JWT:ValidAudience"],
-                    ValidIssuer = configuration["JWT:ValidIssuer"],
-                    IssuerSigningKey = new SymmetricSecurityKey(
-                        Encoding.UTF8.GetBytes(configuration["JWT:Secret"]!)),
-                    ValidateLifetime = true
-                };
-            });
+            builder.Services.AddDbContext<ApplicationDbContext>(options =>
+                options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"))
+            );
 
-            // ================= MediatR =================
+            builder.Services.AddScoped<DbContext>(provider =>
+                provider.GetRequiredService<ApplicationDbContext>()
+            );
+            builder.Services.AddTransient<IEmailService, EmailService>();
+            builder
+                .Services.AddAuthentication(options =>
+                {
+                    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+                    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+                })
+                .AddJwtBearer(options =>
+                {
+                    options.TokenValidationParameters = new TokenValidationParameters
+                    {
+                        ValidateIssuer = true,
+                        ValidateAudience = true,
+                        ValidAudience = configuration["JWT:ValidAudience"],
+                        ValidIssuer = configuration["JWT:ValidIssuer"],
+                        IssuerSigningKey = new SymmetricSecurityKey(
+                            Encoding.UTF8.GetBytes(configuration["JWT:Secret"]!)
+                        ),
+                        ValidateLifetime = true,
+                    };
+                });
 
             builder.Services.AddMediatR(cfg =>
-            {
                 cfg.RegisterServicesFromAssembly(
-                    typeof(Tibr.Application.Services.Auth.RegisterCommand).Assembly);
-
-                cfg.RegisterServicesFromAssembly(
-                    typeof(Tibr.Infrastructure.DependencyInjection).Assembly);
-            });
+                    typeof(Tibr.Application.Services.Auth.RegisterCommand).Assembly
+                )
+            );
 
             builder.Services.AddOpenApi();
 
             builder.Services.AddInfrastructure(builder.Configuration);
             builder.Services.AddApplicationServices();
 
-            // ================= Paymob =================
+            builder.Services.AddMemoryCache();
+
             builder.Services.Configure<PaymobSettings>(
-                configuration.GetSection(PaymobSettings.SectionName));
+                configuration.GetSection(PaymobSettings.SectionName)
+            );
+            builder.Services.AddHttpClient<IPaymentGateway, PaymobPaymentGateway>();
+
+            builder.Services.AddHttpClient<IMarketPriceService, MarketPriceService>();
+            builder.Services.AddHostedService<AssetPriceBackgroundService>();
+            builder.Services.AddHostedService<ResolutionBackgroundService>();
 
             var app = builder.Build();
 
-            // ================= DEV ONLY =================
             if (app.Environment.IsDevelopment())
             {
                 app.MapOpenApi();
             }
 
-            // ================= MIDDLEWARE ORDER =================
-
             app.UseStaticFiles();
-
-            app.UseRouting();
-
             app.UseCors("AllowAll");
 
             if (!app.Environment.IsDevelopment())
@@ -117,12 +111,90 @@ namespace Tibr.API
                 app.UseHttpsRedirection();
             }
 
+
             app.UseAuthentication();
             app.UseAuthorization();
 
             app.MapControllers();
-
             app.Run();
+        }
+    }
+}
+
+public class FileLoggerProvider : ILoggerProvider
+{
+    private readonly string _logsPath;
+
+    public FileLoggerProvider(string logsPath)
+    {
+        _logsPath = logsPath;
+    }
+
+    public ILogger CreateLogger(string categoryName)
+    {
+        return new FileLogger(_logsPath, categoryName);
+    }
+
+    public void Dispose() { }
+}
+
+public class FileLogger : ILogger
+{
+    private readonly string _logsPath;
+    private readonly string _categoryName;
+    private readonly object _syncLock = new object();
+
+    public FileLogger(string logsPath, string categoryName)
+    {
+        _logsPath = logsPath;
+        _categoryName = categoryName;
+    }
+
+    public IDisposable? BeginScope<TState>(TState state)
+        where TState : notnull => null;
+
+    public bool IsEnabled(LogLevel logLevel) => logLevel >= LogLevel.Information;
+
+    public void Log<TState>(
+        LogLevel logLevel,
+        EventId eventId,
+        TState state,
+        Exception? exception,
+        Func<TState, Exception?, string> formatter
+    )
+    {
+        if (!IsEnabled(logLevel))
+            return;
+
+        var message = formatter(state, exception);
+        var timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff");
+        var logEntry = $"{timestamp} [{logLevel:g}] {_categoryName}: {message}";
+
+        if (exception != null)
+            logEntry += $"\nException: {exception}";
+
+        // Write to all-logs file
+        WriteToFile("all-logs.txt", logEntry);
+
+        // Write to payment-callback file if this is a payment-related log
+        if (_categoryName.Contains("Payment"))
+            WriteToFile("payment-callback.txt", logEntry);
+    }
+
+    private void WriteToFile(string fileName, string logEntry)
+    {
+        lock (_syncLock)
+        {
+            try
+            {
+                var filePath = Path.Combine(_logsPath, fileName);
+                File.AppendAllText(filePath, logEntry + Environment.NewLine);
+            }
+            catch (Exception ex)
+            {
+                // Fallback: write to console if file writing fails
+                Console.WriteLine($"Error writing to log file: {ex.Message}");
+            }
         }
     }
 }

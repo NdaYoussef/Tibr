@@ -5,22 +5,19 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 using Tibr.Application.InfrastructureContracts;
-using Tibr.Application.Services.AdminServices;
+using Tibr.Application.Services.AiChatServices;
 using Tibr.Application.Services.CartServices;
 using Tibr.Application.Services.CategoryServices;
 using Tibr.Application.Services.FavoriteServices;
 using Tibr.Application.Services.ProductServices;
 using Tibr.Application.Services.SuppoertServices;
 using Tibr.Application.Services.SupportServices;
-
-using Tibr.Application.Services.TicketServices;
-
-using Tibr.Application.Services.UserServices;
-
 using Tibr.Domain.IRepositories;
+using Tibr.Infrastructure.Config;
 using Tibr.Infrastructure.Contexts;
 using Tibr.Infrastructure.Queries;
 using Tibr.Infrastructure.Repositories;
+using Tibr.Infrastructure.Services;
 
 namespace Tibr.Infrastructure
 {
@@ -32,7 +29,9 @@ namespace Tibr.Infrastructure
                 options.UseSqlServer(configuration.GetConnectionString("DefaultConnection"))
             );
 
-            services.AddMemoryCache();
+            services.AddScoped<DbContext>(provider =>
+                provider.GetRequiredService<ApplicationDbContext>()
+            );
 
             // Mapster
             var config = TypeAdapterConfig.GlobalSettings;
@@ -62,23 +61,28 @@ namespace Tibr.Infrastructure
             services.AddScoped<ICartRepository, CartRepository>();
             services.AddScoped<ICartService, CartService>();
 
+            services.AddScoped<IAssetPriceRepository, AssetPriceRepository>();
+
+            services.AddScoped<IUserRepository, UserRepository>();
 
             services.AddScoped<ITicketRepository, TicketRepository>();
-            services.AddScoped<ITicketService, TicketService>();
 
-            services.AddScoped<IAdminService, AdminService>();
+            services.AddSingleton<IVectorStoreService, InMemoryVectorStoreService>();
+            services.AddHostedService<ChatSeedHostedService>();
 
-            services.AddScoped<IAnalyticsService, AnalyticsService>();
+            services.AddHttpClient<GeminiProviderService>();
+            services.AddHttpClient<OpenAiProviderService>();
+            services.AddHttpClient<XaiProviderService>();
+            services.AddHttpClient<HuggingFaceProviderService>();
+            services.AddSingleton<IAiProviderService, CompositeAiProvider>();
 
+            services.AddScoped<IChatOrderProposalService, ChatOrderProposalService>();
 
-            // User
-            services.AddScoped<IUserRepository, UserRepository>();
-            services.AddScoped<IUserService, UserService>();
-
-            services.AddScoped<IAssetPriceRepository, AssetPriceRepository>();
+            services.Configure<AiChatSettings>(
+                configuration.GetSection(AiChatSettings.SectionName)
+            );
 
             return services;
         }
     }
 }
-

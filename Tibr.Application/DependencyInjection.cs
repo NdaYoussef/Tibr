@@ -2,6 +2,8 @@ using FluentValidation.AspNetCore;
 using Mapster;
 using Microsoft.Extensions.DependencyInjection;
 using Tibr.Application.Services.AddressServices;
+using Tibr.Application.Services.AdminServices;
+using Tibr.Application.Services.AiChatServices;
 using Tibr.Application.Services.AssetPriceServices;
 using Tibr.Application.Services.DeliveryServices;
 using Tibr.Application.Services.DepositServices;
@@ -11,7 +13,9 @@ using Tibr.Application.Services.OrderServices;
 using Tibr.Application.Services.PaymentServices;
 using Tibr.Application.Services.ResolutionServices;
 using Tibr.Application.Services.ReviewServices;
+using Tibr.Application.Services.TicketServices;
 using Tibr.Application.Services.TradeServices;
+using Tibr.Application.Services.UserServices;
 using Tibr.Application.Services.WalletServices;
 using Tibr.Application.Services.WithdrawServices;
 
@@ -33,6 +37,13 @@ namespace Tibr.Application
             services.AddScoped<IWithdrawService, WithdrawService>();
             services.AddScoped<IReviewService, ReviewService>();
             services.AddScoped<PaymentService>();
+            services.AddScoped<IAdminService, AdminService>();
+            services.AddScoped<IAnalyticsService, AnalyticsService>();
+            services.AddScoped<IUserService, UserService>();
+            services.AddScoped<ITicketService, TicketService>();
+            services.AddScoped<IChatService, ChatService>();
+            services.AddScoped<IProposalResolutionClassifier, ProposalResolutionClassifier>();
+            services.AddScoped<GoalParser>();
             services.AddMapster();
             services.AddFluentValidationAutoValidation()
                     .AddFluentValidationClientsideAdapters();
