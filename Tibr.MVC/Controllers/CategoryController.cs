@@ -1,6 +1,7 @@
 ﻿
 using Microsoft.AspNetCore.Mvc;
 using Tibr.Application.Dtos.CategoryDto;
+using Tibr.Application.Services.AdminServices;
 using Tibr.Application.Services.CategoryServices;
 using Tibr.MVC.Models.Categories;
 
@@ -9,13 +10,16 @@ namespace Tibr.MVC.Controllers
     public class CategoryController : Controller
     {
         private readonly ICategoryService _categoryService;
+        private readonly IAdminService _adminService;
         private readonly ILogger<CategoryController> _logger;
 
         public CategoryController(
             ICategoryService categoryService,
+              IAdminService adminService,
             ILogger<CategoryController> logger)
         {
-            _categoryService = categoryService; 
+            _categoryService = categoryService;
+            _adminService = adminService;
             _logger = logger;
         }
 
@@ -68,6 +72,9 @@ namespace Tibr.MVC.Controllers
             var dto = new CreateCategoryDto { Name = model.Name.Trim() };
             var result = await _categoryService.AddCategoryAsync(dto);
 
+            if (result.IsSuccess)
+                _adminService.InvalidateDashboardCache();
+
             TempData[result.IsSuccess ? "Success" : "Error"] =
                 result.IsSuccess
                     ? $"Category \"{model.Name}\" created successfully."
@@ -108,6 +115,9 @@ namespace Tibr.MVC.Controllers
             var dto = new UpdateCategoryDto { Name = model.Name.Trim() };
             var result = await _categoryService.UpdateCategoryAsync(id, dto);
 
+            if (result.IsSuccess)
+                _adminService.InvalidateDashboardCache();
+
             TempData[result.IsSuccess ? "Success" : "Error"] =
                 result.IsSuccess
                     ? $"Category updated to \"{model.Name}\"."
@@ -122,6 +132,9 @@ namespace Tibr.MVC.Controllers
         public async Task<IActionResult> Delete(long id)
         {
             var result = await _categoryService.DeleteCategoryAsync(id);
+
+            if (result.IsSuccess)
+                _adminService.InvalidateDashboardCache();
 
             TempData[result.IsSuccess ? "Success" : "Error"] =
                 result.IsSuccess
