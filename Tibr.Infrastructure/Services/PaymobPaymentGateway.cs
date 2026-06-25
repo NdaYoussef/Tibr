@@ -1,3 +1,4 @@
+using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using System.Text.Json;
@@ -24,9 +25,6 @@ public class PaymobPaymentGateway : IPaymentGateway
         _http = http;
         _settings = settings.Value;
         _logger = logger;
-
-        _http.DefaultRequestHeaders.Authorization =
-            new System.Net.Http.Headers.AuthenticationHeaderValue("Token", _settings.SecretKey);
     }
 
     public async Task<PaymentInitiationResult> CreateIntentionAsync(PaymentIntentionRequest request)
@@ -63,7 +61,7 @@ public class PaymobPaymentGateway : IPaymentGateway
 
         try
         {
-            var responseJson = await PostJsonAsync($"{_settings.BaseUrl}/v1/intention/", body);
+            var responseJson = await PostJsonAsync($"{_settings.BaseUrl}/v1/intention/", body, useAuth: true);
 
             var clientSecret = responseJson.GetProperty("client_secret").GetString();
             if (string.IsNullOrEmpty(clientSecret))
@@ -143,11 +141,60 @@ public class PaymobPaymentGateway : IPaymentGateway
         };
     }
 
-    private async Task<JsonElement> PostJsonAsync(string url, object body)
+    public async Task<PaymentInquiryResult> InquireByMerchantOrderAsync(string merchantOrderId)
+    {
+        try
+        {
+            var token = await GetAuthTokenAsync();
+            var body = new { auth_token = token, merchant_order_id = merchantOrderId };
+            var json = JsonSerializer.Serialize(body);
+            var content = new StringContent(json, Encoding.UTF8, "application/json");
+            var response = await _http.PostAsync(
+                $"{_settings.BaseUrl}/api/ecommerce/orders/transaction_inquiry", content);
+
+            if (response.StatusCode == HttpStatusCode.NotFound)
+                return PaymentInquiryResult.NotPaid();
+
+            response.EnsureSuccessStatusCode();
+            var bodyStr = await response.Content.ReadAsStringAsync();
+            var responseJson = JsonDocument.Parse(bodyStr).RootElement;
+            var success = responseJson.GetProperty("success").GetBoolean();
+            return success ? PaymentInquiryResult.Paid() : PaymentInquiryResult.NotPaid();
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Paymob transaction inquiry failed for ref={Ref}", merchantOrderId);
+            return PaymentInquiryResult.Failure("Payment inquiry failed. Try again later.");
+        }
+    }
+
+    private async Task<string> GetAuthTokenAsync()
+    {
+        var body = new { api_key = _settings.ApiKey };
+        var responseJson = await PostJsonAsync(
+            $"{_settings.BaseUrl}/api/auth/tokens", body);
+        return responseJson.GetProperty("token").GetString()
+               ?? throw new InvalidOperationException("Paymob auth token missing in response.");
+    }
+
+    private async Task<JsonElement> PostJsonAsync(string url, object body, bool useAuth = false)
     {
         var json = JsonSerializer.Serialize(body);
         var content = new StringContent(json, Encoding.UTF8, "application/json");
-        var response = await _http.PostAsync(url, content);
+
+        HttpResponseMessage response;
+        if (useAuth)
+        {
+            var request = new HttpRequestMessage(HttpMethod.Post, url) { Content = content };
+            request.Headers.Authorization =
+                new System.Net.Http.Headers.AuthenticationHeaderValue("Token", _settings.SecretKey);
+            response = await _http.SendAsync(request);
+        }
+        else
+        {
+            response = await _http.PostAsync(url, content);
+        }
+
         response.EnsureSuccessStatusCode();
         var bodyStr = await response.Content.ReadAsStringAsync();
         return JsonDocument.Parse(bodyStr).RootElement;

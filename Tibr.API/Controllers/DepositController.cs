@@ -2,6 +2,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Tibr.Application.Dtos;
+using Tibr.Application.Dtos.Payment;
 using Tibr.Application.Services.DepositServices;
 
 namespace Tibr.API.Controllers
@@ -28,6 +29,19 @@ namespace Tibr.API.Controllers
             if (result.IsFailure)
                 return BadRequest(result.ErrorMessage);
             return Ok(new { checkoutUrl = result.Data });
+        }
+
+        [HttpGet("verify/{depositId:long}")]
+        public async Task<ActionResult<VerifyStatusResponse>> Verify(long depositId)
+        {
+            var userId = GetUserId();
+            if (userId is null) return Unauthorized();
+
+            var result = await _depositService.VerifyDepositAsync(depositId);
+            if (result.IsFailure)
+                return BadRequest(result.ErrorMessage);
+
+            return Ok(result.Data);
         }
 
         [HttpGet("history")]
