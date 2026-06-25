@@ -54,6 +54,10 @@ public static class SystemMessages
         ? "يمكنني مساعدتك في إعداد أوامر شرطية للذهب والفضة. مثال: 'اشتر 10 جرام ذهب عندما ينخفض السعر عن 8000 جنيها للجرام'."
         : "I can help you set conditional orders for gold and silver. For example: 'buy 10g of gold when price drops below 8000 EGP/g'.";
 
+    public static string ConditionalDisabled(string lang) => lang == "ar"
+        ? "الأوامر الشرطية غير متاحة في المحادثة حالياً. يرجى استخدام صفحة الاستراتيجيات في لوحة التحكم."
+        : "Conditional orders are not available in chat at this time. Please use the Strategies page on your dashboard.";
+
     public static string ConditionalCreateFailed(string lang) => lang == "ar"
         ? "تعذر إنشاء أمر الاستراتيجية."
         : "Could not create strategy order.";

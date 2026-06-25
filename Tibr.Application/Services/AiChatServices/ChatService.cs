@@ -266,12 +266,7 @@ namespace Tibr.Application.Services.AiChatServices
                         lang
                     ),
                     "agentic" => await HandleAgenticAsync(message, userId, conversationId, lang),
-                    "conditional_order" => await HandleConditionalOrderAsync(
-                        message,
-                        userId,
-                        conversationId,
-                        lang
-                    ),
+                    "conditional_order" => (SystemMessages.ConditionalDisabled(lang), "system"),
                     "planner" => await _router.HandlePlannerAsync(message, userId, lang),
                     _ => _router.HandleOutOfScope(lang),
                 };
@@ -322,8 +317,7 @@ namespace Tibr.Application.Services.AiChatServices
                     message, userId, language),
                 Intent.Agentic => await HandleAgenticAsync(
                     message, userId, conversationId, language),
-                Intent.ConditionalOrder => await HandleConditionalOrderAsync(
-                    message, userId, conversationId, language),
+                Intent.ConditionalOrder => (SystemMessages.ConditionalDisabled(language), "system"),
                 Intent.Planner => await _router.HandlePlannerAsync(message, userId, language),
                 _ => _router.HandleOutOfScope(language),
             };
