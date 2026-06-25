@@ -12,6 +12,7 @@ namespace Tibr.Application.Services.InvestmentOrderServices
     {
         private readonly IGenericRepository<OrdersInvestment, long> _orderRepository;
         private readonly IGenericRepository<OrderCondition, long> _conditionRepository;
+        private readonly IGenericRepository<Reservation, long> _reservationRepo;
         private readonly IGenericRepository<Wallet, long> _walletRepo;
         private readonly IWalletService _walletService;
         private readonly IAssetPriceService _assetPriceService;
@@ -19,12 +20,14 @@ namespace Tibr.Application.Services.InvestmentOrderServices
         public InvestmentOrderService(
             IGenericRepository<OrdersInvestment, long> orderRepository,
             IGenericRepository<OrderCondition, long> conditionRepository,
+            IGenericRepository<Reservation, long> reservationRepo,
             IGenericRepository<Wallet, long> walletRepo,
             IWalletService walletService,
             IAssetPriceService assetPriceService)
         {
             _orderRepository = orderRepository;
             _conditionRepository = conditionRepository;
+            _reservationRepo = reservationRepo;
             _walletRepo = walletRepo;
             _walletService = walletService;
             _assetPriceService = assetPriceService;
@@ -104,6 +107,13 @@ namespace Tibr.Application.Services.InvestmentOrderServices
 
             order.Status = OrderStatus.Cancelled;
             await _orderRepository.UpdateAsync(order);
+
+            var reservation = _reservationRepo.GetAll(r => r.OrderId == order.Id && r.Status == ReservationStatus.Active).FirstOrDefault();
+            if (reservation is not null)
+            {
+                await _walletService.ReleaseReservationAsync(reservation.Id);
+            }
+
             await _orderRepository.SaveChangesAsync();
 
             return Result.Success();
