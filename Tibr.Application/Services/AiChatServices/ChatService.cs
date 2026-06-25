@@ -366,10 +366,12 @@ namespace Tibr.Application.Services.AiChatServices
                         operatorStr == "greater_than"
                             ? ConditionOperator.GreaterThan
                             : ConditionOperator.LessThan;
-                    var executionType =
-                        execTypeStr == "auto_execute"
-                            ? ExecutionType.AutoExecute
-                            : ExecutionType.AlertOnly;
+                    var executionType = execTypeStr switch
+                    {
+                        "auto_execute" => ExecutionType.AutoExecute,
+                        "alert_and_execute" => ExecutionType.AlertAndExecute,
+                        _ => ExecutionType.AlertOnly,
+                    };
 
                     var dto = new CreateStrategyOrderDto
                     {
@@ -401,10 +403,12 @@ namespace Tibr.Application.Services.AiChatServices
                         );
 
                     var opLabel = operatorStr == "greater_than" ? "rises above" : "drops below";
-                    var execLabel =
-                        execTypeStr == "auto_execute"
-                            ? "automatically executed"
-                            : "you'll be alerted";
+                    var execLabel = execTypeStr switch
+                    {
+                        "auto_execute" => "automatically executed",
+                        "alert_and_execute" => "alerted and automatically executed",
+                        _ => "you'll be alerted",
+                    };
 
                     return (
                         SystemMessages.StrategyCreated(

@@ -100,6 +100,7 @@ namespace Tibr.Application.Services.ResolutionServices
                             await TryFireAlertAsync(order, currentPrice);
                             break;
                         case ExecutionType.AlertAndExecute:
+                            await TryFireAlertAsync(order, currentPrice);
                             await TryAutoExecuteAsync(order, currentPrice);
                             break;
                     }
@@ -176,6 +177,7 @@ namespace Tibr.Application.Services.ResolutionServices
                 CreatedAt = DateTime.UtcNow,
             };
             await _tradeRepo.AddAsync(trade);
+            await _tradeRepo.SaveChangesAsync();
 
             var transaction = new Transaction
             {
