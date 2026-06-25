@@ -1,4 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Tibr.Domain.Common.Classes;
 using Tibr.Domain.Entities;
 
 namespace Tibr.Infrastructure.Contexts
@@ -7,6 +9,38 @@ namespace Tibr.Infrastructure.Contexts
     {
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options) { }
+
+        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            ApplyTimestamps();
+            return base.SaveChangesAsync(cancellationToken);
+        }
+
+        public override int SaveChanges()
+        {
+            ApplyTimestamps();
+            return base.SaveChanges();
+        }
+
+        private void ApplyTimestamps()
+        {
+            var now = DateTime.UtcNow;
+            foreach (var entry in ChangeTracker.Entries<BaseEntity<long>>())
+            {
+                switch (entry.State)
+                {
+                    case EntityState.Added:
+                        if (entry.Entity.CreatedAt == default)
+                            entry.Entity.CreatedAt = now;
+                        entry.Entity.UpdatedAt = now;
+                        break;
+
+                    case EntityState.Modified:
+                        entry.Entity.UpdatedAt = now;
+                        break;
+                }
+            }
+        }
 
         // User and Admin entities
         public DbSet<User> Users { get; set; }
