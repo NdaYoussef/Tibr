@@ -5,6 +5,7 @@
     ViewData["ShowBack"] = true;
 }
 
+@* ── PAGE HEADER ─────────────────────────────────────────────── *@
 <div class="page-header reveal">
     <div class="d-flex align-items-center gap-3">
         <a asp-action="Index" class="btn-tibr btn-tibr-outline btn-sm">
@@ -12,94 +13,306 @@
         </a>
         <div>
             <h1 class="page-title">Review Details</h1>
-            <p class="page-sub">Viewing full feedback for Order #@Model.OrderNumber</p>
+            <p class="page-sub">Customer feedback for Order @Model.OrderNumber</p>
         </div>
     </div>
 </div>
 
-<div class="row reveal">
-    <div class="col-lg-8 mx-auto">
-        <div class="card shadow-lg" style="background: var(--bg-card); border: none; border-top: 3px solid var(--gold);">
-            <div class="card-body p-4">
-                <div class="d-flex justify-content-between align-items-start mb-4">
-                    <div class="d-flex align-items-center gap-3">
-                        <div class="rounded-circle bg-dark d-flex align-items-center justify-content-center" style="width: 56px; height: 56px; border: 1px solid var(--gold);">
-                            <span class="text-gold h4 mb-0">@Model.UserFullName[0]</span>
-                        </div>
-                        <div>
-                            <h4 class="text-dark mb-0">@Model.UserFullName</h4>
-                            <p class="text-muted mb-0">@Model.UserEmail</p>
-                        </div>
-                    </div>
-                    <div class="text-end">
-                        <div class="h2 mb-0" style="color: var(--gold); letter-spacing: 2px;">@Model.StarDisplay</div>
-                        <span class="badge @(Model.Value >= 4 ? "badge-success" : Model.Value == 3 ? "badge-warning" : "badge-danger")">
-                            @Model.Value / 5 Rating
-                        </span>
-                    </div>
+@* ── MAIN DETAIL CARD ─────────────────────────────────────────── *@
+<div class="rvd-wrap reveal">
+    <div class="rvd-card">
+
+        @* Watermark icon in background *@
+        <div class="rvd-watermark" aria-hidden="true">
+            <i class="fa-solid fa-star"></i>
+        </div>
+
+        @* ── CARD HEADER: avatar + name + stars ───────────────── *@
+        <div class="rvd-header">
+            <div class="rvd-user">
+                <div class="rvd-avatar">
+                    @Model.UserFullName.FirstOrDefault()
                 </div>
-
-                <hr class="border-secondary opacity-25 mb-4">
-
-                <div class="mb-5">
-                    <h6 class="text-muted text-uppercase small fw-bold mb-3" style="letter-spacing: 1px;">Customer Feedback</h6>
-                    <div class="p-4 rounded-3" style="background: var(--bg-card-2); border-left: 4px solid var(--gold-light);">
-                        <p class="text-dark fs-5 mb-0" style="line-height: 1.6; font-style: italic;">
-                            @if (string.IsNullOrEmpty(Model.Description))
+                <div>
+                    <h3 class="rvd-name">@Model.UserFullName</h3>
+                    <p class="rvd-email">@Model.UserEmail</p>
+                    <div class="rvd-stars @(Model.Value >= 4 ? "rating-high" : Model.Value == 3 ? "rating-mid" : "rating-low")">
+                        @for (int s = 1; s <= 5; s++)
+                        {
+                            if (s <= Model.Value)
                             {
-                                <span class="text-muted">No written comment was provided for this review.</span>
+                                <i class="fa-solid fa-star"></i>
                             }
                             else
                             {
-                                @Model.Description
+                                <i class="fa-regular fa-star"></i>
                             }
-                        </p>
+                        }
+                        <span class="rvd-stars-val">@Model.Value.ToString("F1")</span>
                     </div>
-                </div>
-
-                <div class="row g-4 mb-4">
-                    <div class="col-sm-6">
-                        <div class="p-3 rounded border border-secondary border-opacity-25">
-                            <label class="text-muted small d-block mb-1">Related Order</label>
-                            <a href="/Orders/Details/@Model.OrderId" class="text-gold fw-bold h5">#@Model.OrderNumber</a>
-                        </div>
-                    </div>
-                    <div class="col-sm-6">
-                        <div class="p-3 rounded border border-secondary border-opacity-25">
-                            <label class="text-muted small d-block mb-1">Submitted On</label>
-                            <span class="text-dark fw-bold h5">@Model.CreatedAt.ToString("MMMM dd, yyyy")</span>
-                            <div class="text-muted small">@Model.CreatedAt.ToString("HH:mm tt")</div>
-                        </div>
-                    </div>
-                    @if (Model.UpdatedAt.HasValue)
-                    {
-                        <div class="col-12">
-                            <div class="p-3 rounded border border-secondary border-opacity-25 bg-opacity-10 bg-info">
-                                <i class="fa-solid fa-pen-to-square text-info me-2"></i>
-                                <span class="text-muted small">Last updated by customer on <strong>@Model.UpdatedAt.Value.ToString("MMM dd, yyyy HH:mm")</strong></span>
-                            </div>
-                        </div>
-                    }
-                </div>
-
-                <div class="d-flex justify-content-between align-items-center mt-5 pt-3 border-top border-secondary border-opacity-25">
-                    <a asp-action="Index" class="btn-tibr btn-tibr-outline">
-                        <i class="fa-solid fa-chevron-left me-2"></i>Back to List
-                    </a>
-                    
-                    <form asp-action="Delete" asp-route-id="@Model.Id" method="post" onsubmit="return confirm('CRITICAL: Are you sure you want to permanently delete this customer review? This action cannot be undone.');">
-                        <button type="submit" class="btn-tibr btn-tibr-danger px-4">
-                            <i class="fa-solid fa-trash me-2"></i>Delete Review
-                        </button>
-                    </form>
                 </div>
             </div>
+            <div class="rvd-id-block">
+                <span class="rvd-id-label">Review ID</span>
+                <span class="rvd-id-val">#@Model.Id</span>
+                <span class="rvd-badge @(Model.Value >= 4 ? "rvd-badge-good" : Model.Value == 3 ? "rvd-badge-mid" : "rvd-badge-bad")">
+                    @(Model.Value >= 4 ? "Positive" : Model.Value == 3 ? "Neutral" : "Negative")
+                </span>
+            </div>
         </div>
+
+        <div class="rvd-divider"></div>
+
+        @* ── FEEDBACK BLOCK ───────────────────────────────────── *@
+        <div class="rvd-feedback-section">
+            <p class="rvd-section-label">Customer Feedback</p>
+            <div class="rvd-feedback-box">
+                <i class="fa-solid fa-quote-left rvd-quote-icon"></i>
+                @if (string.IsNullOrEmpty(Model.Description))
+                {
+                    <p class="rvd-feedback-text rvd-no-comment">No written comment was provided for this review.</p>
+                }
+                else
+                {
+                    <p class="rvd-feedback-text">@Model.Description</p>
+                }
+            </div>
+        </div>
+
+        <div class="rvd-divider"></div>
+
+        @* ── METADATA GRID ────────────────────────────────────── *@
+        <div class="rvd-meta-grid">
+            <div class="rvd-meta-item">
+                <span class="rvd-meta-label">
+                    <i class="fa-solid fa-bag-shopping"></i> Related Order
+                </span>
+                <a href="/Orders/Details/@Model.OrderId" class="rvd-meta-order">
+                    @Model.OrderNumber
+                    <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:10px"></i>
+                </a>
+            </div>
+            <div class="rvd-meta-item">
+                <span class="rvd-meta-label">
+                    <i class="fa-solid fa-calendar-day"></i> Submitted On
+                </span>
+                <span class="rvd-meta-val">@Model.CreatedAt.ToString("MMMM dd, yyyy")</span>
+                <span class="rvd-meta-sub">@Model.CreatedAt.ToString("HH:mm")</span>
+            </div>
+            <div class="rvd-meta-item">
+                <span class="rvd-meta-label">
+                    <i class="fa-solid fa-star-half-stroke"></i> Rating
+                </span>
+                <span class="rvd-meta-val">@Model.Value out of 5</span>
+            </div>
+            @if (Model.UpdatedAt.HasValue)
+            {
+                <div class="rvd-meta-item rvd-meta-updated">
+                    <span class="rvd-meta-label">
+                        <i class="fa-solid fa-pen-to-square"></i> Last Edited
+                    </span>
+                    <span class="rvd-meta-val">@Model.UpdatedAt.Value.ToString("MMM dd, yyyy HH:mm")</span>
+                    <span class="rvd-meta-sub">Edited by customer</span>
+                </div>
+            }
+        </div>
+
+        <div class="rvd-divider"></div>
+
+        @* ── ACTIONS ──────────────────────────────────────────── *@
+        <div class="rvd-actions">
+            <a asp-action="Index" class="btn-tibr btn-tibr-outline">
+                <i class="fa-solid fa-chevron-left"></i> Back to List
+            </a>
+            <form asp-action="Delete" asp-route-id="@Model.Id" method="post"
+                  onsubmit="return confirm('Permanently delete this review? This cannot be undone.');">
+                @Html.AntiForgeryToken()
+                <button type="submit" class="btn-tibr rvd-btn-delete">
+                    <i class="fa-solid fa-trash"></i> Delete Review
+                </button>
+            </form>
+        </div>
+
+        @* ── FOOTER METADATA ──────────────────────────────────── *@
+        <div class="rvd-footer-meta">
+            <span><i class="fa-solid fa-shield-halved"></i> Linked to verified order</span>
+            <span><i class="fa-solid fa-lock"></i> Admin access only</span>
+        </div>
+
     </div>
 </div>
 
 <style>
-    .text-gold { color: var(--gold); text-decoration: none; }
-    .text-gold:hover { color: var(--gold-light); }
-    .bg-dark { background-color: var(--bg-dark) !important; }
+/* ── WRAPPER ─────────────────────────────────────────────────── */
+.rvd-wrap {
+    max-width: 860px;
+    margin: 0 auto;
+}
+
+/* ── MAIN CARD ───────────────────────────────────────────────── */
+.rvd-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-top: 3px solid var(--gold);
+    border-radius: var(--radius);
+    padding: 40px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+.rvd-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 40px rgba(0,0,0,0.15);
+}
+
+/* Watermark */
+.rvd-watermark {
+    position: absolute;
+    right: -20px; bottom: -20px;
+    font-size: 180px;
+    color: var(--gold);
+    opacity: 0.03;
+    pointer-events: none;
+    line-height: 1;
+}
+
+/* Divider */
+.rvd-divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 28px 0;
+}
+
+/* ── HEADER ──────────────────────────────────────────────────── */
+.rvd-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 20px;
+    position: relative; z-index: 1;
+}
+.rvd-user  { display: flex; align-items: flex-start; gap: 18px; }
+.rvd-avatar {
+    width: 72px; height: 72px; border-radius: 18px;
+    background: var(--gold-alpha);
+    border: 1px solid var(--border-gold);
+    color: var(--gold); font-size: 28px; font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    text-transform: uppercase; flex-shrink: 0;
+}
+.rvd-name   { font-size: 20px; font-weight: 700; color: var(--text-primary);
+              margin: 0 0 4px; }
+.rvd-email  { font-size: 13px; color: var(--text-muted); margin: 0 0 10px; }
+.rvd-stars  { font-size: 20px; letter-spacing: 3px; display: flex;
+              align-items: center; gap: 2px; }
+.rvd-stars-val { font-size: 14px; font-weight: 700; margin-left: 8px;
+                 color: var(--text-primary); letter-spacing: 0; }
+
+.rvd-id-block   { text-align: right; display: flex; flex-direction: column;
+                  align-items: flex-end; gap: 6px; }
+.rvd-id-label   { font-size: 10px; text-transform: uppercase;
+                  letter-spacing: 0.1em; color: var(--text-muted); }
+.rvd-id-val     { font-size: 22px; font-weight: 700; color: var(--text-primary); }
+.rvd-badge      { font-size: 11px; font-weight: 700; padding: 3px 12px;
+                  border-radius: 99px; text-transform: uppercase;
+                  letter-spacing: 0.06em; }
+.rvd-badge-good { background: rgba(34,197,94,0.12); color: var(--green); }
+.rvd-badge-mid  { background: rgba(245,158,11,0.12); color: var(--yellow); }
+.rvd-badge-bad  { background: rgba(239,68,68,0.12); color: var(--red); }
+
+/* ── FEEDBACK ────────────────────────────────────────────────── */
+.rvd-feedback-section { position: relative; z-index: 1; }
+.rvd-section-label {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.12em; color: var(--text-muted); margin-bottom: 14px;
+}
+.rvd-feedback-box {
+    background: var(--bg-card2);
+    border-left: 4px solid var(--gold);
+    border-radius: 0 10px 10px 0;
+    padding: 24px 24px 24px 28px;
+    position: relative;
+}
+.rvd-quote-icon {
+    font-size: 28px; color: var(--gold); opacity: 0.25;
+    position: absolute; top: 16px; left: 12px;
+}
+.rvd-feedback-text {
+    font-size: 16px; line-height: 1.7; color: var(--text-primary);
+    font-style: italic; margin: 0; padding-left: 8px;
+}
+.rvd-no-comment { color: var(--text-muted); opacity: 0.6; }
+
+/* ── META GRID ───────────────────────────────────────────────── */
+.rvd-meta-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    position: relative; z-index: 1;
+}
+.rvd-meta-item {
+    display: flex; flex-direction: column; gap: 5px;
+    padding: 16px;
+    background: var(--bg-card2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    transition: border-color 0.2s;
+}
+.rvd-meta-item:hover { border-color: var(--border-gold); }
+.rvd-meta-updated { border-color: var(--border-gold) !important; }
+.rvd-meta-label {
+    font-size: 11px; color: var(--text-muted);
+    text-transform: uppercase; letter-spacing: 0.07em;
+    display: flex; align-items: center; gap: 6px;
+}
+.rvd-meta-label i { color: var(--gold); }
+.rvd-meta-val { font-size: 15px; font-weight: 600; color: var(--text-primary); }
+.rvd-meta-sub { font-size: 11px; color: var(--text-muted); }
+.rvd-meta-order {
+    font-size: 16px; font-weight: 700; color: var(--gold);
+    text-decoration: none; display: flex; align-items: center; gap: 6px;
+}
+.rvd-meta-order:hover { color: var(--gold-dim); text-decoration: underline; }
+
+/* ── ACTIONS ─────────────────────────────────────────────────── */
+.rvd-actions {
+    display: flex; justify-content: space-between; align-items: center;
+    position: relative; z-index: 1;
+}
+.rvd-btn-delete {
+    background: rgba(239,68,68,0.1);
+    border: 1px solid rgba(239,68,68,0.25);
+    color: var(--red);
+}
+.rvd-btn-delete:hover {
+    background: var(--red);
+    border-color: var(--red);
+    color: #fff;
+}
+
+/* ── FOOTER META ─────────────────────────────────────────────── */
+.rvd-footer-meta {
+    display: flex; justify-content: center; gap: 32px;
+    margin-top: 24px; padding-top: 16px;
+    border-top: 1px solid var(--border);
+    font-size: 11px; color: var(--text-muted);
+    position: relative; z-index: 1;
+}
+.rvd-footer-meta i { color: var(--gold); margin-right: 4px; }
+
+/* Star colours */
+.rating-high { color: var(--gold); }
+.rating-mid  { color: var(--yellow); }
+.rating-low  { color: var(--red); }
+
+/* ── RESPONSIVE ──────────────────────────────────────────────── */
+@@media (max-width: 640px) {
+    .rvd-card      { padding: 24px 18px; }
+    .rvd-header    { flex-direction: column; }
+    .rvd-id-block  { align-items: flex-start; }
+    .rvd-meta-grid { grid-template-columns: 1fr; }
+    .rvd-actions   { flex-direction: column; gap: 12px; }
+    .rvd-actions .btn-tibr { width: 100%; justify-content: center; }
+    .rvd-footer-meta { flex-direction: column; align-items: center; gap: 10px; }
+}
 </style>
