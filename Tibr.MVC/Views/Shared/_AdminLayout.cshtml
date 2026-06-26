@@ -96,12 +96,23 @@
                     <i class="fa-solid fa-users"></i>
                     <span>Users</span>
                 </a>
+             @*    <a asp-controller="Admins" asp-action="Index"
+                       class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admins" ? "active" : "")">
+                    <i class="fa-solid fa-users"></i>
+                    <span>Admins</span>
+                </a> *@
                 <a asp-controller="Support" asp-action="Index"
                        class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Support" ? "active" : "")">
                     <i class="fa-solid fa-headset"></i>
                     <span>Support Tickets</span>
                     <span class="nav-badge nav-badge-danger" id="badgeSupport">—</span>
                 </a>
+                <a asp-controller="Withdraw" asp-action="Index"
+                       class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Withdraw" ? "active" : "")">
+                    <i class="fa-solid fa-money-bill-transfer"></i>
+                    <span>Withdraw Requests</span>
+                </a>
+
                 <a asp-controller="Review" asp-action="Index"
                        class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Review" ? "active" : "")">
                     <i class="fa-solid fa-star-half-stroke"></i>

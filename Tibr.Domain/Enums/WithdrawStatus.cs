@@ -8,5 +8,6 @@ namespace Tibr.Domain.Enums
     {
         Pending = 1,
         Approved = 2,
+        Rejected
     }
 }

@@ -7,6 +7,7 @@ public class CreateWithdrawDto
     public WithdrawType Type { get; set; }
     public string Name { get; set; } = string.Empty;
     public string Number { get; set; } = string.Empty;
+
 }
 
 public class WithdrawDto
@@ -17,4 +18,13 @@ public class WithdrawDto
     public string Name { get; set; } = string.Empty;
     public string Number { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; }
+    public string Status { get; set; } = string.Empty;
+
+}
+
+
+public class UpdateWithdrawStatusDto
+{
+    public long Id { get; set; }
+    public WithdrawStatus Status { get; set; }
 }
