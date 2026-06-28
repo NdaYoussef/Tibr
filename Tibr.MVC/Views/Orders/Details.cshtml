@@ -215,20 +215,24 @@ else
             <form method="post" asp-action="UpdateStatus" asp-route-id="@Model.Id">
                 <div class="modal-body py-3">
                     <div class="mb-3">
+                        <label class="form-label text-muted text-uppercase fw-semibold" style="font-size: 0.7rem;">Payment Status</label>
+                        <select name="paymentStatus" id="paymentStatusSelect" class="form-select executive-input w-100" required>
+                            <option value="">Select Payment Status</option>
+                            <option value="Pending" selected="@(Model.PaymentStatus == "Pending" ? "selected" : null)">Pending</option>
+                            <option value="Paid" selected="@(Model.PaymentStatus == "Paid" ? "selected" : null)">Paid</option>
+                            <option value="Refunded" selected="@(Model.PaymentStatus == "Refunded" ? "selected" : null)">Refunded</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
                         <label class="form-label text-muted text-uppercase fw-semibold" style="font-size: 0.7rem;">Advance Order Status</label>
-                        <select name="orderStatus" class="form-select executive-input w-100">
+                        <select name="orderStatus" id="orderStatusSelect" class="form-select executive-input w-100" required>
+                            <option value="">Select Order Status</option>
                             <option value="Pending" selected="@(isPending ? "selected" : null)">Pending</option>
                             <option value="Processing" selected="@(isProcessing ? "selected" : null)">Processing</option>
                             <option value="Shipped" selected="@(isShipped ? "selected" : null)">Shipped</option>
                             <option value="Delivered" selected="@(isDelivered ? "selected" : null)">Delivered</option>
-                        </select>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label text-muted text-uppercase fw-semibold" style="font-size: 0.7rem;">Payment Status</label>
-                        <select name="paymentStatus" class="form-select executive-input w-100">
-                            <option value="Pending" selected="@(Model.PaymentStatus == "Pending" ? "selected" : null)">Pending</option>
-                            <option value="Paid" selected="@(Model.PaymentStatus == "Paid" ? "selected" : null)">Paid</option>
-                            <option value="Refunded" selected="@(Model.PaymentStatus == "Refunded" ? "selected" : null)">Refunded</option>
+                            <option value="Cancelled" selected="@(isCancelled ? "selected" : null)">Cancelled</option>
+                            <option value="Returned">Returned</option>
                         </select>
                     </div>
                 </div>
@@ -264,3 +268,65 @@ else
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const paymentSelect = document.getElementById('paymentStatusSelect');
+            const orderSelect = document.getElementById('orderStatusSelect');
+
+            if (paymentSelect && orderSelect) {
+                const statusMap = {
+                    'Pending': ['Pending', 'Cancelled'],
+                    'Paid': ['Processing', 'Shipped', 'Delivered'],
+                    'Refunded': ['Returned', 'Cancelled']
+                };
+
+                let initialOrderStatus = '@Model.OrderStatus';
+                let currentOrderStatus = orderSelect.value || initialOrderStatus;
+
+                function updateOrderStatusOptions(isChange = false) {
+                    const paymentStatus = paymentSelect.value;
+                    const prevValue = isChange ? '' : currentOrderStatus;
+
+                    // Clear options
+                    orderSelect.innerHTML = '';
+
+                    if (!paymentStatus || !statusMap[paymentStatus]) {
+                        orderSelect.disabled = true;
+                        const opt = document.createElement('option');
+                        opt.value = '';
+                        opt.textContent = 'Select Order Status';
+                        orderSelect.appendChild(opt);
+                        return;
+                    }
+
+                    orderSelect.disabled = false;
+                    
+                    const placeholderOpt = document.createElement('option');
+                    placeholderOpt.value = '';
+                    placeholderOpt.textContent = 'Select Order Status';
+                    orderSelect.appendChild(placeholderOpt);
+
+                    const allowed = statusMap[paymentStatus];
+                    allowed.forEach(status => {
+                        const opt = document.createElement('option');
+                        opt.value = status;
+                        opt.textContent = status;
+                        if (status === prevValue) {
+                            opt.selected = true;
+                        }
+                        orderSelect.appendChild(opt);
+                    });
+                }
+
+                paymentSelect.addEventListener('change', function () {
+                    updateOrderStatusOptions(true);
+                });
+
+                // Initialize options on load
+                updateOrderStatusOptions(false);
+            }
+        });
+    </script>
+}
