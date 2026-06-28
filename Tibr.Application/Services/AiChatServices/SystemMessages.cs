@@ -35,8 +35,8 @@ public static class SystemMessages
         : "Sorry, I could not analyze your portfolio.";
 
     public static string PlannerClarify(string lang) => lang == "ar"
-        ? "هل يمكنك تقديم المزيد من التفاصيل حول هدف الادخار الخاص بك؟"
-        : "Could you provide more details about your savings goal?";
+        ? "لتقديم خطة ادخار، أحتاج إلى: المبلغ المستهدف (بالجرام أو الجنيه)، نوع المعدن (ذهب أو فضة)، والمدة الزمنية بالأسابيع أو الأشهر."
+        : "To create a savings plan, I need: the target amount (in grams or EGP), the metal type (gold or silver), and the time period in weeks or months.";
 
     public static string PlannerFallback(string lang) => lang == "ar"
         ? "هذه هي خطة الادخار الخاصة بك. تابع تقدمك!"

@@ -1,4 +1,5 @@
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using Microsoft.Extensions.Logging;
 using Tibr.Application.Dtos;
 using Tibr.Application.Dtos.ChatDtos;
@@ -36,10 +37,11 @@ namespace Tibr.Application.Services.AiChatServices
             IProposalResolutionClassifier resolutionClassifier,
             IInvestmentOrderService investmentOrderService,
             ChatRoutingOptions routingOptions,
-            ILogger<ChatService> logger
+            ILogger<ChatService> logger,
+            ILoggerFactory loggerFactory
         )
         {
-            _classifier = new IntentClassifier(aiProvider);
+            _classifier = new IntentClassifier(aiProvider, loggerFactory.CreateLogger<IntentClassifier>());
             _router = new ChatRouter(
                 aiProvider,
                 vectorStore,
@@ -64,6 +66,9 @@ namespace Tibr.Application.Services.AiChatServices
             ChatRequestDto request
         )
         {
+            _logger.LogInformation(
+                "SendMessage: userId={UserId}, message={Message}, conversationId={ConvId}, intent={Intent}, language={Lang}",
+                userId, request.Message, request.ConversationId, request.Intent, request.Language);
             var language = request.Language ?? "en";
             ChatConversation conversation = null!;
 
@@ -96,6 +101,16 @@ namespace Tibr.Application.Services.AiChatServices
                 Content = request.Message,
             };
             await _messageRepo.AddAsync(userMessage);
+
+            // Load prior messages for AI conversation context
+            var priorMessages = (await _messageRepo.GetAllAsync())
+                .Where(m => m.ConversationId == conversation.Id && m.Id != userMessage.Id)
+                .OrderBy(m => m.CreatedAt)
+                .Select(m => new Message(
+                    m.Role == ChatRole.User ? "user" : "assistant",
+                    m.Content
+                ))
+                .ToList();
 
             // Check for pending proposal first
             var pending = await _proposalService.GetPendingAsync(conversation.Id);
@@ -132,14 +147,16 @@ namespace Tibr.Application.Services.AiChatServices
                                 await _messageRepo.SaveChangesAsync();
                                 return Result<ChatResponseDto>.Failure(confirmResult.ErrorMessage!);
                             }
+                            var sanitizedReply = SanitizeReply(confirmResult.Data!.Reply);
                             var confirmMsg = new ChatMessage
                             {
                                 ConversationId = conversation.Id,
                                 Role = ChatRole.Assistant,
-                                Content = confirmResult.Data!.Reply,
+                                Content = sanitizedReply,
                             };
                             await _messageRepo.AddAsync(confirmMsg);
                             await _messageRepo.SaveChangesAsync();
+                            confirmResult.Data.Reply = sanitizedReply;
                             return confirmResult;
 
                         case ProposalResolution.Cancel:
@@ -179,9 +196,10 @@ namespace Tibr.Application.Services.AiChatServices
                                 request.Message,
                                 userId,
                                 conversation.Id,
+                                priorMessages,
                                 requestLanguage: language
                             );
-                            var combined = reminder + unrelatedReply;
+                            var combined = SanitizeReply(reminder + unrelatedReply);
                             var combinedMsg = new ChatMessage
                             {
                                 ConversationId = conversation.Id,
@@ -214,9 +232,12 @@ namespace Tibr.Application.Services.AiChatServices
                 request.Message,
                 userId,
                 conversation.Id,
+                priorMessages,
                 request.Intent,
                 request.Language
             );
+
+            reply = SanitizeReply(reply);
 
             var assistantMessage = new ChatMessage
             {
@@ -248,6 +269,7 @@ namespace Tibr.Application.Services.AiChatServices
             string message,
             long userId,
             long conversationId,
+            List<Message> history,
             string? overrideIntent = null,
             string? requestLanguage = null
         )
@@ -257,27 +279,37 @@ namespace Tibr.Application.Services.AiChatServices
                 var lang = requestLanguage ?? "en";
                 var (reply, source) = overrideIntent.ToLowerInvariant() switch
                 {
-                    "faq" => await _router.HandleFaqAsync(message, lang),
-                    "facts" => await _router.HandleFactsAsync(message, lang),
-                    "price" => await _router.HandlePriceAsync(message, lang),
+                    "faq" => await _router.HandleFaqAsync(message, lang, history),
+                    "facts" => await _router.HandleFactsAsync(message, lang, history),
+                    "price" => await _router.HandlePriceAsync(message, lang, history),
                     "portfolio_read" => await _router.HandlePortfolioReadAsync(
                         message,
                         userId,
-                        lang
+                        lang,
+                        history
                     ),
-                    "agentic" => await HandleAgenticAsync(message, userId, conversationId, lang),
-                    "conditional_order" => (SystemMessages.ConditionalDisabled(lang), "system"),
-                    "planner" => await _router.HandlePlannerAsync(message, userId, lang),
+                    "agentic" => await HandleAgenticAsync(message, userId, conversationId, lang, history),
+                    "conditional_order" => await HandleConditionalOrderAsync(message, userId, conversationId, lang, history),
+                    "planner" => await _router.HandlePlannerAsync(message, userId, lang, history),
                     _ => _router.HandleOutOfScope(lang),
                 };
                 return (reply, overrideIntent, source, lang);
             }
 
             var classification = await _classifier.ClassifyAsync(message);
+            _logger.LogInformation(
+                "Classification: intent={Intent}, confidence={Confidence:P}, reason={Reason}, language={Language}",
+                classification.Intent, classification.Confidence, classification.Reason, classification.Language);
+
+            if (classification.Reason == "AI_SERVICE_UNAVAILABLE")
+            {
+                return (SystemMessages.AiUnavailable(requestLanguage ?? "en"), "Error", "system", requestLanguage ?? "en");
+            }
+
             var classifiedLang = requestLanguage ?? classification.Language;
 
             var (classifiedReply, classifiedSource) = await RouteByConfidenceAsync(
-                classification, message, userId, conversationId, classifiedLang);
+                classification, message, userId, conversationId, classifiedLang, history);
 
             return (
                 classifiedReply,
@@ -292,7 +324,8 @@ namespace Tibr.Application.Services.AiChatServices
             string message,
             long userId,
             long conversationId,
-            string language)
+            string language,
+            List<Message> history)
         {
             var intent = classification.Intent;
             var confidence = classification.Confidence;
@@ -305,20 +338,21 @@ namespace Tibr.Application.Services.AiChatServices
                     intent, confidence, _routingOptions.DirectHitConfidenceThreshold);
 
                 return await _router.HandleDualRagAsync(
-                    message, language, _routingOptions.DualRagTopK);
+                    message, language, _routingOptions.DualRagTopK, history);
             }
 
             return intent switch
             {
-                Intent.Faq => await _router.HandleFaqAsync(message, language),
-                Intent.Facts => await _router.HandleFactsAsync(message, language),
-                Intent.Price => await _router.HandlePriceAsync(message, language),
+                Intent.Faq => await _router.HandleFaqAsync(message, language, history),
+                Intent.Facts => await _router.HandleFactsAsync(message, language, history),
+                Intent.Price => await _router.HandlePriceAsync(message, language, history),
                 Intent.PortfolioRead => await _router.HandlePortfolioReadAsync(
-                    message, userId, language),
+                    message, userId, language, history),
                 Intent.Agentic => await HandleAgenticAsync(
-                    message, userId, conversationId, language),
-                Intent.ConditionalOrder => (SystemMessages.ConditionalDisabled(language), "system"),
-                Intent.Planner => await _router.HandlePlannerAsync(message, userId, language),
+                    message, userId, conversationId, language, history),
+                Intent.ConditionalOrder => await HandleConditionalOrderAsync(
+                    message, userId, conversationId, language, history),
+                Intent.Planner => await _router.HandlePlannerAsync(message, userId, language, history),
                 _ => _router.HandleOutOfScope(language),
             };
         }
@@ -327,13 +361,15 @@ namespace Tibr.Application.Services.AiChatServices
             string message,
             long userId,
             long conversationId,
-            string language
+            string language,
+            List<Message> history
         )
         {
             var (reply, toolCall, source) = await _router.HandleConditionalOrderAsync(
                 message,
                 userId,
-                language
+                language,
+                history
             );
 
             if (toolCall is not null)
@@ -427,14 +463,16 @@ namespace Tibr.Application.Services.AiChatServices
             string message,
             long userId,
             long conversationId,
-            string language
+            string language,
+            List<Message> history
         )
         {
             var (reply, toolCall, source) = await _router.HandleAgenticAsync(
                 message,
                 userId,
                 conversationId,
-                language
+                language,
+                history
             );
 
             if (toolCall is not null)
@@ -547,6 +585,12 @@ namespace Tibr.Application.Services.AiChatServices
             await _conversationRepo.DeleteAsync(conversation);
             await _conversationRepo.SaveChangesAsync();
             return Result.Success();
+        }
+
+        private static string SanitizeReply(string text)
+        {
+            // Strip CJK characters that sometimes appear in AI provider responses
+            return Regex.Replace(text, @"[\u4E00-\u9FFF\u3400-\u4DBF\uF900-\uFAFF\u3000-\u303F\uFF00-\uFFEF]", "");
         }
     }
 }

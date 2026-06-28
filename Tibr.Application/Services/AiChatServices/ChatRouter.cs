@@ -49,7 +49,8 @@ namespace Tibr.Application.Services.AiChatServices
 
         public async Task<(string Reply, string Source)> HandleFaqAsync(
             string userPrompt,
-            string language
+            string language,
+            List<Message> history
         )
         {
             var result = await _vectorStore.SearchFaqAsync(userPrompt);
@@ -71,13 +72,14 @@ namespace Tibr.Application.Services.AiChatServices
                 "You are a helpful assistant for Tibr, a gold investment app. "
                 + "Answer the user's question using ONLY the provided FAQ context. "
                 + "Be concise and friendly.";
+            system += language == "ar" ? "\nRespond in Arabic." : "\nRespond in English.";
 
-            var history = new List<Message>
+            var messages = new List<Message>(history)
             {
                 new("user", $"Context:\n{context}\n\nQuestion: {userPrompt}"),
             };
 
-            var response = await _aiProvider.ChatAsync(system, history);
+            var response = await _aiProvider.ChatAsync(system, messages);
             if (response.Content is not null)
                 return (response.Content, "ai");
             return (SystemMessages.FaqGenFailed(language), "system");
@@ -85,7 +87,8 @@ namespace Tibr.Application.Services.AiChatServices
 
         public async Task<(string Reply, string Source)> HandleFactsAsync(
             string userPrompt,
-            string language
+            string language,
+            List<Message> history
         )
         {
             var facts = await _vectorStore.SearchFactsAsync(userPrompt);
@@ -105,8 +108,9 @@ namespace Tibr.Application.Services.AiChatServices
             var system =
                 "You are a helpful assistant for Tibr. "
                 + "Answer using ONLY the provided facts and price context. Be concise.";
+            system += language == "ar" ? "\nRespond in Arabic." : "\nRespond in English.";
 
-            var history = new List<Message>
+            var messages = new List<Message>(history)
             {
                 new(
                     "user",
@@ -114,7 +118,7 @@ namespace Tibr.Application.Services.AiChatServices
                 ),
             };
 
-            var response = await _aiProvider.ChatAsync(system, history);
+            var response = await _aiProvider.ChatAsync(system, messages);
             if (response.Content is not null)
                 return (response.Content, "ai");
             return (SystemMessages.FactsGenFailed(language), "system");
@@ -122,7 +126,8 @@ namespace Tibr.Application.Services.AiChatServices
 
         public async Task<(string Reply, string Source)> HandlePriceAsync(
             string userPrompt,
-            string language
+            string language,
+            List<Message> history
         )
         {
             var priceResult = await _priceService.GetCurrentPriceAsync(AssetType.Gold);
@@ -139,13 +144,14 @@ namespace Tibr.Application.Services.AiChatServices
             var system =
                 "You are a helpful assistant for Tibr. "
                 + "Answer the user's price-related question using the provided price context. Be concise.";
+            system += language == "ar" ? "\nRespond in Arabic." : "\nRespond in English.";
 
-            var history = new List<Message>
+            var messages = new List<Message>(history)
             {
                 new("user", $"Price context:\n{priceCtx}\n\nQuestion: {userPrompt}"),
             };
 
-            var response = await _aiProvider.ChatAsync(system, history);
+            var response = await _aiProvider.ChatAsync(system, messages);
             if (response.Content is not null)
                 return (response.Content, "ai");
             return (priceCtx, "system");
@@ -154,7 +160,8 @@ namespace Tibr.Application.Services.AiChatServices
         public async Task<(string Reply, string Source)> HandlePortfolioReadAsync(
             string userPrompt,
             long userId,
-            string language
+            string language,
+            List<Message> history
         )
         {
             var balanceResult = await _walletService.GetBalancesAsync(userId);
@@ -217,8 +224,9 @@ namespace Tibr.Application.Services.AiChatServices
             var system =
                 "You are a financial assistant for Tibr. Analyze the user's portfolio "
                 + "and answer their question. Be precise with numbers. Do not recommend actions unless asked.";
+            system += language == "ar" ? "\nRespond in Arabic." : "\nRespond in English.";
 
-            var history = new List<Message>
+            var messages = new List<Message>(history)
             {
                 new(
                     "user",
@@ -227,7 +235,7 @@ namespace Tibr.Application.Services.AiChatServices
                 ),
             };
 
-            var response = await _aiProvider.ChatAsync(system, history);
+            var response = await _aiProvider.ChatAsync(system, messages);
             if (response.Content is not null)
                 return (response.Content, "ai");
             return (SystemMessages.PortfolioGenFailed(language), "system");
@@ -237,17 +245,18 @@ namespace Tibr.Application.Services.AiChatServices
             string Reply,
             object? ToolCallRequest,
             string Source
-        )> HandleAgenticAsync(string userPrompt, long userId, long conversationId, string language)
+        )> HandleAgenticAsync(string userPrompt, long userId, long conversationId, string language, List<Message> history)
         {
             var systemPrompt =
                 "You are an order assistant for Tibr, a fractional gold investment app. "
                 + "If the user wants to buy or sell gold or silver now, use the propose_order tool. "
                 + "If the phrasing implies a conditional order (e.g., 'when price drops below', 'if it reaches'), "
                 + "do NOT use propose_order — the conditional_order intent handles that separately.";
+            systemPrompt += language == "ar" ? "\nRespond in Arabic." : "\nRespond in English.";
 
-            var history = new List<Message> { new("user", userPrompt) };
+            var messages = new List<Message>(history) { new("user", userPrompt) };
             var tools = new List<object> { Tools.OrderBuilderTool.FunctionDeclaration };
-            var response = await _aiProvider.ChatAsync(systemPrompt, history, tools);
+            var response = await _aiProvider.ChatAsync(systemPrompt, messages, tools);
 
             if (response.ToolCalls is { Count: > 0 })
             {
@@ -264,20 +273,21 @@ namespace Tibr.Application.Services.AiChatServices
             string Reply,
             object? ToolCallRequest,
             string Source
-        )> HandleConditionalOrderAsync(string userPrompt, long userId, string language)
+        )> HandleConditionalOrderAsync(string userPrompt, long userId, string language, List<Message> history)
         {
             var systemPrompt =
                 "You are a strategy assistant for Tibr, a fractional gold investment app. "
                 + "If the user wants to set a conditional order (buy/sell when price reaches a target), "
                 + "use the create_strategy_order tool. Capture asset, side (buy/sell), operator (greater_than/less_than), "
                 + "target_price_egp, execution_type (alert_only/auto_execute), quantity_grams, and expires_in_days.";
+            systemPrompt += language == "ar" ? "\nRespond in Arabic." : "\nRespond in English.";
 
-            var history = new List<Message> { new("user", userPrompt) };
+            var messages = new List<Message>(history) { new("user", userPrompt) };
             var tools = new List<object>
             {
                 Tools.OrderBuilderTool.CreateStrategyFunctionDeclaration,
             };
-            var response = await _aiProvider.ChatAsync(systemPrompt, history, tools);
+            var response = await _aiProvider.ChatAsync(systemPrompt, messages, tools);
 
             if (response.ToolCalls is { Count: > 0 })
             {
@@ -293,10 +303,11 @@ namespace Tibr.Application.Services.AiChatServices
         public async Task<(string Reply, string Source)> HandlePlannerAsync(
             string userPrompt,
             long userId,
-            string language
+            string language,
+            List<Message> history
         )
         {
-            var goal = await _goalParser.ParseAsync(userPrompt);
+            var goal = await _goalParser.ParseAsync(userPrompt, language);
 
             if (goal.ClarificationNeeded)
                 return (
@@ -347,16 +358,19 @@ namespace Tibr.Application.Services.AiChatServices
                     : "";
 
             advisePrompt += factsText;
+            advisePrompt += language == "ar"
+                ? "\nRespond in Arabic."
+                : "\nRespond in English.";
 
-            var history = new List<Message> { new("user", userPrompt) };
-            var adviceResponse = await _aiProvider.ChatAsync(advisePrompt, history);
+            var messages = new List<Message>(history) { new("user", userPrompt) };
+            var adviceResponse = await _aiProvider.ChatAsync(advisePrompt, messages);
             if (adviceResponse.Content is not null)
                 return (adviceResponse.Content, "ai");
             return (SystemMessages.PlannerFallback(language), "system");
         }
 
         public async Task<(string Reply, string Source)> HandleDualRagAsync(
-            string userPrompt, string language, int topK)
+            string userPrompt, string language, int topK, List<Message> history)
         {
             var faq = await _vectorStore.SearchFaqAsync(userPrompt, topK, minScore: 0.5f);
             var facts = await _vectorStore.SearchFactsAsync(userPrompt, topK, minScore: 0.4f);
@@ -372,13 +386,14 @@ namespace Tibr.Application.Services.AiChatServices
 
             var system = "You are a helpful assistant for Tibr. "
                 + "Answer using ONLY the provided context. Be concise and friendly.";
+            system += language == "ar" ? "\nRespond in Arabic." : "\nRespond in English.";
 
-            var history = new List<Message>
+            var messages = new List<Message>(history)
             {
                 new("user", $"Context:\n{context}\n\nQuestion: {userPrompt}")
             };
 
-            var response = await _aiProvider.ChatAsync(system, history);
+            var response = await _aiProvider.ChatAsync(system, messages);
             return (response.Content ?? SystemMessages.FaqGenFailed(language), "system");
         }
 

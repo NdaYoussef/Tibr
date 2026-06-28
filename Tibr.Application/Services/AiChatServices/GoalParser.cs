@@ -37,10 +37,14 @@ namespace Tibr.Application.Services.AiChatServices
             _aiProvider = aiProvider;
         }
 
-        public async Task<GoalParseResult> ParseAsync(string userMessage)
-        {
-            var history = new List<Message> { new("user", userMessage) };
-            var response = await _aiProvider.ChatAsync(SystemPrompt, history);
+            public async Task<GoalParseResult> ParseAsync(string userMessage, string language = "en")
+            {
+                var langInstruction = language == "ar"
+                    ? "Respond to the user in Arabic. The clarification_question must be in Arabic."
+                    : "Respond to the user in English.";
+                var prompt = SystemPrompt + "\n\n" + langInstruction;
+                var history = new List<Message> { new("user", userMessage) };
+                var response = await _aiProvider.ChatAsync(prompt, history);
 
             var raw = (response.Content ?? "{}").Trim();
             if (raw.StartsWith("```"))
@@ -74,10 +78,13 @@ namespace Tibr.Application.Services.AiChatServices
             }
             catch
             {
+                var fallbackMsg = language == "ar"
+                    ? "لتقديم خطة ادخار، أحتاج إلى: المبلغ المستهدف (بالجرام أو الجنيه)، نوع المعدن (ذهب أو فضة)، والمدة الزمنية بالأسابيع أو الأشهر."
+                    : "To create a savings plan, I need: the target amount (in grams or EGP), the metal type (gold or silver), and the time period in weeks or months.";
                 return new GoalParseResult(
                     GoalType: "", Asset: "", TargetAmount: 0,
                     TimeframeWeeks: 0, ClarificationNeeded: true,
-                    ClarificationQuestion: "I didn't understand your goal. Could you rephrase it with more detail?"
+                    ClarificationQuestion: fallbackMsg
                 );
             }
         }
