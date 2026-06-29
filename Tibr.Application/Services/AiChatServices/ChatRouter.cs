@@ -69,7 +69,9 @@ namespace Tibr.Application.Services.AiChatServices
             var context = string.Join(
                 "\n\n",
                 result.Hits.Select(h =>
-                    $"Q: {h.Entry.Question}\nA: {h.Entry.Answer}  (score: {h.Score:F2})"
+                    h.Entry.QuestionAr is not null
+                        ? $"Q: {h.Entry.Question}\nA: {h.Entry.Answer}\nس: {h.Entry.QuestionAr}\nج: {h.Entry.AnswerAr ?? h.Entry.Answer}  (score: {h.Score:F2})"
+                        : $"Q: {h.Entry.Question}\nA: {h.Entry.Answer}  (score: {h.Score:F2})"
                 )
             );
 
@@ -380,7 +382,8 @@ namespace Tibr.Application.Services.AiChatServices
                 + $"Required weekly investment: {mathResult.RequiredWeeklyEgp:N2} EGP\n"
                 + $"Projected completion: {mathResult.ProjectedCompletionDate:yyyy-MM-dd}\n\n"
                 + $"Provide encouraging, practical advice. Do NOT recompute any numbers yourself."
-                + " Do NOT ask follow-up questions — the user cannot answer in this chat.";
+                + " Do NOT ask follow-up questions — the user cannot answer in this chat."
+                + " At the end, suggest the user can ask about what Tibr offers by saying 'what features does Tibr offer'.";
 
             var facts = await _vectorStore.SearchFactsAsync(userPrompt, topK: 2, minScore: 0.4f);
             var factsText =

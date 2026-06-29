@@ -1,8 +1,8 @@
 namespace Tibr.Application.Services.AiChatServices
 {
-    public record FaqEntry(string Id, string Question, string Answer);
+    public record FaqEntry(string Id, string Question, string Answer, string? AnswerAr = null, string? QuestionAr = null);
 
-    public record FactEntry(string Id, string Content);
+    public record FactEntry(string Id, string Content, string? ContentAr = null);
 
     public record ScoredFaq(FaqEntry Entry, float Score);
 

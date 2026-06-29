@@ -15,7 +15,9 @@ namespace Tibr.Infrastructure.Services
 
         public async Task IndexFaqAsync(List<FaqEntry> entries)
         {
-            var texts = entries.Select(e => $"Q: {e.Question}\nA: {e.Answer}").ToList();
+            var texts = entries.Select(e => e.QuestionAr is not null
+                ? $"Q: {e.Question}\nA: {e.Answer}\nس: {e.QuestionAr}\nج: {e.AnswerAr ?? e.Answer}"
+                : $"Q: {e.Question}\nA: {e.Answer}").ToList();
             var vectors = await _aiProvider.EmbedBatchAsync(texts);
             for (int i = 0; i < entries.Count; i++)
                 _faqStore.Add(new FaqVector(entries[i], vectors[i]));
