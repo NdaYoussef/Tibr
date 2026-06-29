@@ -45,7 +45,7 @@ namespace Tibr.Application.Services.InvestmentOrderServices
                 : dto.AssetType == AssetType.Gold ? WalletType.Gold : WalletType.Silver;
 
             var reserveAmount = dto.OrderType == OrderType.Buy
-                ? dto.Quantity * currentPrice
+                ? (dto.MaxAmountEgp ?? dto.Quantity * currentPrice)
                 : dto.Quantity;
 
             var wallet = _walletRepo.GetAll(w => w.UserId == userId && w.WalletType == walletType).FirstOrDefault();
@@ -65,6 +65,7 @@ namespace Tibr.Application.Services.InvestmentOrderServices
                 ExecutionMode = ExecutionMode.Strategy,
                 ExecutionType = dto.ExecutionType,
                 Quantity = dto.Quantity,
+                MaxBudgetEgp = dto.MaxAmountEgp,
                 RequestedPrice = 0,
                 CurrentPrice = currentPrice,
                 Status = OrderStatus.Pending,
@@ -132,6 +133,7 @@ namespace Tibr.Application.Services.InvestmentOrderServices
                 ExecutionMode = o.ExecutionMode,
                 ExecutionType = o.ExecutionType,
                 Quantity = o.Quantity,
+                MaxAmountEgp = o.MaxBudgetEgp,
                 RequestedPrice = o.RequestedPrice,
                 CurrentPrice = o.CurrentPrice,
                 Status = o.Status,
@@ -169,6 +171,7 @@ namespace Tibr.Application.Services.InvestmentOrderServices
                 ExecutionMode = o.ExecutionMode,
                 ExecutionType = o.ExecutionType,
                 Quantity = o.Quantity,
+                MaxAmountEgp = o.MaxBudgetEgp,
                 RequestedPrice = o.RequestedPrice,
                 CurrentPrice = o.CurrentPrice,
                 Status = o.Status,
@@ -208,6 +211,7 @@ namespace Tibr.Application.Services.InvestmentOrderServices
                 ExecutionMode = order.ExecutionMode,
                 ExecutionType = order.ExecutionType,
                 Quantity = order.Quantity,
+                MaxAmountEgp = order.MaxBudgetEgp,
                 RequestedPrice = order.RequestedPrice,
                 CurrentPrice = order.CurrentPrice,
                 Status = order.Status,
@@ -243,6 +247,7 @@ namespace Tibr.Application.Services.InvestmentOrderServices
                 ExecutionMode = order.ExecutionMode,
                 ExecutionType = order.ExecutionType,
                 Quantity = order.Quantity,
+                MaxAmountEgp = order.MaxBudgetEgp,
                 RequestedPrice = order.RequestedPrice,
                 CurrentPrice = order.CurrentPrice,
                 Status = order.Status,

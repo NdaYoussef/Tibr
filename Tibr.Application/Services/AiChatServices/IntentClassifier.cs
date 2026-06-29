@@ -31,11 +31,9 @@ namespace Tibr.Application.Services.AiChatServices
               AR: محفظتي, أرباحي, كم عندي ذهب, رصيدي, مشترياتي, صافي الربح
               EN: my portfolio, my holdings, my profit, my balance, show my trades
 
-            - "planner": user expresses a specific savings goal with amount + timeframe + asset
-              AR: أريد ادخار 10 جرام ذهب في 3 شهور, أحتاج 20 جرام بحلول ديسمبر, وفر 500 جنيه شهرياً
-              EN: I want to save 10g of gold in 3 months, help me invest 500 EGP per month, I want 20g by December
-              IMPORTANT: Questions about inflation protection, market timing ("هل الوقت مناسب؟"), or general
-              financial advice are NOT planner. Only messages with a clear target amount/timeframe/asset are planner.
+            - "planner": user wants a savings/investment plan, portfolio allocation, or has a specific goal
+              AR: كيف أوزع ميزانيتي, خطة استثمار, عمل خطة, خطط لي, أريد ادخار 10 جرام ذهب في 3 شهور, وفر 500 جنيه شهرياً, توزيع المحفظة
+              EN: how should I distribute my budget, make a plan for me, investment plan, I want to save 10g of gold in 3 months, help me invest 500 EGP per month, portfolio allocation
 
             - "agentic": requests to buy/sell/trade gold or silver NOW
               AR: اشتري ذهب, بيع فضة, شراء سبائك, نفذ أمر, أريد شراء, أريد بيع
@@ -46,15 +44,6 @@ namespace Tibr.Application.Services.AiChatServices
               EN: buy when gold drops below 8000, sell silver if it reaches 140, set a strategy, alert me when
 
             - "out_of_scope": anything unrelated to gold, investment, or Tibr
-
-            CRITICAL NEGATIVE RULES — "planner" is STRICTLY for explicit savings goals:
-            - Questions about prices or market timing → "price". NEVER planner.
-            - Questions about inflation, economy, financial advice → "faq" or "facts". NEVER planner.
-            - Requests to buy/sell → "agentic". NEVER planner.
-            - Questions about how Tibr works → "faq". NEVER planner.
-            - Greetings → "faq" or "out_of_scope". NEVER planner.
-            - "هل الوقت مناسب للشراء؟", "Is now a good time?" → "price". NEVER planner.
-            - "كيف أحمي مدخراتي", "How to protect savings" → "facts" or "faq". NEVER planner.
 
             Also detect the language of the user's message. Use ISO 639-1 codes (e.g. "en" for English, "ar" for Arabic).
 

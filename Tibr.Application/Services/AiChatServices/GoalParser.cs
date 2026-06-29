@@ -14,7 +14,7 @@ namespace Tibr.Application.Services.AiChatServices
             Return format:
             {
               "goal_type": "reach_grams" | "reach_value_egp" | "monthly_budget",
-              "asset": "gold" | "silver",
+              "asset": "gold" | "silver" | "both",
               "target_amount": number,
               "timeframe_weeks": number,
               "clarification_needed": false,

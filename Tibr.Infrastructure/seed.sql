@@ -607,6 +607,24 @@ ORDER BY [Table];
 GO
 
 PRINT '';
+-- ============================================
+-- PriceSnapshots — historical data for analytics AI
+-- AssetType: 1=Gold, 2=Silver
+-- ============================================
+INSERT INTO PriceSnapshots (AssetType, Price, SnapshotDate, CreatedAt, IsDeleted)
+VALUES
+    (1, 6480.00, DATEADD(DAY, -29, GETUTCDATE()), GETUTCDATE(), 0),
+    (1, 6520.00, DATEADD(DAY, -22, GETUTCDATE()), GETUTCDATE(), 0),
+    (1, 6600.00, DATEADD(DAY, -15, GETUTCDATE()), GETUTCDATE(), 0),
+    (1, 6580.00, DATEADD(DAY, -8,  GETUTCDATE()), GETUTCDATE(), 0),
+    (1, 6502.45, DATEADD(DAY, -1,  GETUTCDATE()), GETUTCDATE(), 0),
+    (2, 132.00,  DATEADD(DAY, -29, GETUTCDATE()), GETUTCDATE(), 0),
+    (2, 135.00,  DATEADD(DAY, -22, GETUTCDATE()), GETUTCDATE(), 0),
+    (2, 138.00,  DATEADD(DAY, -15, GETUTCDATE()), GETUTCDATE(), 0),
+    (2, 136.00,  DATEADD(DAY, -8,  GETUTCDATE()), GETUTCDATE(), 0),
+    (2, 133.50,  DATEADD(DAY, -1,  GETUTCDATE()), GETUTCDATE(), 0);
+GO
+
 PRINT '╔══════════════════════════════════════════╗';
 PRINT '║  ✅ Tibr seed complete!                  ║';
 PRINT '║  All test data inserted successfully.    ║';

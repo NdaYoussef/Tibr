@@ -80,6 +80,7 @@ namespace Tibr.Infrastructure.Contexts
         public DbSet<WalletTransaction> WalletTransactions { get; set; }
         public DbSet<Deposit> Deposits { get; set; }
         public DbSet<AssetPrice> AssetPrices { get; set; }
+        public DbSet<PriceSnapshot> PriceSnapshots { get; set; }
         public DbSet<OrdersInvestment> OrdersInvestments { get; set; }
         public DbSet<OrderCondition> OrderConditions { get; set; }
         public DbSet<Reservation> Reservations { get; set; }
@@ -353,6 +354,13 @@ namespace Tibr.Infrastructure.Contexts
             modelBuilder.Entity<AssetPrice>()
                 .Property(x => x.SellPrice).HasPrecision(18, 4);
 
+            modelBuilder.Entity<PriceSnapshot>(entity =>
+            {
+                entity.ToTable("PriceSnapshots");
+                entity.HasIndex(e => new { e.AssetType, e.SnapshotDate }).IsUnique();
+                entity.Property(e => e.Price).HasPrecision(18, 4);
+            });
+
             modelBuilder.Entity<OrdersInvestment>()
                 .Property(x => x.Quantity).HasPrecision(18, 4);
 
@@ -361,6 +369,9 @@ namespace Tibr.Infrastructure.Contexts
 
             modelBuilder.Entity<OrdersInvestment>()
                 .Property(x => x.CurrentPrice).HasPrecision(18, 4);
+
+            modelBuilder.Entity<OrdersInvestment>()
+                .Property(x => x.MaxBudgetEgp).HasPrecision(18, 2);
 
             modelBuilder.Entity<OrderCondition>()
                 .Property(x => x.TargetValue).HasPrecision(18, 4);

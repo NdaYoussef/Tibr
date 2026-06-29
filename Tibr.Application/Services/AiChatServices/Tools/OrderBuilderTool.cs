@@ -75,13 +75,31 @@ namespace Tibr.Application.Services.AiChatServices.Tools
                     execution_type = new { type = "string", @enum = new[] { "alert_only", "auto_execute", "alert_and_execute" },
                         description = "Alert only notifies; auto execute buys/sells from wallet; alert and execute sends notification AND executes automatically" },
                     quantity_grams = new { type = "number",
-                        description = "Quantity in grams to buy or sell" },
+                        description = "Quantity in grams to buy or sell (required for sell, or for buy without max_amount_egp)" },
+                    max_amount_egp = new { type = "number",
+                        description = "Max EGP to spend on a buy (alternative to quantity_grams for buy orders)" },
                     expires_in_days = new { type = "number",
                         description = "Days until expiry (default 30)" }
                 },
-                required = new[] { "asset", "side", "operator", "target_price_egp", "execution_type", "quantity_grams" }
+                required = new[] { "asset", "side", "operator", "target_price_egp", "execution_type" }
             }
         };
+
+        public static (string Asset, string Side, string Operator, decimal TargetPrice, string ExecutionType, decimal? QuantityGrams, decimal? MaxAmountEgp, int ExpiresInDays) ParseStrategyArgs(string argsJson)
+        {
+            using var doc = JsonDocument.Parse(argsJson);
+            var root = doc.RootElement;
+            return (
+                root.GetProperty("asset").GetString()!,
+                root.GetProperty("side").GetString()!,
+                root.GetProperty("operator").GetString()!,
+                root.GetProperty("target_price_egp").GetDecimal(),
+                root.GetProperty("execution_type").GetString()!,
+                root.TryGetProperty("quantity_grams", out var q) && q.ValueKind == JsonValueKind.Number ? q.GetDecimal() : null,
+                root.TryGetProperty("max_amount_egp", out var m) && m.ValueKind == JsonValueKind.Number ? m.GetDecimal() : null,
+                root.TryGetProperty("expires_in_days", out var e) ? e.GetInt32() : 30
+            );
+        }
 
         public static (string Action, string Asset, string Scope, decimal? AmountGrams, decimal? AmountEgp) ParseArgs(string argsJson)
         {

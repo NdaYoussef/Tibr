@@ -6,6 +6,7 @@ using Tibr.Application.Dtos.ChatDtos;
 using Tibr.Application.Services.AssetPriceServices;
 using Tibr.Application.Services.InvestmentOrderServices;
 using Tibr.Application.Services.WalletServices;
+using Tibr.Application.Services.AiChatServices.Tools;
 using Tibr.Domain.Entities;
 using Tibr.Domain.Enums;
 using Tibr.Domain.IRepositories;
@@ -417,31 +418,23 @@ namespace Tibr.Application.Services.AiChatServices
                 var tc = (ToolCall)toolCall;
                 if (tc.FunctionName == "create_strategy_order")
                 {
-                    using var doc = JsonDocument.Parse(tc.Arguments);
-                    var root = doc.RootElement;
+                    var strategyArgs = OrderBuilderTool.ParseStrategyArgs(tc.Arguments);
 
-                    var assetStr = root.GetProperty("asset").GetString()!;
-                    var sideStr = root.GetProperty("side").GetString()!;
-                    var operatorStr = root.GetProperty("operator").GetString()!;
-                    var targetPrice = root.GetProperty("target_price_egp").GetDecimal();
-                    var execTypeStr = root.GetProperty("execution_type").GetString()!;
-                    var quantity = root.GetProperty("quantity_grams").GetDecimal();
-                    var expiresInDays = root.TryGetProperty("expires_in_days", out var e)
-                        ? e.GetInt32()
-                        : 30;
-
-                    var assetType = assetStr == "silver" ? AssetType.Silver : AssetType.Gold;
-                    var orderType = sideStr == "buy" ? OrderType.Buy : OrderType.Sell;
+                    var assetType = strategyArgs.Asset == "silver" ? AssetType.Silver : AssetType.Gold;
+                    var orderType = strategyArgs.Side == "buy" ? OrderType.Buy : OrderType.Sell;
                     var conditionOp =
-                        operatorStr == "greater_than"
+                        strategyArgs.Operator == "greater_than"
                             ? ConditionOperator.GreaterThan
                             : ConditionOperator.LessThan;
-                    var executionType = execTypeStr switch
+                    var executionType = strategyArgs.ExecutionType switch
                     {
                         "auto_execute" => ExecutionType.AutoExecute,
                         "alert_and_execute" => ExecutionType.AlertAndExecute,
                         _ => ExecutionType.AlertOnly,
                     };
+
+                    var quantity = strategyArgs.QuantityGrams ?? 0;
+                    var maxAmountEgp = orderType == OrderType.Buy ? strategyArgs.MaxAmountEgp : null;
 
                     var dto = new CreateStrategyOrderDto
                     {
@@ -449,14 +442,15 @@ namespace Tibr.Application.Services.AiChatServices
                         OrderType = orderType,
                         ExecutionType = executionType,
                         Quantity = quantity,
-                        ExpiryDate = DateTime.UtcNow.AddDays(expiresInDays),
+                        MaxAmountEgp = maxAmountEgp,
+                        ExpiryDate = DateTime.UtcNow.AddDays(strategyArgs.ExpiresInDays),
                         Conditions =
                         [
                             new OrderConditionDto
                             {
                                 ConditionType = ConditionType.PriceTarget,
                                 Operator = conditionOp,
-                                TargetValue = targetPrice,
+                                TargetValue = strategyArgs.TargetPrice,
                             },
                         ],
                     };
@@ -472,8 +466,8 @@ namespace Tibr.Application.Services.AiChatServices
                             "system"
                         );
 
-                    var opLabel = operatorStr == "greater_than" ? "rises above" : "drops below";
-                    var execLabel = execTypeStr switch
+                    var opLabel = strategyArgs.Operator == "greater_than" ? "rises above" : "drops below";
+                    var execLabel = strategyArgs.ExecutionType switch
                     {
                         "auto_execute" => "automatically executed",
                         "alert_and_execute" => "alerted and automatically executed",
@@ -483,13 +477,14 @@ namespace Tibr.Application.Services.AiChatServices
                     return (
                         SystemMessages.StrategyCreated(
                             language,
-                            sideStr,
+                            strategyArgs.Side,
                             quantity,
-                            assetStr,
+                            strategyArgs.Asset,
                             opLabel,
-                            targetPrice,
-                            expiresInDays,
-                            execLabel
+                            strategyArgs.TargetPrice,
+                            strategyArgs.ExpiresInDays,
+                            execLabel,
+                            strategyArgs.MaxAmountEgp
                         ),
                         "system"
                     );

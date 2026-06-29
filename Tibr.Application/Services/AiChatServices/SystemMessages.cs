@@ -150,16 +150,20 @@ public static class SystemMessages
         ? $"تم تنفيذ الطلب! تم بيع {grams:F4}g {TranslateAsset(asset, lang)} بسعر {price:N2} جنيها للجرام."
         : $"Order executed! Sold {grams:F4}g {asset} at {price:N2} EGP/g.";
 
-    public static string StrategyCreated(string lang, string side, decimal quantity, string asset, string opLabel, decimal targetPrice, int expiresInDays, string execLabel)
+    public static string StrategyCreated(string lang, string side, decimal quantity, string asset, string opLabel, decimal targetPrice, int expiresInDays, string execLabel, decimal? maxAmountEgp = null)
     {
         if (lang == "ar")
         {
             var sideAr = side == "buy" ? "شراء" : "بيع";
             var opAr = opLabel == "rises above" ? "يرتفع عن" : "ينخفض عن";
             var execAr = execLabel == "automatically executed" ? "سيتم تنفيذه تلقائياً" : "سيتم إعلامك";
+            if (side == "buy" && maxAmountEgp.HasValue)
+                return $"✅ تم إنشاء الاستراتيجية! سأنفق حتى {maxAmountEgp:N2} جنيهاً على {TranslateAsset(asset, lang)} عندما {opAr} {targetPrice:N2} جنيها للجرام. تنتهي في {expiresInDays} يوماً و{execAr}.";
             return $"✅ تم إنشاء الاستراتيجية! سأقوم بـ {sideAr} {quantity:F4}g {TranslateAsset(asset, lang)} عندما {opAr} {targetPrice:N2} جنيها للجرام. تنتهي في {expiresInDays} يوماً و{execAr}.";
         }
 
+        if (side == "buy" && maxAmountEgp.HasValue)
+            return $"✅ Strategy created! I'll spend up to {maxAmountEgp:N2} EGP on {asset} when the price {opLabel} {targetPrice:N2} EGP/g. It expires in {expiresInDays} days and will be {execLabel}.";
         return $"✅ Strategy created! I'll {side} {quantity:F4}g of {asset} when the price {opLabel} {targetPrice:N2} EGP/g. It expires in {expiresInDays} days and will be {execLabel}.";
     }
 }
