@@ -59,7 +59,12 @@ namespace Tibr.Application.Services.AiChatServices
                 return (SystemMessages.FaqNoAnswers(language), "system");
 
             if (result.IsDirectHit)
-                return (result.Hits[0].Entry.Answer, "system");
+            {
+                var answer = language == "ar" && result.Hits[0].Entry.AnswerAr is not null
+                    ? result.Hits[0].Entry.AnswerAr!
+                    : result.Hits[0].Entry.Answer;
+                return (answer, "system");
+            }
 
             var context = string.Join(
                 "\n\n",
@@ -130,20 +135,18 @@ namespace Tibr.Application.Services.AiChatServices
             List<Message> history
         )
         {
-            var priceResult = await _priceService.GetCurrentPriceAsync(AssetType.Gold);
+            var detected = DetectAssets(userPrompt);
+            var assetTypes = detected.Count > 0 ? detected : [AssetType.Gold, AssetType.Silver];
+            var wasAmbiguous = detected.Count == 0;
 
-            if (!priceResult.IsSuccess || priceResult.Data is null)
-                return (SystemMessages.PriceUnavailable(language), "system");
+            var priceCtx = await BuildCombinedPriceContext(assetTypes, language);
 
-            var p = priceResult.Data;
-            var priceCtx =
-                language == "ar"
-                    ? $"سعر الذهب الحالي: شراء بسعر {p.BuyPrice:N2} جنيها للجرام، بيع بسعر {p.SellPrice:N2} جنيها للجرام (حتى {p.CreatedAt:HH:mm} UTC)"
-                    : $"Current gold price: buy at {p.BuyPrice:N2} EGP/g, sell at {p.SellPrice:N2} EGP/g (as of {p.CreatedAt:HH:mm} UTC)";
-
-            var system =
-                "You are a helpful assistant for Tibr. "
-                + "Answer the user's price-related question using the provided price context. Be concise.";
+            var system = "You are a helpful assistant for Tibr. "
+                + "Answer the user's price-related question using the provided price context. Be concise. ";
+            if (wasAmbiguous)
+                system += language == "ar"
+                    ? "إذا لم يكن واضحاً أي معدن يقصده المستخدم، اسأله قبل أن تفترض."
+                    : "If it's unclear which metal the user means, ask before assuming. ";
             system += language == "ar" ? "\nRespond in Arabic." : "\nRespond in English.";
 
             var messages = new List<Message>(history)
@@ -300,7 +303,7 @@ namespace Tibr.Application.Services.AiChatServices
             return (SystemMessages.ConditionalFallback(language), null, "system");
         }
 
-        public async Task<(string Reply, string Source)> HandlePlannerAsync(
+        public async Task<(string Reply, string Source, bool ClarificationNeeded)> HandlePlannerAsync(
             string userPrompt,
             long userId,
             string language,
@@ -312,44 +315,72 @@ namespace Tibr.Application.Services.AiChatServices
             if (goal.ClarificationNeeded)
                 return (
                     goal.ClarificationQuestion ?? SystemMessages.PlannerClarify(language),
-                    "system"
+                    "system",
+                    true
                 );
 
             var balanceResult = await _walletService.GetBalancesAsync(userId);
-            var priceResult = await _priceService.GetCurrentPriceAsync(AssetType.Gold);
 
-            var currentGrams = balanceResult.IsSuccess
-                ? (
-                    balanceResult
-                        .Data!.FirstOrDefault(b => b.WalletType == WalletType.Gold)
-                        ?.AvailableBalance
-                    ?? 0
-                )
-                : 0;
-
-            var currentPrice =
-                priceResult.IsSuccess && priceResult.Data is not null
-                    ? priceResult.Data.SellPrice
-                    : 0;
-
-            var mathResult = GoalMathService.Compute(goal, currentGrams, currentPrice);
-
+            GoalMathResult mathResult;
+            string assetsPrompt;
             var goalTypeLabel = goal.GoalType switch
             {
-                "reach_grams" => $"own {goal.TargetAmount:F2}g of {goal.Asset}",
+                "reach_grams" => goal.Asset == "both"
+                    ? $"own {goal.TargetAmount:F2}g total (split between Gold and Silver)"
+                    : $"own {goal.TargetAmount:F2}g of {goal.Asset}",
                 "reach_value_egp" => $"a portfolio worth {goal.TargetAmount:N0} EGP",
                 "monthly_budget" => $"invest {goal.TargetAmount:N0} EGP/month",
                 _ => "your goal",
             };
 
+            if (goal.Asset == "both")
+            {
+                var goldPriceResult = await _priceService.GetCurrentPriceAsync(AssetType.Gold);
+                var silverPriceResult = await _priceService.GetCurrentPriceAsync(AssetType.Silver);
+
+                var goldGrams = balanceResult.IsSuccess
+                    ? balanceResult.Data!.FirstOrDefault(b => b.WalletType == WalletType.Gold)?.AvailableBalance ?? 0
+                    : 0;
+                var silverGrams = balanceResult.IsSuccess
+                    ? balanceResult.Data!.FirstOrDefault(b => b.WalletType == WalletType.Silver)?.AvailableBalance ?? 0
+                    : 0;
+                var goldPrice = goldPriceResult.IsSuccess && goldPriceResult.Data is not null ? goldPriceResult.Data.SellPrice : 0;
+                var silverPrice = silverPriceResult.IsSuccess && silverPriceResult.Data is not null ? silverPriceResult.Data.SellPrice : 0;
+
+                mathResult = GoalMathService.Compute(goal, new List<AssetInput>
+                {
+                    new("Gold", goldGrams, goldPrice),
+                    new("Silver", silverGrams, silverPrice)
+                });
+
+                assetsPrompt = $"Current holdings: {goldGrams:F4}g Gold, {silverGrams:F4}g Silver\n"
+                            + $"Current prices: Gold {goldPrice:N2} EGP/g, Silver {silverPrice:N2} EGP/g\n";
+            }
+            else
+            {
+                var assetType = goal.Asset?.ToLower() == "silver" ? AssetType.Silver : AssetType.Gold;
+                var walletType = goal.Asset?.ToLower() == "silver" ? WalletType.Silver : WalletType.Gold;
+                var priceResult = await _priceService.GetCurrentPriceAsync(assetType);
+
+                var currentGrams = balanceResult.IsSuccess
+                    ? balanceResult.Data!.FirstOrDefault(b => b.WalletType == walletType)?.AvailableBalance ?? 0
+                    : 0;
+                var currentPrice = priceResult.IsSuccess && priceResult.Data is not null ? priceResult.Data.SellPrice : 0;
+
+                mathResult = GoalMathService.Compute(goal, currentGrams, currentPrice);
+
+                assetsPrompt = $"Current holdings: {currentGrams:F4}g {goal.Asset}\n"
+                            + $"Current price: {currentPrice:N2} EGP/g\n";
+            }
+
             var advisePrompt =
                 $"You are a financial advisor for Tibr. "
                 + $"The user wants to achieve {goalTypeLabel} within {goal.TimeframeWeeks} weeks.\n"
-                + $"Current holdings: {currentGrams:F4}g {goal.Asset}\n"
-                + $"Current price: {currentPrice:N2} EGP/g\n"
+                + assetsPrompt
                 + $"Required weekly investment: {mathResult.RequiredWeeklyEgp:N2} EGP\n"
                 + $"Projected completion: {mathResult.ProjectedCompletionDate:yyyy-MM-dd}\n\n"
-                + $"Provide encouraging, practical advice. Do NOT recompute any numbers yourself.";
+                + $"Provide encouraging, practical advice. Do NOT recompute any numbers yourself."
+                + " Do NOT ask follow-up questions — the user cannot answer in this chat.";
 
             var facts = await _vectorStore.SearchFactsAsync(userPrompt, topK: 2, minScore: 0.4f);
             var factsText =
@@ -365,8 +396,8 @@ namespace Tibr.Application.Services.AiChatServices
             var messages = new List<Message>(history) { new("user", userPrompt) };
             var adviceResponse = await _aiProvider.ChatAsync(advisePrompt, messages);
             if (adviceResponse.Content is not null)
-                return (adviceResponse.Content, "ai");
-            return (SystemMessages.PlannerFallback(language), "system");
+                return (adviceResponse.Content, "ai", false);
+            return (SystemMessages.PlannerFallback(language), "system", false);
         }
 
         public async Task<(string Reply, string Source)> HandleDualRagAsync(
@@ -395,6 +426,88 @@ namespace Tibr.Application.Services.AiChatServices
 
             var response = await _aiProvider.ChatAsync(system, messages);
             return (response.Content ?? SystemMessages.FaqGenFailed(language), "system");
+        }
+
+        private async Task<string> BuildCombinedPriceContext(List<AssetType> assetTypes, string language)
+        {
+            var parts = new List<string>();
+            foreach (var assetType in assetTypes)
+            {
+                var priceResult = await _priceService.GetCurrentPriceAsync(assetType);
+                if (!priceResult.IsSuccess || priceResult.Data is null) continue;
+
+                var p = priceResult.Data;
+                var analytics = await _priceService.GetPriceAnalyticsAsync(assetType);
+                parts.Add(BuildPriceContext(p, analytics.IsSuccess ? analytics.Data : null, assetType, language));
+            }
+
+            if (parts.Count == 0) return SystemMessages.PriceUnavailable(language);
+            return string.Join("\n---\n", parts);
+        }
+
+        private static string BuildPriceContext(
+            AssetPriceDto p, PriceAnalyticsDto? a, AssetType assetType, string language)
+        {
+            var metal = assetType == AssetType.Silver
+                ? (language == "ar" ? "الفضة" : "silver")
+                : (language == "ar" ? "الذهب" : "gold");
+
+            var ctx = language == "ar"
+                ? $"سعر {metal} الحالي: شراء بسعر {p.BuyPrice:N2} ج.م، بيع بسعر {p.SellPrice:N2} ج.م (آخر تحديث {p.CreatedAt:HH:mm} UTC)"
+                : $"Current {metal} price: buy at {p.BuyPrice:N2} EGP, sell at {p.SellPrice:N2} EGP (as of {p.CreatedAt:HH:mm} UTC)";
+
+            if (a is null) return ctx;
+
+            ctx += language == "ar"
+                ? $"\nمتوسط 30 يوم: {a.AvgPriceLast30Days:N2} ج.م"
+                : $"\n30-day average: {a.AvgPriceLast30Days:N2} EGP";
+            ctx += language == "ar"
+                ? $"\nأدنى سعر 30 يوم: {a.MinPriceLast30Days:N2} ج.م"
+                : $"\n30-day low: {a.MinPriceLast30Days:N2} EGP";
+            ctx += language == "ar"
+                ? $"\nأعلى سعر 30 يوم: {a.MaxPriceLast30Days:N2} ج.م"
+                : $"\n30-day high: {a.MaxPriceLast30Days:N2} EGP";
+
+            if (a.DaysOfData < 30)
+                ctx += language == "ar"
+                    ? $"\nبيانات متاحة: {a.DaysOfData} يوم"
+                    : $"\nData available: {a.DaysOfData} days";
+
+            var range = a.MaxPriceLast30Days - a.MinPriceLast30Days;
+            if (range > 0 && a.DaysOfData >= 7)
+            {
+                var percentile = (a.CurrentPrice - a.MinPriceLast30Days) / range * 100;
+                ctx += language == "ar"
+                    ? $"\nالسعر الحالي عند النسبة المئوية {percentile:F0} من نطاق 30 يوم"
+                    : $"\nCurrent price is at the {percentile:F0}th percentile of the 30-day range";
+            }
+
+            if (a.IsBelowAverage)
+                ctx += language == "ar"
+                    ? $"\nالسعر الحالي أقل من متوسط 30 يوم بنسبة {Math.Abs(a.PercentBelowAverage ?? 0):F1}%"
+                    : $"\nCurrent price is {Math.Abs(a.PercentBelowAverage ?? 0):F1}% below the 30-day average";
+            else if (a.PercentBelowAverage > 0)
+                ctx += language == "ar"
+                    ? $"\nالسعر الحالي أعلى من متوسط 30 يوم بنسبة {a.PercentBelowAverage:F1}%"
+                    : $"\nCurrent price is {a.PercentBelowAverage:F1}% above the 30-day average";
+
+            if (a.IsNearMonthlyLow)
+                ctx += language == "ar"
+                    ? "\nالسعر قريب من أدنى مستوى شهري"
+                    : "\nPrice is near its monthly low";
+
+            return ctx;
+        }
+
+        private static List<AssetType> DetectAssets(string prompt)
+        {
+            var lower = prompt.ToLowerInvariant();
+            var detected = new List<AssetType>();
+            if (lower.Contains("ذهب") || lower.Contains("دهب") || lower.Contains("gold") || lower.Contains("xau"))
+                detected.Add(AssetType.Gold);
+            if (lower.Contains("فضة") || lower.Contains("فضه") || lower.Contains("silver") || lower.Contains("xag"))
+                detected.Add(AssetType.Silver);
+            return detected;
         }
 
         private static List<RagResult> MergeAndRank(
