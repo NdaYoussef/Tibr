@@ -104,16 +104,15 @@ namespace Tibr.Application.Services.AdminServices
         //   - grouped by Product (not by Order)
         //   - calculates TotalCost (BuyPrice * Qty) and NetMargin per product
         public async Task<List<RevenueReportDto>> GetRevenueReportAsync(
-            DateTime fromDate,
-            DateTime toDate)
+           DateTime fromDate,
+           DateTime toDate)
         {
             _logger.LogDebug("GetRevenueReportAsync {From} – {To}", fromDate, toDate);
 
             var from = fromDate.Date.ToUniversalTime();
             var to = toDate.Date.AddDays(1).ToUniversalTime();
 
-            // Join OrderItems → Orders (Paid only, in date range) → Product
-            var rows = await _orderItemRepo
+            var raw = await _orderItemRepo
                 .GetAll(oi =>
                     !oi.Order.IsDeleted
                     && oi.Order.PaymentStatus == PaymentStatusConstants.Paid
@@ -123,23 +122,30 @@ namespace Tibr.Application.Services.AdminServices
                 {
                     oi.ProductId,
                     oi.Product.Name,
-                    MetalType = oi.Product.MetalType.ToString(),
+                    oi.Product.MetalType,   
                     oi.Product.BuyPrice
                 })
-                .Select(g => new RevenueReportDto
+                .Select(g => new
                 {
-                    ProductName = g.Key.Name,
-                    MetalType = g.Key.MetalType,
+                    g.Key.Name,
+                    g.Key.MetalType,
+                    g.Key.BuyPrice,
                     UnitsSold = g.Sum(x => x.Quantity),
-                    // Revenue = what customer paid (SellPrice stored as Price on OrderItem)
-                    TotalRevenue = g.Sum(x => x.Price * x.Quantity),
-                    // Cost = BuyPrice at time of report (current BuyPrice)
-                    TotalCost = g.Key.BuyPrice * g.Sum(x => x.Quantity)
+                    TotalRevenue = g.Sum(x => x.Price * x.Quantity)
                 })
-                .OrderByDescending(r => r.NetMargin)
-                .ToListAsync();
+                .ToListAsync();  
 
-            return rows;
+            return raw
+                .Select(r => new RevenueReportDto
+                {
+                    ProductName = r.Name,
+                    MetalType = r.MetalType.ToString(),  
+                    UnitsSold = r.UnitsSold,
+                    TotalRevenue = r.TotalRevenue,
+                    TotalCost = r.BuyPrice * r.UnitsSold
+                })
+                .OrderByDescending(r => r.NetMargin)  
+                .ToList();
         }
 
         //  PRODUCT PERFORMANCE 
