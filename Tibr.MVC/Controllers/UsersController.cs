@@ -189,7 +189,10 @@ namespace Tibr.MVC.Controllers
                 Email = details.Email,
                 Phone = details.Phone,
                 Status = details.Status,
-                KycStatus = details.KycStatus
+                KycStatus = details.KycStatus,
+                KycDocumentFront = details.KycDocumentFront,
+                KycDocumentBack = details.KycDocumentBack,
+                KycSelfieImage = details.KycSelfieImage
             };
 
             return View(editModel);

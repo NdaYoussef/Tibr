@@ -144,5 +144,9 @@ namespace Tibr.MVC.Models.Users
 
         [Display(Name = "System Logs")]
         public bool SystemLogs { get; set; } = false;
+
+        public string? KycDocumentFront { get; set; }
+        public string? KycDocumentBack { get; set; }
+        public string? KycSelfieImage { get; set; }
     }
 }
