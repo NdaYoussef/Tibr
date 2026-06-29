@@ -3,6 +3,7 @@ using Tibr.Application.Dtos;
 using Tibr.Application.Dtos.ChatDtos;
 using Tibr.Application.Services.AssetPriceServices;
 using Tibr.Application.Services.InvestmentOrderServices;
+using Tibr.Application.Services.PlanServices;
 using Tibr.Application.Services.WalletServices;
 using Tibr.Domain.Entities;
 using Tibr.Domain.Enums;
@@ -20,6 +21,7 @@ namespace Tibr.Application.Services.AiChatServices
         private readonly IChatOrderProposalService _proposalService;
         private readonly IInvestmentOrderService _investmentOrderService;
         private readonly GoalParser _goalParser;
+        private readonly IPlanService _planService;
 
         public ChatRouter(
             IAiProviderService aiProvider,
@@ -29,7 +31,8 @@ namespace Tibr.Application.Services.AiChatServices
             IGenericRepository<Trade, long> tradeRepo,
             IChatOrderProposalService proposalService,
             IInvestmentOrderService investmentOrderService,
-            GoalParser goalParser
+            GoalParser goalParser,
+            IPlanService planService
         )
         {
             _aiProvider = aiProvider;
@@ -40,6 +43,7 @@ namespace Tibr.Application.Services.AiChatServices
             _proposalService = proposalService;
             _investmentOrderService = investmentOrderService;
             _goalParser = goalParser;
+            _planService = planService;
         }
 
         public (string Reply, string Source) HandleOutOfScope(string language)
@@ -325,6 +329,8 @@ namespace Tibr.Application.Services.AiChatServices
 
             GoalMathResult mathResult;
             string assetsPrompt;
+            decimal creationPrice = 0;
+            decimal? silverCreationPrice = null;
             var goalTypeLabel = goal.GoalType switch
             {
                 "reach_grams" => goal.Asset == "both"
@@ -348,6 +354,8 @@ namespace Tibr.Application.Services.AiChatServices
                     : 0;
                 var goldPrice = goldPriceResult.IsSuccess && goldPriceResult.Data is not null ? goldPriceResult.Data.SellPrice : 0;
                 var silverPrice = silverPriceResult.IsSuccess && silverPriceResult.Data is not null ? silverPriceResult.Data.SellPrice : 0;
+                creationPrice = goldPrice;
+                silverCreationPrice = silverPrice;
 
                 mathResult = GoalMathService.Compute(goal, new List<AssetInput>
                 {
@@ -368,6 +376,7 @@ namespace Tibr.Application.Services.AiChatServices
                     ? balanceResult.Data!.FirstOrDefault(b => b.WalletType == walletType)?.AvailableBalance ?? 0
                     : 0;
                 var currentPrice = priceResult.IsSuccess && priceResult.Data is not null ? priceResult.Data.SellPrice : 0;
+                creationPrice = currentPrice;
 
                 mathResult = GoalMathService.Compute(goal, currentGrams, currentPrice);
 
@@ -398,9 +407,37 @@ namespace Tibr.Application.Services.AiChatServices
 
             var messages = new List<Message>(history) { new("user", userPrompt) };
             var adviceResponse = await _aiProvider.ChatAsync(advisePrompt, messages);
+
+            // Persist plan after generating advice
+            var planResult = await _planService.CreateFromGoalAsync(userId, goal, creationPrice, silverCreationPrice);
+
             if (adviceResponse.Content is not null)
                 return (adviceResponse.Content, "ai", false);
             return (SystemMessages.PlannerFallback(language), "system", false);
+        }
+
+        public async Task<(string Reply, string Source, bool ClarificationNeeded)> HandlePlanUpdateAsync(
+            long userId, string language)
+        {
+            var result = await _planService.ReevaluateAsync(userId);
+            if (result.IsFailure)
+                return (result.ErrorMessage ?? "Could not re-evaluate plan.", "system", false);
+
+            var data = result.Data!;
+            var reply = data.Message;
+
+            if (data.PriceChangePercent.HasValue && data.CurrentPrice.HasValue)
+            {
+                var metal = data.Plan.Asset == "silver" ? "Silver" : "Gold";
+                reply += $" {metal} has moved {data.PriceChangePercent.Value:+0.00;-0.00}% since you started ({data.Plan.PriceAtCreation:N2} → {data.CurrentPrice:N2} EGP/g).";
+            }
+            if (data.SilverPriceChangePercent.HasValue && data.SilverCurrentPrice.HasValue)
+            {
+                reply += $" Silver has moved {data.SilverPriceChangePercent.Value:+0.00;-0.00}% since you started ({data.Plan.SilverPriceAtCreation:N2} → {data.SilverCurrentPrice:N2} EGP/g).";
+            }
+
+            reply += " These numbers are based on today's price. Prices fluctuate — check back for an updated projection.";
+            return (reply, "system", false);
         }
 
         public async Task<(string Reply, string Source)> HandleDualRagAsync(

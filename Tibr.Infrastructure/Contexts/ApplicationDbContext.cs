@@ -93,6 +93,7 @@ namespace Tibr.Infrastructure.Contexts
         public DbSet<Review> Reviews { get; set; }
 
         // Chat entities
+        public DbSet<Plan> Plans { get; set; }
         public DbSet<ChatConversation> ChatConversations { get; set; }
         public DbSet<ChatMessage> ChatMessages { get; set; }
         public DbSet<ChatOrderProposal> ChatOrderProposals { get; set; }
@@ -393,6 +394,33 @@ namespace Tibr.Infrastructure.Contexts
 
             modelBuilder.Entity<DeliveryRequest>()
                 .Property(x => x.Quantity).HasPrecision(18, 4);
+
+            #endregion
+
+            #region Plan
+
+            modelBuilder.Entity<Plan>()
+                .HasOne(p => p.User)
+                .WithMany(u => u.Plans)
+                .HasForeignKey(p => p.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Plan>()
+                .Property(p => p.TargetAmount).HasPrecision(18, 4);
+
+            modelBuilder.Entity<Plan>()
+                .Property(p => p.PriceAtCreation).HasPrecision(18, 2);
+
+            modelBuilder.Entity<Plan>()
+                .Property(p => p.SilverPriceAtCreation).HasPrecision(18, 2);
+
+            modelBuilder.Entity<Plan>()
+                .Property(p => p.MonthlyBudgetEgp).HasPrecision(18, 2);
+
+            modelBuilder.Entity<Plan>()
+                .Property(p => p.Status)
+                .HasConversion<string>()
+                .HasMaxLength(20);
 
             #endregion
 

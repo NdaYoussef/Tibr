@@ -7,6 +7,7 @@ using Tibr.Application.Services.AssetPriceServices;
 using Tibr.Application.Services.InvestmentOrderServices;
 using Tibr.Application.Services.WalletServices;
 using Tibr.Application.Services.AiChatServices.Tools;
+using Tibr.Application.Services.PlanServices;
 using Tibr.Domain.Entities;
 using Tibr.Domain.Enums;
 using Tibr.Domain.IRepositories;
@@ -23,6 +24,7 @@ namespace Tibr.Application.Services.AiChatServices
         private readonly IChatOrderProposalService _proposalService;
         private readonly IProposalResolutionClassifier _resolutionClassifier;
         private readonly IInvestmentOrderService _investmentOrderService;
+        private readonly IPlanService _planService;
         private readonly ChatRoutingOptions _routingOptions;
         private readonly ILogger<ChatService> _logger;
 
@@ -37,11 +39,13 @@ namespace Tibr.Application.Services.AiChatServices
             IChatOrderProposalService proposalService,
             IProposalResolutionClassifier resolutionClassifier,
             IInvestmentOrderService investmentOrderService,
+            IPlanService planService,
             ChatRoutingOptions routingOptions,
             ILogger<ChatService> logger,
             ILoggerFactory loggerFactory
         )
         {
+            _planService = planService;
             _classifier = new IntentClassifier(aiProvider, loggerFactory.CreateLogger<IntentClassifier>());
             _router = new ChatRouter(
                 aiProvider,
@@ -51,7 +55,8 @@ namespace Tibr.Application.Services.AiChatServices
                 tradeRepo,
                 proposalService,
                 investmentOrderService,
-                new GoalParser(aiProvider)
+                new GoalParser(aiProvider),
+                _planService
             );
             _investmentOrderService = investmentOrderService;
             _conversationRepo = conversationRepo;
@@ -247,6 +252,12 @@ namespace Tibr.Application.Services.AiChatServices
                     if (clarificationNeeded)
                         conversation.PendingClarification = "planner";
                 }
+                else if (pendingIntent == "plan_update")
+                {
+                    (reply, source, clarificationNeeded) = await _router.HandlePlanUpdateAsync(
+                        userId, lang);
+                    intent = "PlanUpdate";
+                }
                 else
                 {
                     (reply, intent, source, lang, clarificationNeeded) = await ClassifyAndRouteAsync(
@@ -315,6 +326,13 @@ namespace Tibr.Application.Services.AiChatServices
                     var (pReply, pSource, pClarification) = await _router.HandlePlannerAsync(
                         message, userId, lang, history);
                     return (pReply, overrideIntent, pSource, lang, pClarification);
+                }
+
+                if (overrideIntent.ToLowerInvariant() == "plan_update")
+                {
+                    var (uReply, uSource, uClarification) = await _router.HandlePlanUpdateAsync(
+                        userId, lang);
+                    return (uReply, overrideIntent, uSource, lang, uClarification);
                 }
 
                 var (reply, source) = overrideIntent.ToLowerInvariant() switch
@@ -391,6 +409,7 @@ namespace Tibr.Application.Services.AiChatServices
                 Intent.ConditionalOrder => To3(await HandleConditionalOrderAsync(
                     message, userId, conversationId, language, history)),
                 Intent.Planner => await _router.HandlePlannerAsync(message, userId, language, history),
+                Intent.PlanUpdate => await _router.HandlePlanUpdateAsync(userId, language),
                 _ => To3(_router.HandleOutOfScope(language)),
             };
         }

@@ -43,6 +43,10 @@ namespace Tibr.Application.Services.AiChatServices
               AR: اشتري إذا انخفض السعر, بيع عندما يصل, أمر معلق, أوقف الخسارة
               EN: buy when gold drops below 8000, sell silver if it reaches 140, set a strategy, alert me when
 
+            - "plan_update": user wants to check progress on their savings plan or update it
+              AR: تقدم خطتي, كيف خطتي, حدث خطتي, مراجعة الادخار, أين وصلت في خطتي
+              EN: how's my plan, update my plan, check my savings plan, plan progress, review my plan
+
             - "out_of_scope": anything unrelated to gold, investment, or Tibr
 
             Also detect the language of the user's message. Use ISO 639-1 codes (e.g. "en" for English, "ar" for Arabic).
@@ -97,6 +101,7 @@ namespace Tibr.Application.Services.AiChatServices
                     "planner" => Intent.Planner,
                     "agentic" => Intent.Agentic,
                     "conditional_order" => Intent.ConditionalOrder,
+                    "plan_update" => Intent.PlanUpdate,
                     _ => Intent.OutOfScope,
                 };
 

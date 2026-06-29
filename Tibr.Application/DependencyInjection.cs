@@ -15,6 +15,7 @@ using Tibr.Application.Services.TradeServices;
 using Tibr.Application.Services.WalletServices;
 using Tibr.Application.Services.WithdrawServices;
 using Tibr.Application.Services.AiChatServices;
+using Tibr.Application.Services.PlanServices;
 
 namespace Tibr.Application
 {
@@ -33,6 +34,7 @@ namespace Tibr.Application
             services.AddScoped<IDeliveryService, DeliveryService>();
             services.AddScoped<IWithdrawService, WithdrawService>();
             services.AddScoped<IReviewService, ReviewService>();
+            services.AddScoped<IPlanService, PlanService>();
             services.AddScoped<PaymentService>();
             services.AddScoped<IChatService, ChatService>();
             services.AddScoped<IProposalResolutionClassifier, ProposalResolutionClassifier>();
