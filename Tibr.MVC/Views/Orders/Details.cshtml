@@ -109,7 +109,6 @@ else
     <div class="item-list-container">
         @foreach (var item in Model.Items)
         {
-            // التحقق من وجود صورة للمنتج، وإذا لم توجد نضع صورة افتراضية (placeholder) لمنع كسر التصميم
             var imgUrl = string.IsNullOrEmpty(item.ProductImageUrl) ? "/images/default-product.jpg" : item.ProductImageUrl;
             var categoryText = string.IsNullOrEmpty(item.CategoryName) ? "Premium Product" : item.CategoryName;
 

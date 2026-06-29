@@ -41,6 +41,8 @@ namespace Tibr.MVC.Models.Orders
         public int Quantity { get; set; }
         public decimal Price { get; set; }
         public decimal Total => Quantity * Price;
+        public string? ProductImageUrl { get; set; }
+        public string? CategoryName { get; set; }
     }
 
     public class OrderTrackingMilestoneViewModel
