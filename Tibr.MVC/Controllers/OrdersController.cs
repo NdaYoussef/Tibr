@@ -179,6 +179,42 @@ namespace Tibr.MVC.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> UpdateStatus(long id, string orderStatus, string paymentStatus)
         {
+            if (string.IsNullOrWhiteSpace(paymentStatus))
+            {
+                TempData["ErrorMessage"] = "Payment status is required.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            if (string.IsNullOrWhiteSpace(orderStatus))
+            {
+                TempData["ErrorMessage"] = "Order status is required.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
+            // Validate status combination based on business rules:
+            // - If Pending: Pending or Cancelled
+            // - If Paid: Processing, Shipped, Delivered
+            // - If Refunded: Returned or Cancelled
+            bool isValid = false;
+            if (paymentStatus == "Pending" && (orderStatus == "Pending" || orderStatus == "Cancelled"))
+            {
+                isValid = true;
+            }
+            else if (paymentStatus == "Paid" && (orderStatus == "Processing" || orderStatus == "Shipped" || orderStatus == "Delivered"))
+            {
+                isValid = true;
+            }
+            else if (paymentStatus == "Refunded" && (orderStatus == "Returned" || orderStatus == "Cancelled"))
+            {
+                isValid = true;
+            }
+
+            if (!isValid)
+            {
+                TempData["ErrorMessage"] = $"Invalid order status '{orderStatus}' for payment status '{paymentStatus}'.";
+                return RedirectToAction(nameof(Details), new { id });
+            }
+
             var updateDto = new UpdateOrderDto
             {
                 OrderStatus = orderStatus,

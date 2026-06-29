@@ -4,15 +4,12 @@
     ViewData["Title"] = "Admin Directory";
     var totalPages = Math.Ceiling((double)Model.TotalCount / Model.PageSize);
 }
-
 <div class="mb-3">
     <span class="text-uppercase fw-bold text-muted" style="font-size: 0.75rem; letter-spacing: 1px;">Administration</span>
     <h2 class="font-bold text-white mb-1" style="font-size: 1.8rem; letter-spacing: -0.5px;">Admin Directory</h2>
     <p class="text-muted" style="font-size: 0.9rem;">Manage system administrators and security credentials.</p>
 </div>
 
-
-<!-- Search Panel -->
 <div class="mb-3">
     <form method="get" asp-action="Index">
         <input type="hidden" name="sortBy" value="@Model.SortBy" />
@@ -23,7 +20,6 @@
         </div>
     </form>
     
-    <!-- Filter Toggle -->
     <details class="executive-card p-3 mb-4 shadow-sm" style="border-radius: 14px;">
         <summary class="accordion-summary text-muted fw-semibold" style="font-size: 0.85rem;">
             <span><i class="bi bi-sliders me-2"></i> Toggle Sort & Filter Options</span>
@@ -52,7 +48,6 @@
     </details>
 </div>
 
-<!-- Admin Card List -->
 <div class="mb-4">
     @if (Model.Admins.Count == 0)
     {
@@ -104,12 +99,10 @@
     }
 </div>
 
-<!-- Floating Action Button for Adding New Admin -->
 <a asp-action="Create" class="fab-btn" title="Add New Admin">
     <i class="bi bi-plus-lg"></i>
 </a>
 
-<!-- Pagination Panel -->
 @if (totalPages > 1)
 {
     <nav aria-label="Page navigation" class="mt-4">
@@ -155,4 +148,3 @@
         });
     </script>
 }
-

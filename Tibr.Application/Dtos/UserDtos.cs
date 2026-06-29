@@ -40,6 +40,9 @@ namespace Tibr.Application.Dtos
         public string KycStatus { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
         public DateTime? UpdatedAt { get; set; }
+        public string? KycDocumentFront { get; set; }
+        public string? KycDocumentBack { get; set; }
+        public string? KycSelfieImage { get; set; }
         public List<UserOrderHistoryDto> Orders { get; set; } = [];
     }
 
