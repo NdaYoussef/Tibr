@@ -81,6 +81,7 @@
         public ReportsSummaryViewModel Summary { get; set; } = new();
 
         public List<SalesReportRow> SalesRows { get; set; } = [];
+        public List<RevenueReportRow> RevenueRows { get; set; } = [];
         public List<ProductPerformanceRow> ProductRows { get; set; } = [];
         public List<InventoryRow> InventoryRows { get; set; } = [];
         public List<CustomerReportRow> CustomerRows { get; set; } = [];
@@ -105,6 +106,18 @@
         public decimal Amount { get; set; }
         public string OrderStatus { get; set; } = string.Empty;
         public string PaymentStatus { get; set; } = string.Empty;
+    }
+
+    public class RevenueReportRow
+    {
+        public string ProductName { get; set; } = string.Empty;
+        public string MetalType { get; set; } = string.Empty;
+        public int UnitsSold { get; set; }
+        public decimal TotalRevenue { get; set; }
+        public decimal TotalCost { get; set; }
+        public decimal NetMargin => TotalRevenue - TotalCost;
+        public decimal MarginPercent => TotalCost == 0 ? 0
+            : Math.Round(NetMargin / TotalCost * 100, 1);
     }
 
     public class ProductPerformanceRow
