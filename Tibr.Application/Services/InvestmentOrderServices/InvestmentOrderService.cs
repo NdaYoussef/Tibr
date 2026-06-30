@@ -39,7 +39,9 @@ namespace Tibr.Application.Services.InvestmentOrderServices
             if (priceResult.IsFailure)
                 return Result<InvestmentOrderDto>.Failure(priceResult.ErrorMessage!);
 
-            var currentPrice = priceResult.Data?.SellPrice ?? 0;
+            var currentPrice = dto.OrderType == OrderType.Buy
+                ? priceResult.Data?.SellPrice ?? 0
+                : priceResult.Data?.BuyPrice ?? 0;
 
             var walletType = dto.OrderType == OrderType.Buy ? WalletType.Cash
                 : dto.AssetType == AssetType.Gold ? WalletType.Gold : WalletType.Silver;

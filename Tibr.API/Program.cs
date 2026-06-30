@@ -90,6 +90,10 @@ namespace Tibr.API
                 configuration.GetSection(PaymobSettings.SectionName)
             );
 
+            builder.Services.Configure<PricingSettings>(
+                configuration.GetSection(PricingSettings.SectionName)
+            );
+
             var routingOptions = configuration
                 .GetSection(ChatRoutingOptions.SectionName)
                 .Get<ChatRoutingOptions>() ?? new ChatRoutingOptions();
