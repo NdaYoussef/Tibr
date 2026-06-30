@@ -1,0 +1,526 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "H:\\Tibr\\Tibr\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{7C1AAC71-4E6F-4607-AD32-940F1C544EA1}|Tibr.MVC\\Tibr.MVC.csproj|h:\\tibr\\tibr\\tibr.mvc\\views\\admin\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{7C1AAC71-4E6F-4607-AD32-940F1C544EA1}|Tibr.MVC\\Tibr.MVC.csproj|solutionrelative:tibr.mvc\\views\\admin\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7C1AAC71-4E6F-4607-AD32-940F1C544EA1}|Tibr.MVC\\Tibr.MVC.csproj|h:\\tibr\\tibr\\tibr.mvc\\views\\shared\\_adminlayout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{7C1AAC71-4E6F-4607-AD32-940F1C544EA1}|Tibr.MVC\\Tibr.MVC.csproj|solutionrelative:tibr.mvc\\views\\shared\\_adminlayout.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7C1AAC71-4E6F-4607-AD32-940F1C544EA1}|Tibr.MVC\\Tibr.MVC.csproj|h:\\tibr\\tibr\\tibr.mvc\\views\\withdraw\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{7C1AAC71-4E6F-4607-AD32-940F1C544EA1}|Tibr.MVC\\Tibr.MVC.csproj|solutionrelative:tibr.mvc\\views\\withdraw\\index.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7C1AAC71-4E6F-4607-AD32-940F1C544EA1}|Tibr.MVC\\Tibr.MVC.csproj|h:\\tibr\\tibr\\tibr.mvc\\views\\adminauth\\login.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{7C1AAC71-4E6F-4607-AD32-940F1C544EA1}|Tibr.MVC\\Tibr.MVC.csproj|solutionrelative:tibr.mvc\\views\\adminauth\\login.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7C1AAC71-4E6F-4607-AD32-940F1C544EA1}|Tibr.MVC\\Tibr.MVC.csproj|h:\\tibr\\tibr\\tibr.mvc\\controllers\\userscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7C1AAC71-4E6F-4607-AD32-940F1C544EA1}|Tibr.MVC\\Tibr.MVC.csproj|solutionrelative:tibr.mvc\\controllers\\userscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7C1AAC71-4E6F-4607-AD32-940F1C544EA1}|Tibr.MVC\\Tibr.MVC.csproj|h:\\tibr\\tibr\\tibr.mvc\\views\\dashboard\\reports.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{7C1AAC71-4E6F-4607-AD32-940F1C544EA1}|Tibr.MVC\\Tibr.MVC.csproj|solutionrelative:tibr.mvc\\views\\dashboard\\reports.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7C1AAC71-4E6F-4607-AD32-940F1C544EA1}|Tibr.MVC\\Tibr.MVC.csproj|h:\\tibr\\tibr\\tibr.mvc\\controllers\\dashboardcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7C1AAC71-4E6F-4607-AD32-940F1C544EA1}|Tibr.MVC\\Tibr.MVC.csproj|solutionrelative:tibr.mvc\\controllers\\dashboardcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7C1AAC71-4E6F-4607-AD32-940F1C544EA1}|Tibr.MVC\\Tibr.MVC.csproj|h:\\tibr\\tibr\\tibr.mvc\\mapping\\dashboardmappingconfig.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7C1AAC71-4E6F-4607-AD32-940F1C544EA1}|Tibr.MVC\\Tibr.MVC.csproj|solutionrelative:tibr.mvc\\mapping\\dashboardmappingconfig.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7C1AAC71-4E6F-4607-AD32-940F1C544EA1}|Tibr.MVC\\Tibr.MVC.csproj|h:\\tibr\\tibr\\tibr.mvc\\models\\dashboardviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7C1AAC71-4E6F-4607-AD32-940F1C544EA1}|Tibr.MVC\\Tibr.MVC.csproj|solutionrelative:tibr.mvc\\models\\dashboardviewmodel.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{BE963855-272A-4C1C-8EBE-0A6D1261D305}|Tibr.Application\\Tibr.Application.csproj|h:\\tibr\\tibr\\tibr.application\\services\\adminservices\\ianalyticsservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{BE963855-272A-4C1C-8EBE-0A6D1261D305}|Tibr.Application\\Tibr.Application.csproj|solutionrelative:tibr.application\\services\\adminservices\\ianalyticsservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{BE963855-272A-4C1C-8EBE-0A6D1261D305}|Tibr.Application\\Tibr.Application.csproj|h:\\tibr\\tibr\\tibr.application\\services\\adminservices\\analyticsservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{BE963855-272A-4C1C-8EBE-0A6D1261D305}|Tibr.Application\\Tibr.Application.csproj|solutionrelative:tibr.application\\services\\adminservices\\analyticsservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{BE963855-272A-4C1C-8EBE-0A6D1261D305}|Tibr.Application\\Tibr.Application.csproj|h:\\tibr\\tibr\\tibr.application\\dtos\\dashboarddtos\\dashboarddto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{BE963855-272A-4C1C-8EBE-0A6D1261D305}|Tibr.Application\\Tibr.Application.csproj|solutionrelative:tibr.application\\dtos\\dashboarddtos\\dashboarddto.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7C1AAC71-4E6F-4607-AD32-940F1C544EA1}|Tibr.MVC\\Tibr.MVC.csproj|h:\\tibr\\tibr\\tibr.mvc\\views\\orders\\details.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{7C1AAC71-4E6F-4607-AD32-940F1C544EA1}|Tibr.MVC\\Tibr.MVC.csproj|solutionrelative:tibr.mvc\\views\\orders\\details.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7C1AAC71-4E6F-4607-AD32-940F1C544EA1}|Tibr.MVC\\Tibr.MVC.csproj|h:\\tibr\\tibr\\tibr.mvc\\models\\orders\\orderviewmodels.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7C1AAC71-4E6F-4607-AD32-940F1C544EA1}|Tibr.MVC\\Tibr.MVC.csproj|solutionrelative:tibr.mvc\\models\\orders\\orderviewmodels.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7C1AAC71-4E6F-4607-AD32-940F1C544EA1}|Tibr.MVC\\Tibr.MVC.csproj|h:\\tibr\\tibr\\tibr.mvc\\wwwroot\\css\\admin.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}",
+      "RelativeMoniker": "D:0:0:{7C1AAC71-4E6F-4607-AD32-940F1C544EA1}|Tibr.MVC\\Tibr.MVC.csproj|solutionrelative:tibr.mvc\\wwwroot\\css\\admin.css||{A5401142-F49D-43DB-90B1-F57BA349E55C}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{BE963855-272A-4C1C-8EBE-0A6D1261D305}|Tibr.Application\\Tibr.Application.csproj|h:\\tibr\\tibr\\tibr.application\\services\\userservices\\userservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{BE963855-272A-4C1C-8EBE-0A6D1261D305}|Tibr.Application\\Tibr.Application.csproj|solutionrelative:tibr.application\\services\\userservices\\userservice.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{BE963855-272A-4C1C-8EBE-0A6D1261D305}|Tibr.Application\\Tibr.Application.csproj|h:\\tibr\\tibr\\tibr.application\\dtos\\userdtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{BE963855-272A-4C1C-8EBE-0A6D1261D305}|Tibr.Application\\Tibr.Application.csproj|solutionrelative:tibr.application\\dtos\\userdtos.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7C1AAC71-4E6F-4607-AD32-940F1C544EA1}|Tibr.MVC\\Tibr.MVC.csproj|h:\\tibr\\tibr\\tibr.mvc\\views\\users\\edit.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{7C1AAC71-4E6F-4607-AD32-940F1C544EA1}|Tibr.MVC\\Tibr.MVC.csproj|solutionrelative:tibr.mvc\\views\\users\\edit.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7C1AAC71-4E6F-4607-AD32-940F1C544EA1}|Tibr.MVC\\Tibr.MVC.csproj|h:\\tibr\\tibr\\tibr.mvc\\views\\users\\create.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}",
+      "RelativeMoniker": "D:0:0:{7C1AAC71-4E6F-4607-AD32-940F1C544EA1}|Tibr.MVC\\Tibr.MVC.csproj|solutionrelative:tibr.mvc\\views\\users\\create.cshtml||{40D31677-CBC0-4297-A9EF-89D907823A98}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7C1AAC71-4E6F-4607-AD32-940F1C544EA1}|Tibr.MVC\\Tibr.MVC.csproj|h:\\tibr\\tibr\\tibr.mvc\\models\\users\\userviewmodels.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7C1AAC71-4E6F-4607-AD32-940F1C544EA1}|Tibr.MVC\\Tibr.MVC.csproj|solutionrelative:tibr.mvc\\models\\users\\userviewmodels.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7C1AAC71-4E6F-4607-AD32-940F1C544EA1}|Tibr.MVC\\Tibr.MVC.csproj|h:\\tibr\\tibr\\tibr.mvc\\controllers\\orderscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7C1AAC71-4E6F-4607-AD32-940F1C544EA1}|Tibr.MVC\\Tibr.MVC.csproj|solutionrelative:tibr.mvc\\controllers\\orderscontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7C1AAC71-4E6F-4607-AD32-940F1C544EA1}|Tibr.MVC\\Tibr.MVC.csproj|h:\\tibr\\tibr\\tibr.mvc\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{7C1AAC71-4E6F-4607-AD32-940F1C544EA1}|Tibr.MVC\\Tibr.MVC.csproj|solutionrelative:tibr.mvc\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{DC39BADB-B519-DE2C-EEBB-628444195906}|Tibr.Infrastructure\\Tibr.Infrastructure.csproj|h:\\tibr\\tibr\\tibr.infrastructure\\seeds\\seeddata.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{DC39BADB-B519-DE2C-EEBB-628444195906}|Tibr.Infrastructure\\Tibr.Infrastructure.csproj|solutionrelative:tibr.infrastructure\\seeds\\seeddata.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7C1AAC71-4E6F-4607-AD32-940F1C544EA1}|Tibr.MVC\\Tibr.MVC.csproj|h:\\tibr\\tibr\\tibr.mvc\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{7C1AAC71-4E6F-4607-AD32-940F1C544EA1}|Tibr.MVC\\Tibr.MVC.csproj|solutionrelative:tibr.mvc\\properties\\launchsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7C1AAC71-4E6F-4607-AD32-940F1C544EA1}|Tibr.MVC\\Tibr.MVC.csproj|h:\\tibr\\tibr\\tibr.mvc\\tibr.mvc.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|",
+      "RelativeMoniker": "D:0:0:{7C1AAC71-4E6F-4607-AD32-940F1C544EA1}|Tibr.MVC\\Tibr.MVC.csproj|solutionrelative:tibr.mvc\\tibr.mvc.csproj||{FA3CD31E-987B-443A-9B81-186104E8DAC1}|"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{7C1AAC71-4E6F-4607-AD32-940F1C544EA1}|Tibr.MVC\\Tibr.MVC.csproj|h:\\tibr\\tibr\\tibr.mvc\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{7C1AAC71-4E6F-4607-AD32-940F1C544EA1}|Tibr.MVC\\Tibr.MVC.csproj|solutionrelative:tibr.mvc\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{104305BB-CF56-B54F-992A-9962BB8169AE}|Tibr.API\\Tibr.API.csproj|h:\\tibr\\tibr\\tibr.api\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}",
+      "RelativeMoniker": "D:0:0:{104305BB-CF56-B54F-992A-9962BB8169AE}|Tibr.API\\Tibr.API.csproj|solutionrelative:tibr.api\\appsettings.json||{90A6B3A7-C1A3-4009-A288-E2FF89E96FA0}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{104305BB-CF56-B54F-992A-9962BB8169AE}|Tibr.API\\Tibr.API.csproj|h:\\tibr\\tibr\\tibr.api\\controllers\\productcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{104305BB-CF56-B54F-992A-9962BB8169AE}|Tibr.API\\Tibr.API.csproj|solutionrelative:tibr.api\\controllers\\productcontroller.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{104305BB-CF56-B54F-992A-9962BB8169AE}|Tibr.API\\Tibr.API.csproj|h:\\tibr\\tibr\\tibr.api\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{104305BB-CF56-B54F-992A-9962BB8169AE}|Tibr.API\\Tibr.API.csproj|solutionrelative:tibr.api\\program.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{DC39BADB-B519-DE2C-EEBB-628444195906}|Tibr.Infrastructure\\Tibr.Infrastructure.csproj|h:\\tibr\\tibr\\tibr.infrastructure\\migrations\\20260629145800_initialcreate2.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{DC39BADB-B519-DE2C-EEBB-628444195906}|Tibr.Infrastructure\\Tibr.Infrastructure.csproj|solutionrelative:tibr.infrastructure\\migrations\\20260629145800_initialcreate2.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 6,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{3ae79031-e1bc-11d0-8f78-00a0c9110057}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "Index.cshtml",
+              "DocumentMoniker": "H:\\Tibr\\Tibr\\Tibr.MVC\\Views\\Withdraw\\Index.cshtml",
+              "RelativeDocumentMoniker": "Tibr.MVC\\Views\\Withdraw\\Index.cshtml",
+              "ToolTip": "H:\\Tibr\\Tibr\\Tibr.MVC\\Views\\Withdraw\\Index.cshtml",
+              "RelativeToolTip": "Tibr.MVC\\Views\\Withdraw\\Index.cshtml",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-06-30T23:40:49.798Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "_AdminLayout.cshtml",
+              "DocumentMoniker": "H:\\Tibr\\Tibr\\Tibr.MVC\\Views\\Shared\\_AdminLayout.cshtml",
+              "RelativeDocumentMoniker": "Tibr.MVC\\Views\\Shared\\_AdminLayout.cshtml",
+              "ToolTip": "H:\\Tibr\\Tibr\\Tibr.MVC\\Views\\Shared\\_AdminLayout.cshtml",
+              "RelativeToolTip": "Tibr.MVC\\Views\\Shared\\_AdminLayout.cshtml",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAANgAAAAmAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-06-30T23:34:31.703Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 5,
+              "Title": "Reports.cshtml",
+              "DocumentMoniker": "H:\\Tibr\\Tibr\\Tibr.MVC\\Views\\Dashboard\\Reports.cshtml",
+              "RelativeDocumentMoniker": "Tibr.MVC\\Views\\Dashboard\\Reports.cshtml",
+              "ToolTip": "H:\\Tibr\\Tibr\\Tibr.MVC\\Views\\Dashboard\\Reports.cshtml",
+              "RelativeToolTip": "Tibr.MVC\\Views\\Dashboard\\Reports.cshtml",
+              "ViewState": "AgIAAO4BAAAAAAAAAAAwwAUCAAALAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-06-30T23:30:59.977Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 4,
+              "Title": "UsersController.cs",
+              "DocumentMoniker": "H:\\Tibr\\Tibr\\Tibr.MVC\\Controllers\\UsersController.cs",
+              "RelativeDocumentMoniker": "Tibr.MVC\\Controllers\\UsersController.cs",
+              "ToolTip": "H:\\Tibr\\Tibr\\Tibr.MVC\\Controllers\\UsersController.cs",
+              "RelativeToolTip": "Tibr.MVC\\Controllers\\UsersController.cs",
+              "ViewState": "AgIAAHYAAAAAAAAAAAAYwI0AAAAZAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-30T23:10:46.357Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 3,
+              "Title": "Login.cshtml",
+              "DocumentMoniker": "H:\\Tibr\\Tibr\\Tibr.MVC\\Views\\AdminAuth\\Login.cshtml",
+              "RelativeDocumentMoniker": "Tibr.MVC\\Views\\AdminAuth\\Login.cshtml",
+              "ToolTip": "H:\\Tibr\\Tibr\\Tibr.MVC\\Views\\AdminAuth\\Login.cshtml",
+              "RelativeToolTip": "Tibr.MVC\\Views\\AdminAuth\\Login.cshtml",
+              "ViewState": "AgIAAHgAAAAAAAAAAAAwwL8AAAAGAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-06-29T15:22:16.86Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "Index.cshtml",
+              "DocumentMoniker": "H:\\Tibr\\Tibr\\Tibr.MVC\\Views\\Admin\\Index.cshtml",
+              "RelativeDocumentMoniker": "Tibr.MVC\\Views\\Admin\\Index.cshtml",
+              "ToolTip": "H:\\Tibr\\Tibr\\Tibr.MVC\\Views\\Admin\\Index.cshtml",
+              "RelativeToolTip": "Tibr.MVC\\Views\\Admin\\Index.cshtml",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAJwAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-06-30T23:03:33.39Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 6,
+              "Title": "DashboardController.cs",
+              "DocumentMoniker": "H:\\Tibr\\Tibr\\Tibr.MVC\\Controllers\\DashboardController.cs",
+              "RelativeDocumentMoniker": "Tibr.MVC\\Controllers\\DashboardController.cs",
+              "ToolTip": "H:\\Tibr\\Tibr\\Tibr.MVC\\Controllers\\DashboardController.cs",
+              "RelativeToolTip": "Tibr.MVC\\Controllers\\DashboardController.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAG0AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-30T23:29:31.377Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 7,
+              "Title": "DashboardMappingConfig.cs",
+              "DocumentMoniker": "H:\\Tibr\\Tibr\\Tibr.MVC\\Mapping\\DashboardMappingConfig.cs",
+              "RelativeDocumentMoniker": "Tibr.MVC\\Mapping\\DashboardMappingConfig.cs",
+              "ToolTip": "H:\\Tibr\\Tibr\\Tibr.MVC\\Mapping\\DashboardMappingConfig.cs",
+              "RelativeToolTip": "Tibr.MVC\\Mapping\\DashboardMappingConfig.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAABGAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-30T23:28:17.579Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 8,
+              "Title": "DashboardViewModel.cs",
+              "DocumentMoniker": "H:\\Tibr\\Tibr\\Tibr.MVC\\Models\\DashboardViewModel.cs",
+              "RelativeDocumentMoniker": "Tibr.MVC\\Models\\DashboardViewModel.cs",
+              "ToolTip": "H:\\Tibr\\Tibr\\Tibr.MVC\\Models\\DashboardViewModel.cs",
+              "RelativeToolTip": "Tibr.MVC\\Models\\DashboardViewModel.cs",
+              "ViewState": "AgIAAH0AAAAAAAAAAAA/wIsAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-30T23:25:22.107Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 9,
+              "Title": "IAnalyticsService.cs",
+              "DocumentMoniker": "H:\\Tibr\\Tibr\\Tibr.Application\\Services\\AdminServices\\IAnalyticsService.cs",
+              "RelativeDocumentMoniker": "Tibr.Application\\Services\\AdminServices\\IAnalyticsService.cs",
+              "ToolTip": "H:\\Tibr\\Tibr\\Tibr.Application\\Services\\AdminServices\\IAnalyticsService.cs",
+              "RelativeToolTip": "Tibr.Application\\Services\\AdminServices\\IAnalyticsService.cs",
+              "ViewState": "AgIAAAYAAAAAAAAAAAAAABoAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-30T23:24:08.514Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 10,
+              "Title": "AnalyticsService.cs",
+              "DocumentMoniker": "H:\\Tibr\\Tibr\\Tibr.Application\\Services\\AdminServices\\AnalyticsService.cs",
+              "RelativeDocumentMoniker": "Tibr.Application\\Services\\AdminServices\\AnalyticsService.cs",
+              "ToolTip": "H:\\Tibr\\Tibr\\Tibr.Application\\Services\\AdminServices\\AnalyticsService.cs",
+              "RelativeToolTip": "Tibr.Application\\Services\\AdminServices\\AnalyticsService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-30T23:23:11.311Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 11,
+              "Title": "DashboardDto.cs",
+              "DocumentMoniker": "H:\\Tibr\\Tibr\\Tibr.Application\\Dtos\\DashboardDtos\\DashboardDto.cs",
+              "RelativeDocumentMoniker": "Tibr.Application\\Dtos\\DashboardDtos\\DashboardDto.cs",
+              "ToolTip": "H:\\Tibr\\Tibr\\Tibr.Application\\Dtos\\DashboardDtos\\DashboardDto.cs",
+              "RelativeToolTip": "Tibr.Application\\Dtos\\DashboardDtos\\DashboardDto.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAE8AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-30T23:22:26.153Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 13,
+              "Title": "OrderViewModels.cs",
+              "DocumentMoniker": "H:\\Tibr\\Tibr\\Tibr.MVC\\Models\\Orders\\OrderViewModels.cs",
+              "RelativeDocumentMoniker": "Tibr.MVC\\Models\\Orders\\OrderViewModels.cs",
+              "ToolTip": "H:\\Tibr\\Tibr\\Tibr.MVC\\Models\\Orders\\OrderViewModels.cs",
+              "RelativeToolTip": "Tibr.MVC\\Models\\Orders\\OrderViewModels.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAABBAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-30T23:20:20.246Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 14,
+              "Title": "Admin.css",
+              "DocumentMoniker": "H:\\Tibr\\Tibr\\Tibr.MVC\\wwwroot\\css\\Admin.css",
+              "RelativeDocumentMoniker": "Tibr.MVC\\wwwroot\\css\\Admin.css",
+              "ToolTip": "H:\\Tibr\\Tibr\\Tibr.MVC\\wwwroot\\css\\Admin.css",
+              "RelativeToolTip": "Tibr.MVC\\wwwroot\\css\\Admin.css",
+              "ViewState": "AgIAACgIAAAAAAAAAAAcwFAIAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003000|",
+              "WhenOpened": "2026-06-30T23:16:24.532Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 15,
+              "Title": "UserService.cs",
+              "DocumentMoniker": "H:\\Tibr\\Tibr\\Tibr.Application\\Services\\UserServices\\UserService.cs",
+              "RelativeDocumentMoniker": "Tibr.Application\\Services\\UserServices\\UserService.cs",
+              "ToolTip": "H:\\Tibr\\Tibr\\Tibr.Application\\Services\\UserServices\\UserService.cs",
+              "RelativeToolTip": "Tibr.Application\\Services\\UserServices\\UserService.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAL8AAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-30T23:09:56.633Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 16,
+              "Title": "UserDtos.cs",
+              "DocumentMoniker": "H:\\Tibr\\Tibr\\Tibr.Application\\Dtos\\UserDtos.cs",
+              "RelativeDocumentMoniker": "Tibr.Application\\Dtos\\UserDtos.cs",
+              "ToolTip": "H:\\Tibr\\Tibr\\Tibr.Application\\Dtos\\UserDtos.cs",
+              "RelativeToolTip": "Tibr.Application\\Dtos\\UserDtos.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAADwAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-30T23:09:27.202Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 17,
+              "Title": "Edit.cshtml",
+              "DocumentMoniker": "H:\\Tibr\\Tibr\\Tibr.MVC\\Views\\Users\\Edit.cshtml",
+              "RelativeDocumentMoniker": "Tibr.MVC\\Views\\Users\\Edit.cshtml",
+              "ToolTip": "H:\\Tibr\\Tibr\\Tibr.MVC\\Views\\Users\\Edit.cshtml",
+              "RelativeToolTip": "Tibr.MVC\\Views\\Users\\Edit.cshtml",
+              "ViewState": "AgIAAGwAAAAAAAAAAAAwwJMAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-06-30T23:06:53.763Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 12,
+              "Title": "Details.cshtml",
+              "DocumentMoniker": "H:\\Tibr\\Tibr\\Tibr.MVC\\Views\\Orders\\Details.cshtml",
+              "RelativeDocumentMoniker": "Tibr.MVC\\Views\\Orders\\Details.cshtml",
+              "ToolTip": "H:\\Tibr\\Tibr\\Tibr.MVC\\Views\\Orders\\Details.cshtml",
+              "RelativeToolTip": "Tibr.MVC\\Views\\Orders\\Details.cshtml",
+              "ViewState": "AgIAAK4AAAAAAAAAAAAwwCwBAAAGAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-06-30T23:04:38.764Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 18,
+              "Title": "Create.cshtml",
+              "DocumentMoniker": "H:\\Tibr\\Tibr\\Tibr.MVC\\Views\\Users\\Create.cshtml",
+              "RelativeDocumentMoniker": "Tibr.MVC\\Views\\Users\\Create.cshtml",
+              "ToolTip": "H:\\Tibr\\Tibr\\Tibr.MVC\\Views\\Users\\Create.cshtml",
+              "RelativeToolTip": "Tibr.MVC\\Views\\Users\\Create.cshtml",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAAhAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
+              "WhenOpened": "2026-06-30T23:05:57.081Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 19,
+              "Title": "UserViewModels.cs",
+              "DocumentMoniker": "H:\\Tibr\\Tibr\\Tibr.MVC\\Models\\Users\\UserViewModels.cs",
+              "RelativeDocumentMoniker": "Tibr.MVC\\Models\\Users\\UserViewModels.cs",
+              "ToolTip": "H:\\Tibr\\Tibr\\Tibr.MVC\\Models\\Users\\UserViewModels.cs",
+              "RelativeToolTip": "Tibr.MVC\\Models\\Users\\UserViewModels.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAJkAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-30T23:03:05.171Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 20,
+              "Title": "OrdersController.cs",
+              "DocumentMoniker": "H:\\Tibr\\Tibr\\Tibr.MVC\\Controllers\\OrdersController.cs",
+              "RelativeDocumentMoniker": "Tibr.MVC\\Controllers\\OrdersController.cs",
+              "ToolTip": "H:\\Tibr\\Tibr\\Tibr.MVC\\Controllers\\OrdersController.cs",
+              "RelativeToolTip": "Tibr.MVC\\Controllers\\OrdersController.cs",
+              "ViewState": "AgIAAAgBAAAAAAAAAAAwwC8BAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-30T23:02:16.232Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 22,
+              "Title": "SeedData.cs",
+              "DocumentMoniker": "H:\\Tibr\\Tibr\\Tibr.Infrastructure\\Seeds\\SeedData.cs",
+              "RelativeDocumentMoniker": "Tibr.Infrastructure\\Seeds\\SeedData.cs",
+              "ToolTip": "H:\\Tibr\\Tibr\\Tibr.Infrastructure\\Seeds\\SeedData.cs",
+              "RelativeToolTip": "Tibr.Infrastructure\\Seeds\\SeedData.cs",
+              "ViewState": "AgIAABAAAAAAAAAAAAAQwCQAAABaAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-29T15:18:31.193Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 23,
+              "Title": "launchSettings.json",
+              "DocumentMoniker": "H:\\Tibr\\Tibr\\Tibr.MVC\\Properties\\launchSettings.json",
+              "RelativeDocumentMoniker": "Tibr.MVC\\Properties\\launchSettings.json",
+              "ToolTip": "H:\\Tibr\\Tibr\\Tibr.MVC\\Properties\\launchSettings.json",
+              "RelativeToolTip": "Tibr.MVC\\Properties\\launchSettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAABYAAAABAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-06-29T15:16:05.719Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 24,
+              "Title": "Tibr.MVC.csproj",
+              "DocumentMoniker": "H:\\Tibr\\Tibr\\Tibr.MVC\\Tibr.MVC.csproj",
+              "RelativeDocumentMoniker": "Tibr.MVC\\Tibr.MVC.csproj",
+              "ToolTip": "H:\\Tibr\\Tibr\\Tibr.MVC\\Tibr.MVC.csproj",
+              "RelativeToolTip": "Tibr.MVC\\Tibr.MVC.csproj",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000758|",
+              "WhenOpened": "2026-06-29T15:15:13.172Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 25,
+              "Title": "Program.cs",
+              "DocumentMoniker": "H:\\Tibr\\Tibr\\Tibr.MVC\\Program.cs",
+              "RelativeDocumentMoniker": "Tibr.MVC\\Program.cs",
+              "ToolTip": "H:\\Tibr\\Tibr\\Tibr.MVC\\Program.cs",
+              "RelativeToolTip": "Tibr.MVC\\Program.cs",
+              "ViewState": "AgIAAFkAAAAAAAAAAAAwwF8AAAANAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-29T15:12:43.729Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 21,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "H:\\Tibr\\Tibr\\Tibr.MVC\\appsettings.json",
+              "RelativeDocumentMoniker": "Tibr.MVC\\appsettings.json",
+              "ToolTip": "H:\\Tibr\\Tibr\\Tibr.MVC\\appsettings.json",
+              "RelativeToolTip": "Tibr.MVC\\appsettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAFAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-06-29T08:46:55.863Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 29,
+              "Title": "20260629145800_InitialCreate2.cs",
+              "DocumentMoniker": "H:\\Tibr\\Tibr\\Tibr.Infrastructure\\Migrations\\20260629145800_InitialCreate2.cs",
+              "RelativeDocumentMoniker": "Tibr.Infrastructure\\Migrations\\20260629145800_InitialCreate2.cs",
+              "ToolTip": "H:\\Tibr\\Tibr\\Tibr.Infrastructure\\Migrations\\20260629145800_InitialCreate2.cs",
+              "RelativeToolTip": "Tibr.Infrastructure\\Migrations\\20260629145800_InitialCreate2.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-29T14:58:00.579Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 27,
+              "Title": "ProductController.cs",
+              "DocumentMoniker": "H:\\Tibr\\Tibr\\Tibr.API\\Controllers\\ProductController.cs",
+              "RelativeDocumentMoniker": "Tibr.API\\Controllers\\ProductController.cs",
+              "ToolTip": "H:\\Tibr\\Tibr\\Tibr.API\\Controllers\\ProductController.cs",
+              "RelativeToolTip": "Tibr.API\\Controllers\\ProductController.cs",
+              "ViewState": "AgIAAA4AAAAAAAAAAAAAwAoAAAAYAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-29T14:46:50.18Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 26,
+              "Title": "appsettings.json",
+              "DocumentMoniker": "H:\\Tibr\\Tibr\\Tibr.API\\appsettings.json",
+              "RelativeDocumentMoniker": "Tibr.API\\appsettings.json",
+              "ToolTip": "H:\\Tibr\\Tibr\\Tibr.API\\appsettings.json",
+              "RelativeToolTip": "Tibr.API\\appsettings.json",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAMAAACbAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
+              "WhenOpened": "2026-06-29T08:46:38.691Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 28,
+              "Title": "Program.cs",
+              "DocumentMoniker": "H:\\Tibr\\Tibr\\Tibr.API\\Program.cs",
+              "RelativeDocumentMoniker": "Tibr.API\\Program.cs",
+              "ToolTip": "H:\\Tibr\\Tibr\\Tibr.API\\Program.cs",
+              "RelativeToolTip": "Tibr.API\\Program.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-06-29T06:34:29.071Z"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -5,10 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>@ViewData["Title"] - Tibr | Admin Panel</title>
     <script>
-            (function () {
-                var saved = localStorage.getItem('tibr-admin-theme') || 'light';
-                document.documentElement.setAttribute('data-theme', saved);
-            })();
+        (function () {
+            var saved = localStorage.getItem('tibr-admin-theme') || 'light';
+            document.documentElement.setAttribute('data-theme', saved);
+        })();
     </script>
 
     <!-- Bootstrap -->
@@ -35,8 +35,8 @@
 <body>
 
     <!-- ════════════════════════════════════════════════
-     SIDEBAR
-════════════════════════════════════════════════ -->
+         SIDEBAR
+    ════════════════════════════════════════════════ -->
     <aside class="tibr-sidebar" id="sidebar">
 
         <div class="sidebar-brand">
@@ -57,12 +57,12 @@
             <div class="nav-group">
                 <span class="nav-group-label">Overview</span>
                 <a asp-controller="Dashboard" asp-action="Index"
-                       class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Dashboard" && ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")">
+                   class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Dashboard" && ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")">
                     <i class="fa-solid fa-gauge-high"></i>
                     <span>Dashboard</span>
                 </a>
                 <a asp-controller="Dashboard" asp-action="Reports"
-                       class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Dashboard" && ViewContext.RouteData.Values["action"]?.ToString() == "Reports" ? "active" : "")">
+                   class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Dashboard" && ViewContext.RouteData.Values["action"]?.ToString() == "Reports" ? "active" : "")">
                     <i class="fa-solid fa-chart-bar"></i>
                     <span>Reports & Analytics</span>
                 </a>
@@ -71,18 +71,18 @@
             <div class="nav-group">
                 <span class="nav-group-label">Store Management</span>
                 <a asp-controller="Product" asp-action="Index"
-                       class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Product" ? "active" : "")">
+                   class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Product" ? "active" : "")">
                     <i class="fa-solid fa-layer-group"></i>
                     <span>Products</span>
                     <span class="nav-badge" id="badgeProducts">—</span>
                 </a>
                 <a asp-controller="Category" asp-action="Index"
-                       class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Category" ? "active" : "")">
+                   class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Category" ? "active" : "")">
                     <i class="fa-solid fa-tags"></i>
                     <span>Categories</span>
                 </a>
                 <a asp-controller="Orders" asp-action="Index"
-                       class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Orders" ? "active" : "")">
+                   class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Orders" ? "active" : "")">
                     <i class="fa-solid fa-cart-shopping"></i>
                     <span>Orders</span>
                     <span class="nav-badge nav-badge-warning" id="badgeOrders">—</span>
@@ -92,27 +92,32 @@
             <div class="nav-group">
                 <span class="nav-group-label">Customers & Support</span>
                 <a asp-controller="Users" asp-action="Index"
-                       class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Users" ? "active" : "")">
+                   class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Users" ? "active" : "")">
                     <i class="fa-solid fa-users"></i>
                     <span>Users</span>
                 </a>
                 <a asp-controller="Admin" asp-action="Index"
-                       class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" ? "active" : "")">
+                   class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Admin" ? "active" : "")">
                     <i class="fa-solid fa-user-shield"></i>
                     <span>Admins</span>
                 </a>
                 <a asp-controller="Support" asp-action="Index"
-                       class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Support" ? "active" : "")">
+                   class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Support" ? "active" : "")">
                     <i class="fa-solid fa-headset"></i>
                     <span>Support Tickets</span>
                     <span class="nav-badge nav-badge-danger" id="badgeSupport">—</span>
                 </a>
-                @* <a asp-controller="Review" asp-action="Index"
-                       class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Review" ? "active" : "")">
+                <a asp-controller="Withdraw" asp-action="Index"
+                   class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Withdraw" ? "active" : "")">
+                    <i class="fa-solid fa-money-bill-transfer"></i>
+                    <span>Withdraw Requests</span>
+                </a>
+                <a asp-controller="Review" asp-action="Index"
+                   class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Review" ? "active" : "")">
                     <i class="fa-solid fa-star-half-stroke"></i>
                     <span>Reviews</span>
-                    <span class="nav-badge-soon">Soon</span>
-                </a> *@
+
+                </a>
             </div>
 
         </nav>
@@ -128,7 +133,7 @@
             </button>
 
             <a asp-controller="Settings" asp-action="Index"
-                   class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Settings" ? "active" : "")">
+               class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Settings" ? "active" : "")">
                 <i class="fa-solid fa-gear"></i>
                 <span>Settings</span>
             </a>
@@ -141,8 +146,8 @@
     </aside>
 
     <!-- ════════════════════════════════════════════════
-     MAIN CONTENT
-════════════════════════════════════════════════ -->
+         MAIN CONTENT
+    ════════════════════════════════════════════════ -->
     <div class="tibr-main" id="mainContent">
 
         <header class="tibr-topbar" id="topbar">

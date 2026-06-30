@@ -18,7 +18,7 @@ namespace Tibr.MVC.Models.Orders
     public class OrderListViewModel
     {
         public List<OrderListItemViewModel> Orders { get; set; } = [];
-        
+
         // Search & Filters
         public string? SearchQuery { get; set; }
         public string? StatusFilter { get; set; }
@@ -65,7 +65,7 @@ namespace Tibr.MVC.Models.Orders
         public DateTime CreatedAt { get; set; }
         public string ShippingAddress { get; set; } = string.Empty;
         public string? CourierName { get; set; }
-        
+
         public List<OrderItemViewModel> Items { get; set; } = [];
         public List<OrderTrackingMilestoneViewModel> TrackingTimeline { get; set; } = [];
     }
@@ -75,7 +75,7 @@ namespace Tibr.MVC.Models.Orders
         public string InvoiceNumber { get; set; } = string.Empty;
         public DateTime InvoiceDate { get; set; }
         public DateTime DueDate { get; set; }
-        
+
         public string CompanyName { get; set; } = "Tibr Enterprise Ltd";
         public string CompanyAddress { get; set; } = "123 Business Parkway, Suite 500, Tech City";
         public string CompanyEmail { get; set; } = "billing@tibr.com";

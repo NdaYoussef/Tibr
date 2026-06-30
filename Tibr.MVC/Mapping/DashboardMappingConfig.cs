@@ -1,7 +1,7 @@
 ﻿using Mapster;
-using Tibr.Application.Dtos.DashboardDtos;  
-using Tibr.MVC.Models;                       
-                                             
+using Tibr.Application.Dtos.DashboardDtos;
+using Tibr.MVC.Models;
+
 
 namespace Tibr.MVC.Mapping
 {

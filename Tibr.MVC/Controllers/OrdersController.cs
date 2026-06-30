@@ -1,11 +1,10 @@
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Tibr.Application.Dtos;
-using Tibr.Application.Services.AdminServices;
 using Tibr.Application.Services.OrderServices;
 using Tibr.Application.Services.UserServices;
 using Tibr.MVC.Models.Orders;
@@ -16,14 +15,12 @@ namespace Tibr.MVC.Controllers
     {
         private readonly IOrderService _orderService;
         private readonly IUserService _userService;
-        private readonly IAdminService _adminService;
         private readonly ILogger<OrdersController> _logger;
 
-        public OrdersController(IOrderService orderService, IUserService userService, IAdminService adminService, ILogger<OrdersController> logger)
+        public OrdersController(IOrderService orderService, IUserService userService, ILogger<OrdersController> logger)
         {
             _orderService = orderService;
             _userService = userService;
-            _adminService = adminService;
             _logger = logger;
         }
 
@@ -58,7 +55,7 @@ namespace Tibr.MVC.Controllers
             if (!string.IsNullOrWhiteSpace(searchQuery))
             {
                 var lowerSearch = searchQuery.ToLower();
-                query = query.Where(o => o.OrderNumber.ToLower().Contains(lowerSearch) || 
+                query = query.Where(o => o.OrderNumber.ToLower().Contains(lowerSearch) ||
                                          o.UserFullName.ToLower().Contains(lowerSearch));
             }
 
@@ -164,7 +161,7 @@ namespace Tibr.MVC.Controllers
                 details.TrackingTimeline.Add(new() { Status = "Cancelled", UpdatedTime = apiOrder.CreatedAt.AddHours(1), Description = "Order cancelled by administrator.", IsCompleted = true });
             }
 
-            var formattedNumber = details.OrderNumber.Contains("-") 
+            var formattedNumber = details.OrderNumber.Contains("-")
                 ? details.OrderNumber.Replace("TIBR-2026-000", "TR-").Replace("TIBR-", "TR-").Replace("ORD-", "TR-")
                 : details.OrderNumber;
 
@@ -188,7 +185,6 @@ namespace Tibr.MVC.Controllers
             var result = await _orderService.UpdateAsync(id, updateDto);
             if (result.IsSuccess)
             {
-                _adminService.InvalidateDashboardCache();
                 TempData["SuccessMessage"] = "Order status updated successfully in DB.";
             }
             else
@@ -217,7 +213,6 @@ namespace Tibr.MVC.Controllers
 
             if (result.IsSuccess)
             {
-                _adminService.InvalidateDashboardCache();
                 TempData["SuccessMessage"] = $"Order assigned to {courierName} & status updated to Shipped.";
             }
             else
@@ -241,7 +236,6 @@ namespace Tibr.MVC.Controllers
 
             if (result.IsSuccess)
             {
-                _adminService.InvalidateDashboardCache();
                 TempData["SuccessMessage"] = "Order cancelled and status updated to Refunded.";
             }
             else

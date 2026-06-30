@@ -285,8 +285,8 @@
                             </td>
                             <td><span class="date-cell">@order.CreatedAt.ToString("dd/MM/yyyy")</span></td>
                             <td>
-                                <a asp-controller="Order" asp-action="Details" asp-route-id="@order.Id"
-                                       class="btn-icon-sm" title="View">
+                                <a asp-controller="Orders" asp-action="Details" asp-route-id="@order.Id"
+                                   class="btn-icon-sm" title="View">
                                     <i class="fa-solid fa-eye"></i>
                                 </a>
                             </td>
@@ -382,7 +382,7 @@
                     </div>
                 }
                 <a asp-controller="Dashboard" asp-action="Reports" asp-route-reportType="inventory"
-                       class="btn-tibr btn-tibr-outline btn-sm mt-2">
+                   class="btn-tibr btn-tibr-outline btn-sm mt-2">
                     View Inventory Report
                 </a>
             </div>
@@ -635,4 +635,3 @@
         });
     </script>
 }
-

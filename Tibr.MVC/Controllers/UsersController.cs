@@ -1,15 +1,14 @@
-using MediatR;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
+using MediatR;
 using Tibr.Application.Dtos;
-using Tibr.Application.Services.AdminServices;
-using Tibr.Application.Services.Auth;
 using Tibr.Application.Services.UserServices;
+using Tibr.Application.Services.Auth;
 using Tibr.MVC.Models.Users;
 
 namespace Tibr.MVC.Controllers
@@ -18,14 +17,12 @@ namespace Tibr.MVC.Controllers
     {
         private readonly IUserService _userService;
         private readonly IMediator _mediator;
-        private readonly IAdminService _adminService;
         private readonly ILogger<UsersController> _logger;
 
-        public UsersController(IUserService userService, IMediator mediator, IAdminService adminService, ILogger<UsersController> logger)
+        public UsersController(IUserService userService, IMediator mediator, ILogger<UsersController> logger)
         {
             _userService = userService;
             _mediator = mediator;
-            _adminService = adminService;
             _logger = logger;
         }
 
@@ -141,7 +138,8 @@ namespace Tibr.MVC.Controllers
                 model.Email,
                 model.Phone,
                 model.Password,
-                model.ConfirmPassword
+                model.ConfirmPassword,
+                lang:"en"
             );
 
             try
@@ -149,7 +147,6 @@ namespace Tibr.MVC.Controllers
                 var result = await _mediator.Send(new RegisterCommand(requestData));
                 if (result.IsSuccess)
                 {
-                    _adminService.InvalidateDashboardCache();
                     TempData["SuccessMessage"] = "User created successfully. OTP code sent to user email.";
                     return RedirectToAction(nameof(Index));
                 }
@@ -224,7 +221,6 @@ namespace Tibr.MVC.Controllers
             var result = await _userService.UpdateAsync(id, updateDto);
             if (result.IsSuccess)
             {
-                _adminService.InvalidateDashboardCache();
                 TempData["SuccessMessage"] = "User updated successfully.";
                 return RedirectToAction(nameof(Index));
             }
@@ -270,7 +266,6 @@ namespace Tibr.MVC.Controllers
             var result = await _userService.DeleteAsync(id);
             if (result.IsSuccess)
             {
-                _adminService.InvalidateDashboardCache();
                 TempData["SuccessMessage"] = "User deleted successfully.";
                 return RedirectToAction(nameof(Index));
             }

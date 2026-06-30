@@ -53,7 +53,7 @@ namespace Tibr.MVC.Controllers
             var summary = await _analyticsService.GetReportsSummaryAsync(fromDate, toDate);
             var monthly = await _analyticsService.GetMonthlySalesChartAsync();
 
-            
+
             var sales = IsType(reportType, ReportTypes.Sales, ReportTypes.Revenue)
                  ? await _analyticsService.GetSalesReportAsync(fromDate, toDate)
                  : new List<SalesReportDto>();

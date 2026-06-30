@@ -1,0 +1,12 @@
+H:\Tibr\Tibr\Tibr.Domain\bin\Release\net10.0\Tibr.Domain.deps.json
+H:\Tibr\Tibr\Tibr.Domain\bin\Release\net10.0\Tibr.Domain.dll
+H:\Tibr\Tibr\Tibr.Domain\bin\Release\net10.0\Tibr.Domain.pdb
+H:\Tibr\Tibr\Tibr.Domain\obj\Release\net10.0\Tibr.Domain.GeneratedMSBuildEditorConfig.editorconfig
+H:\Tibr\Tibr\Tibr.Domain\obj\Release\net10.0\Tibr.Domain.AssemblyInfoInputs.cache
+H:\Tibr\Tibr\Tibr.Domain\obj\Release\net10.0\Tibr.Domain.AssemblyInfo.cs
+H:\Tibr\Tibr\Tibr.Domain\obj\Release\net10.0\Tibr.Domain.csproj.CoreCompileInputs.cache
+H:\Tibr\Tibr\Tibr.Domain\obj\Release\net10.0\Tibr.Domain.sourcelink.json
+H:\Tibr\Tibr\Tibr.Domain\obj\Release\net10.0\Tibr.Domain.dll
+H:\Tibr\Tibr\Tibr.Domain\obj\Release\net10.0\refint\Tibr.Domain.dll
+H:\Tibr\Tibr\Tibr.Domain\obj\Release\net10.0\Tibr.Domain.pdb
+H:\Tibr\Tibr\Tibr.Domain\obj\Release\net10.0\ref\Tibr.Domain.dll

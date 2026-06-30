@@ -19,11 +19,11 @@
                     avatarUrl = "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=150&auto=format&fit=crop";
                 }
             }
-            <img src="@avatarUrl" 
-                 class="rounded-circle border border-light shadow-sm" 
-                 alt="Portrait Placeholder" 
+            <img src="@avatarUrl"
+                 class="rounded-circle border border-light shadow-sm"
+                 alt="Portrait Placeholder"
                  style="width: 100px; height: 100px; object-fit: cover; background-color: #f1f5f9;" />
-            <button type="button" class="btn btn-warning rounded-circle position-absolute bottom-0 end-0 p-0 d-flex align-items-center justify-content-center shadow-sm" 
+            <button type="button" class="btn btn-warning rounded-circle position-absolute bottom-0 end-0 p-0 d-flex align-items-center justify-content-center shadow-sm"
                     style="width: 32px; height: 32px; border: 2px solid #ffffff; background-color: var(--accent-gold); color: #ffffff;">
                 <i class="bi bi-pencil-fill" style="font-size: 0.8rem;"></i>
             </button>
@@ -38,14 +38,14 @@
             <i class="bi bi-person-badge text-warning fs-5"></i>
             <h4 class="mb-0 text-white" style="font-size: 1.1rem; font-weight: 700;">Personal Information</h4>
         </div>
-        
+
         <div class="row g-3">
             <div class="col-md-6">
                 <label class="form-label text-muted text-uppercase fw-semibold" style="font-size: 0.7rem; letter-spacing: 0.5px;">First Name</label>
                 <input asp-for="FirstName" class="form-control executive-input" />
                 <span asp-validation-for="FirstName" class="text-danger mt-1 d-block" style="font-size: 0.75rem;"></span>
             </div>
-            
+
             <div class="col-md-6">
                 <label class="form-label text-muted text-uppercase fw-semibold" style="font-size: 0.7rem; letter-spacing: 0.5px;">Last Name</label>
                 <input asp-for="LastName" class="form-control executive-input" />
@@ -104,7 +104,7 @@
         </div>
 
         <!-- Permission toggle 1 -->
-        <div class="executive-card p-3 d-flex justify-content-between align-items-center shadow-none mb-3" style="background-color: var(--bg-card2);">
+        <div class="executive-card p-3 d-flex justify-content-between align-items-center shadow-none mb-3" style="background-color: #f8fafc;">
             <div style="max-width: 75%;">
                 <div class="d-flex align-items-center gap-2 mb-1">
                     <i class="bi bi-bar-chart-line text-warning"></i>
@@ -118,7 +118,7 @@
         </div>
 
         <!-- Permission toggle 2 -->
-        <div class="executive-card p-3 d-flex justify-content-between align-items-center shadow-none mb-0" style="background-color: var(--bg-card2);">
+        <div class="executive-card p-3 d-flex justify-content-between align-items-center shadow-none mb-0" style="background-color: #f8fafc;">
             <div style="max-width: 75%;">
                 <div class="d-flex align-items-center gap-2 mb-1">
                     <i class="bi bi-card-list text-warning"></i>
@@ -135,7 +135,7 @@
     <!-- Submit buttons -->
     <div class="row g-2 mb-4">
         <div class="col-6">
-            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-gold w-100 py-3" style="font-weight: 700;">CANCEL</a>
+            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-gold w-100 py-3" style="font-weight: 700; border-color: #cbd5e1; color: var(--text-dark);">CANCEL</a>
         </div>
         <div class="col-6">
             <button type="submit" class="btn btn-gold w-100 py-3" style="font-weight: 700;"><i class="bi bi-save me-1"></i> SAVE CHANGES</button>

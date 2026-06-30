@@ -39,7 +39,7 @@ namespace Tibr.Application.Services.AdminServices
             var from = fromDate.Date.ToUniversalTime();
             var to = toDate.Date.AddDays(1).ToUniversalTime();
 
-          
+
             var revenue = await _orderRepo
                 .GetAll(o => !o.IsDeleted
                           && o.PaymentStatus == PaymentStatusConstants.Paid
@@ -110,7 +110,7 @@ namespace Tibr.Application.Services.AdminServices
             var from = fromDate.Date.ToUniversalTime();
             var to = toDate.Date.AddDays(1).ToUniversalTime();
 
-           
+
             var soldByProduct = await _orderItemRepo
                 .GetAll(oi => !oi.Order.IsDeleted
                            && oi.Order.CreatedAt >= from
@@ -161,7 +161,7 @@ namespace Tibr.Application.Services.AdminServices
         {
             _logger.LogDebug("GetInventoryReportAsync");
 
-           
+
             return await _productRepo
                 .GetAll(p => !p.IsDeleted)
                 .OrderBy(p => p.Stock)

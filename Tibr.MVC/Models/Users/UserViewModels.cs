@@ -21,7 +21,7 @@ namespace Tibr.MVC.Models.Users
     public class UserListViewModel
     {
         public List<UserListItemViewModel> Users { get; set; } = [];
-        
+
         // Search & Filters
         public string? SearchQuery { get; set; }
         public string? StatusFilter { get; set; }

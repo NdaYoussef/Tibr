@@ -34,37 +34,37 @@
 ══════════════════════════════════════════════ -->
 <div class="report-tabs">
     <a asp-action="Reports"
-           asp-route-reportType="sales"
-           asp-route-from="@Model.FromDate?.ToString("yyyy-MM-dd")"
-           asp-route-to="@Model.ToDate?.ToString("yyyy-MM-dd")"
-           data-report-type="sales"
-           class="report-tab @(Model.ReportType == "sales" ? "active" : "")">
+       asp-route-reportType="sales"
+       asp-route-from="@Model.FromDate?.ToString("yyyy-MM-dd")"
+       asp-route-to="@Model.ToDate?.ToString("yyyy-MM-dd")"
+       data-report-type="sales"
+       class="report-tab @(Model.ReportType == "sales" ? "active" : "")">
         <i class="fa-solid fa-chart-line"></i> Sales Report
     </a>
     <a asp-action="Reports"
-           asp-route-reportType="revenue"
-           asp-route-from="@Model.FromDate?.ToString("yyyy-MM-dd")"
-           asp-route-to="@Model.ToDate?.ToString("yyyy-MM-dd")"
-           data-report-type="revenue"
-           class="report-tab @(Model.ReportType == "revenue" ? "active" : "")">
+       asp-route-reportType="revenue"
+       asp-route-from="@Model.FromDate?.ToString("yyyy-MM-dd")"
+       asp-route-to="@Model.ToDate?.ToString("yyyy-MM-dd")"
+       data-report-type="revenue"
+       class="report-tab @(Model.ReportType == "revenue" ? "active" : "")">
         <i class="fa-solid fa-coins"></i> Revenue Report
     </a>
     <a asp-action="Reports"
-           asp-route-reportType="products"
-           data-report-type="products"
-           class="report-tab @(Model.ReportType == "products" ? "active" : "")">
+       asp-route-reportType="products"
+       data-report-type="products"
+       class="report-tab @(Model.ReportType == "products" ? "active" : "")">
         <i class="fa-solid fa-layer-group"></i> Product Performance
     </a>
     <a asp-action="Reports"
-           asp-route-reportType="customers"
-           data-report-type="customers"
-           class="report-tab @(Model.ReportType == "customers" ? "active" : "")">
+       asp-route-reportType="customers"
+       data-report-type="customers"
+       class="report-tab @(Model.ReportType == "customers" ? "active" : "")">
         <i class="fa-solid fa-users"></i> Customer Report
     </a>
     <a asp-action="Reports"
-           asp-route-reportType="inventory"
-           data-report-type="inventory"
-           class="report-tab @(Model.ReportType == "inventory" ? "active" : "")">
+       asp-route-reportType="inventory"
+       data-report-type="inventory"
+       class="report-tab @(Model.ReportType == "inventory" ? "active" : "")">
         <i class="fa-solid fa-boxes-stacked"></i> Inventory
     </a>
 </div>
@@ -149,11 +149,11 @@
         <h3 class="chart-title">
             @(Model.ReportType switch
             {
-                "sales" => "Sales Details",
-                "revenue" => "Revenue Details",
-                "products" => "Product Performance",
-                "customers" => "Customer Data",
-                "inventory" => "Inventory Report",
+                    "sales" => "Sales Details",
+                    "revenue" => "Revenue Details",
+                    "products" => "Product Performance",
+                    "customers" => "Customer Data",
+                    "inventory" => "Inventory Report",
                 _ => "Data"
             })
         </h3>
@@ -457,7 +457,7 @@
             });
         });
 
-               
+
         // ── Export — reads current filter state from the page ───────────
         function getCurrentParams() {
             // Read the active report type from the active tab
@@ -465,11 +465,11 @@
             const reportType = activeTab?.dataset.reportType
                 ?? new URLSearchParams(window.location.search).get('reportType')
                 ?? 'sales';
- 
+
             const params = new URLSearchParams(window.location.search);
             const from = params.get('from') ?? '';
             const to   = params.get('to')   ?? '';
- 
+
             return { reportType, from, to };
         }
 
@@ -477,24 +477,24 @@
             const overlay = document.getElementById('exportOverlay');
             const fill    = document.getElementById('exportFill');
             const msg     = document.getElementById('exportMsg');
- 
+
             overlay.style.display = 'flex';
             fill.style.width      = '0%';
- 
+
             const steps = [
                 { pct: 20,  ms: 300,  msg: 'Gathering data...' },
                 { pct: 50,  ms: 600,  msg: 'Processing report...' },
                 { pct: 80,  ms: 900,  msg: 'Formatting file...' },
                 { pct: 100, ms: 1200, msg: 'Download starting...' }
             ];
- 
+
             steps.forEach(({ pct, ms, msg: m }) => {
                 setTimeout(() => {
                     fill.style.width = pct + '%';
                     msg.textContent  = m;
                 }, ms);
             });
- 
+
             // Trigger the actual download after animation starts
             setTimeout(() => {
                 callback();
@@ -512,11 +512,11 @@
                 window.open(url, '_blank');
             });
         }
- 
+
         document.getElementById('exportOverlay')?.addEventListener('click', function (e) {
             if (e.target === this) this.style.display = 'none';
         });
-        
+
         function exportExcel() {
             const { reportType, from, to } = getCurrentParams();
             runExportAnimation(() => {
@@ -531,4 +531,3 @@
         });
     </script>
 }
-

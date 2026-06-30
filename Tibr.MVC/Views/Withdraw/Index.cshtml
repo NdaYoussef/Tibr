@@ -1,0 +1,189 @@
+﻿@model IEnumerable<Tibr.Application.Dtos.WithdrawDto>
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Withdraw Requests";
+}
+
+@if (TempData["Success"] != null)
+{
+    <div class="executive-card p-3 mb-4 shadow-sm d-flex align-items-center gap-3"
+         style="background-color: #f0fdf4; border-left: 4px solid #16a34a;">
+        <i class="bi bi-check-circle-fill text-success fs-5"></i>
+        <span class="text-success fw-semibold" style="font-size: 0.9rem;">@TempData["Success"]</span>
+    </div>
+}
+
+@if (TempData["Error"] != null)
+{
+    <div class="executive-card p-3 mb-4 shadow-sm d-flex align-items-center gap-3"
+         style="background-color: #fef2f2; border-left: 4px solid #dc2626;">
+        <i class="bi bi-x-circle-fill text-danger fs-5"></i>
+        <span class="text-danger fw-semibold" style="font-size: 0.9rem;">@TempData["Error"]</span>
+    </div>
+}
+
+<!-- Header -->
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h4 class="mb-0 text-dark" style="font-size: 1.15rem; font-weight: 700;">Withdraw Requests</h4>
+        <span class="text-muted" style="font-size: 0.8rem;">@Model.Count() total requests</span>
+    </div>
+    <span class="pill-badge badge-grey-light">@Model.Count(x => x.Status == "Pending") PENDING</span>
+</div>
+
+<!-- Table Card -->
+<div class="executive-card shadow-sm p-4 mb-5">
+    @if (!Model.Any())
+    {
+        <div class="text-center py-5 text-muted">
+            <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+            <span style="font-size: 0.9rem;">No withdraw requests found.</span>
+        </div>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table align-middle" style="font-size: 0.88rem;">
+                <thead>
+                    <tr class="text-muted text-uppercase" style="font-size: 0.7rem; letter-spacing: 0.5px; border-bottom: 2px solid #f1f5f9;">
+                        <th class="fw-semibold pb-3">#</th>
+                        <th class="fw-semibold pb-3">Amount</th>
+                        <th class="fw-semibold pb-3">Type</th>
+                        <th class="fw-semibold pb-3">Name</th>
+                        <th class="fw-semibold pb-3">Number</th>
+                        <th class="fw-semibold pb-3">Date</th>
+                        <th class="fw-semibold pb-3">Status</th>
+                        <th class="fw-semibold pb-3">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model)
+                    {
+                        <tr style="border-bottom: 1px solid #f8fafc;">
+                            <td class="text-muted">@item.Id</td>
+                            <td class="fw-bold text-dark">$@item.Amount.ToString("N2")</td>
+                            <td>
+                                <span class="pill-badge @(item.Type == "Bank" ? "badge-grey-light" : "bg-primary-subtle text-primary")">
+                                    <i class="bi @(item.Type == "Bank" ? "bi-bank" : "bi-phone") me-1"></i>@item.Type
+                                </span>
+                            </td>
+                            <td class="text-dark">@item.Name</td>
+                            <td class="text-muted">@item.Number</td>
+                            <td class="text-muted">@item.CreatedAt.ToString("MMM dd, yyyy")</td>
+                            <td>
+                                @{
+                                    var statusClass = item.Status switch
+                                    {
+                                                        "Pending" => "bg-warning-subtle text-warning",
+                                                        "Approved" => "bg-success-subtle text-success",
+                                                        "Rejected" => "bg-danger-subtle text-danger",
+                                        _ => "badge-grey-light"
+                                    };
+                                    var statusIcon = item.Status switch
+                                    {
+                                                        "Pending" => "bi-hourglass-split",
+                                                        "Approved" => "bi-check-circle",
+                                                        "Rejected" => "bi-x-circle",
+                                        _ => "bi-dash"
+                                    };
+                                }
+                                <span class="pill-badge @statusClass">
+                                    <i class="bi @statusIcon me-1"></i>@item.Status
+                                </span>
+                            </td>
+                            <td>
+                                @if (item.Status == "Pending")
+                                {
+                                    <button class="btn btn-gold py-1 px-3"
+                                            style="font-size: 0.78rem; font-weight: 700;"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#actionModal"
+                                            data-id="@item.Id"
+                                            data-name="@item.Name"
+                                            data-amount="@item.Amount.ToString("N2")"
+                                            data-type="@item.Type">
+                                        Review
+                                    </button>
+                                }
+                                else
+                                {
+                                    <span class="text-muted" style="font-size: 0.78rem;">—</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</div>
+
+<!-- Modal: Approve / Reject -->
+<div class="modal fade" id="actionModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content p-4 border-0" style="border-radius: 16px;">
+            <div class="modal-header border-0 pb-0">
+                <h5 class="modal-title fw-bold text-dark">
+                    <i class="bi bi-wallet2 me-2 text-warning"></i> Review Withdraw Request
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+
+            <div class="modal-body py-3">
+                <!-- Request Info -->
+                <div class="executive-card p-3 mb-4" style="background-color: #f8fafc;">
+                    <div class="d-flex justify-content-between mb-2" style="font-size: 0.85rem;">
+                        <span class="text-muted">Recipient</span>
+                        <span class="fw-bold text-dark" id="modal-name"></span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2" style="font-size: 0.85rem;">
+                        <span class="text-muted">Amount</span>
+                        <span class="fw-bold text-warning" id="modal-amount"></span>
+                    </div>
+                    <div class="d-flex justify-content-between" style="font-size: 0.85rem;">
+                        <span class="text-muted">Type</span>
+                        <span class="fw-bold text-dark" id="modal-type"></span>
+                    </div>
+                </div>
+
+                <p class="text-muted text-center" style="font-size: 0.82rem;">
+                    Choose an action to apply to this request.
+                </p>
+            </div>
+
+            <div class="modal-footer border-0 pt-0 gap-2">
+                <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+
+                <form method="post" asp-action="UpdateStatus" class="d-inline">
+                    <input type="hidden" name="Id" id="modal-id-reject" />
+                    <input type="hidden" name="Status" value="2" />
+                    <button type="submit" class="btn btn-outline-danger fw-bold px-4">
+                        <i class="bi bi-x-lg me-1"></i> Reject
+                    </button>
+                </form>
+
+                <form method="post" asp-action="UpdateStatus" class="d-inline">
+                    <input type="hidden" name="Id" id="modal-id-approve" />
+                    <input type="hidden" name="Status" value="1" />
+                    <button type="submit" class="btn btn-gold fw-bold px-4">
+                        <i class="bi bi-check-lg me-1"></i> Approve
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const actionModal = document.getElementById('actionModal');
+        actionModal.addEventListener('show.bs.modal', e => {
+            const btn = e.relatedTarget;
+            document.getElementById('modal-name').textContent   = btn.dataset.name;
+            document.getElementById('modal-amount').textContent = '$' + btn.dataset.amount;
+            document.getElementById('modal-type').textContent   = btn.dataset.type;
+            document.getElementById('modal-id-approve').value   = btn.dataset.id;
+            document.getElementById('modal-id-reject').value    = btn.dataset.id;
+        });
+    </script>
+}

@@ -1,0 +1,754 @@
+﻿@model Tibr.MVC.Models.Reviews.ReviewListViewModel
+@{
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+    ViewData["Title"] = "Reviews";
+}
+
+@* ── PAGE HEADER ─────────────────────────────────────────────── *@
+<div class="page-header reveal">
+    <div>
+        <h1 class="page-title">Customer Reviews</h1>
+        <p class="page-sub">Moderate and monitor customer feedback on orders.</p>
+    </div>
+</div>
+
+@* ── TOP STAT STRIP ──────────────────────────────────────────── *@
+<div class="prod-stats-strip reveal">
+    <div class="pstat-card">
+        <div class="pstat-icon"><i class="fa-solid fa-comments"></i></div>
+        <div>
+            <span class="pstat-label">Total Reviews</span>
+            <strong class="pstat-val">@Model.TotalReviews</strong>
+        </div>
+    </div>
+    <div class="pstat-card">
+        <div class="pstat-icon gold"><i class="fa-solid fa-star"></i></div>
+        <div>
+            <span class="pstat-label">Average Rating</span>
+            <strong class="pstat-val">@Model.AverageRating.ToString("F1") ★</strong>
+        </div>
+    </div>
+    <div class="pstat-card">
+        <div class="pstat-icon green"><i class="fa-solid fa-star"></i></div>
+        <div>
+            <span class="pstat-label">5-Star Reviews</span>
+            <strong class="pstat-val">@Model.FiveStarCount</strong>
+        </div>
+    </div>
+    <div class="pstat-card">
+        <div class="pstat-icon red"><i class="fa-solid fa-triangle-exclamation"></i></div>
+        <div>
+            <span class="pstat-label">Low Rating (1-2★)</span>
+            <strong class="pstat-val">@Model.LowRatingCount</strong>
+        </div>
+    </div>
+</div>
+
+@* ── TWO-COLUMN LAYOUT: reviews list + analytics sidebar ─────── *@
+<div class="rv-layout reveal">
+
+    @* ── LEFT: FILTER + TABLE ─────────────────────────────────── *@
+    <div class="rv-main">
+
+        @* Filter Bar *@
+        <div class="filter-card">
+            <form asp-action="Index" method="get" class="filter-form-row">
+                <div class="filter-search-wrap">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" name="search" value="@Model.SearchKeyword"
+                           class="filter-input filter-search"
+                           placeholder="Search by customer or order..." />
+                </div>
+                <div class="metal-chips">
+                    <span class="chip-label">Rating:</span>
+                    <a asp-action="Index" asp-route-search="@Model.SearchKeyword"
+                       class="chip @(Model.RatingFilter == null ? "chip-active chip-gold" : "")">All</a>
+                    @for (int i = 5; i >= 1; i--)
+                    {
+                        <a asp-action="Index" asp-route-rating="@i" asp-route-search="@Model.SearchKeyword"
+                           class="chip @(Model.RatingFilter == i ? "chip-active chip-gold" : "")">@i ★</a>
+                    }
+                </div>
+                <button type="submit" class="btn-tibr btn-tibr-gold">
+                    <i class="fa-solid fa-magnifying-glass"></i> Apply
+                </button>
+                <a asp-action="Index" class="btn-tibr btn-tibr-outline">
+                    <i class="fa-solid fa-rotate-left"></i> Reset
+                </a>
+            </form>
+        </div>
+
+        @* Reviews Table *@
+        <div class="table-card">
+            <div class="table-card-header">
+                <span>All Reviews</span>
+                <span class="table-count-badge">@Model.TotalItems reviews</span>
+            </div>
+            <div class="table-responsive">
+                @if (!Model.Reviews.Any())
+                {
+                    <div class="rv-empty">
+                        <i class="fa-solid fa-comment-slash"></i>
+                        <p>No reviews found. Try adjusting your filters.</p>
+                    </div>
+                }
+                else
+                {
+                    <table class="tibr-table">
+                        <thead>
+                            <tr>
+                                <th style="width:22%">User</th>
+                                <th style="width:12%">Order</th>
+                                <th style="width:15%">Rating</th>
+                                <th>Review Text</th>
+                                <th style="width:13%">Date</th>
+                                <th style="width:10%" class="text-end">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var review in Model.Reviews)
+                            {
+                                <tr class="table-row-anim">
+                                    <td>
+                                        <div class="rv-user-cell">
+                                            <div class="rv-avatar">@review.UserFullName.FirstOrDefault()</div>
+                                            <div>
+                                                <div class="rv-username">@review.UserFullName</div>
+                                                <div class="rv-email">@review.UserEmail</div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <a href="/Orders/Details/@review.OrderId" class="rv-order-link">
+                                            @review.OrderNumber
+                                        </a>
+                                    </td>
+                                    <td>
+                                        <div class="@review.RatingClass rv-stars">@review.StarDisplay</div>
+                                        <div class="rv-rating-sub">@review.Value / 5</div>
+                                    </td>
+                                    <td>
+                                        <div class="rv-text">
+                                            @if (string.IsNullOrEmpty(review.Description))
+                                            {
+                                                <em class="rv-no-comment">No comment provided.</em>
+                                            }
+                                            else
+                                            {
+                                                @(review.Description.Length > 90
+                                                                                    ? review.Description.Substring(0, 90) + "…"
+                                                                                    : review.Description)
+                                            }
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <div class="rv-date">@review.CreatedAt.ToString("MMM dd, yyyy")</div>
+                                        <div class="rv-timeago">@review.TimeAgo</div>
+                                    </td>
+                                    <td class="text-end" onclick="event.stopPropagation()">
+                                        <div class="action-btns" style="justify-content:flex-end">
+                                            <a asp-action="Details" asp-route-id="@review.Id"
+                                               class="btn-icon-sm" title="View review">
+                                                <i class="fa-solid fa-eye"></i>
+                                            </a>
+                                            <form asp-action="Delete" asp-route-id="@review.Id" method="post"
+                                                  onsubmit="return confirm('Delete this review? This cannot be undone.');"
+                                                  style="display:inline">
+                                                @Html.AntiForgeryToken()
+                                                <button type="submit" class="btn-icon-sm btn-icon-danger" title="Delete">
+                                                    <i class="fa-solid fa-trash"></i>
+                                                </button>
+                                            </form>
+                                        </div>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+
+                    @if (Model.TotalItems > Model.PageSize)
+                    {
+                        int totalPages = (int)Math.Ceiling((double)Model.TotalItems / Model.PageSize);
+                        <div class="rv-pagination">
+                            <div class="rv-page-info">
+                                Showing @(((Model.CurrentPage - 1) * Model.PageSize) + 1)
+                                – @(Math.Min(Model.CurrentPage * Model.PageSize, Model.TotalItems))
+                                of @Model.TotalItems reviews
+                            </div>
+                            <nav>
+                                <ul class="pagination pagination-sm mb-0">
+                                    <li class="page-item @(Model.CurrentPage == 1 ? "disabled" : "")">
+                                        <a class="page-link" asp-action="Index"
+                                           asp-route-page="@(Model.CurrentPage - 1)"
+                                           asp-route-search="@Model.SearchKeyword"
+                                           asp-route-rating="@Model.RatingFilter">Previous</a>
+                                    </li>
+                                    @for (int i = 1; i <= totalPages; i++)
+                                    {
+                                        <li class="page-item @(Model.CurrentPage == i ? "active" : "")">
+                                            <a class="page-link" asp-action="Index"
+                                               asp-route-page="@i"
+                                               asp-route-search="@Model.SearchKeyword"
+                                               asp-route-rating="@Model.RatingFilter">@i</a>
+                                        </li>
+                                    }
+                                    <li class="page-item @(Model.CurrentPage == totalPages ? "disabled" : "")">
+                                        <a class="page-link" asp-action="Index"
+                                           asp-route-page="@(Model.CurrentPage + 1)"
+                                           asp-route-search="@Model.SearchKeyword"
+                                           asp-route-rating="@Model.RatingFilter">Next</a>
+                                    </li>
+                                </ul>
+                            </nav>
+                        </div>
+                    }
+                }
+            </div>
+        </div>
+    </div>
+
+    @* ── RIGHT: ANALYTICS SIDEBAR ──────────────────────────────── *@
+    <aside class="rv-analytics">
+
+        @* Donut + average *@
+        <div class="rv-analytics-card">
+            <h3 class="rv-analytics-title">Rating Analytics</h3>
+
+            <div class="rv-donut-wrap">
+                <div class="rv-donut" id="rvDonut">
+                    <div class="rv-donut-inner">
+                        <span class="rv-donut-avg" id="rvAvgNum">@Model.AverageRating.ToString("F1")</span>
+                        <span class="rv-donut-lbl">Average</span>
+                    </div>
+                </div>
+                <div class="rv-donut-stars rating-high">
+                    @for (int s = 1; s <= 5; s++)
+                    {
+                        if (s <= (int)Math.Round(Model.AverageRating))
+                        {
+                            <i class="fa-solid fa-star"></i>
+                        }
+                        else
+                        {
+                            <i class="fa-regular fa-star"></i>
+                        }
+                    }
+                </div>
+            </div>
+
+            @* Bar distribution *@
+            <div class="rv-bars">
+                @{
+                    var starCounts = new[] {
+                                Model.Reviews.Count(r => r.Value == 5),
+                                Model.Reviews.Count(r => r.Value == 4),
+                                Model.Reviews.Count(r => r.Value == 3),
+                                Model.Reviews.Count(r => r.Value == 2),
+                                Model.Reviews.Count(r => r.Value == 1)
+                                };
+                    int totalForPct = Model.TotalReviews > 0 ? Model.TotalReviews : 1;
+                }
+                @for (int s = 5; s >= 1; s--)
+                {
+                    int cnt = starCounts[5 - s];
+                    int pct = (int)Math.Round((double)cnt / totalForPct * 100);
+                    string barClass = s >= 4 ? "rv-bar-fill gold" : s == 3 ? "rv-bar-fill yellow" : "rv-bar-fill red";
+                    <div class="rv-bar-row">
+                        <span class="rv-bar-label">@s</span>
+                        <i class="fa-solid fa-star rv-bar-star"></i>
+                        <div class="rv-bar-track">
+                            <div class="@barClass rv-bar-anim" style="width:0%" data-width="@pct%"></div>
+                        </div>
+                        <span class="rv-bar-pct">@pct%</span>
+                    </div>
+                }
+            </div>
+
+            @* Footer counts *@
+            <div class="rv-analytics-footer">
+                <div>
+                    <p class="rv-foot-label">Total Reviews</p>
+                    <p class="rv-foot-val">@Model.TotalReviews</p>
+                </div>
+                <div>
+                    <p class="rv-foot-label">5-Star</p>
+                    <p class="rv-foot-val" style="color:var(--gold)">@Model.FiveStarCount</p>
+                </div>
+            </div>
+        </div>
+
+        @* Velocity card *@
+        <div class="rv-analytics-card">
+            <h3 class="rv-analytics-title">Review Insights</h3>
+            <div class="rv-insight-row">
+                <div class="rv-insight-icon green-bg">
+                    <i class="fa-solid fa-arrow-trend-up"></i>
+                </div>
+                <div>
+                    <div class="rv-insight-head">Positive Sentiment</div>
+                    <div class="rv-insight-sub">
+                        @{
+                            int positivePct = Model.TotalReviews > 0
+                            ? (int)Math.Round((double)(Model.FiveStarCount + Model.FourStarCount) / Model.TotalReviews * 100)
+                            : 0;
+                        }
+                        @positivePct% of reviews are 4★ or above
+                    </div>
+                </div>
+            </div>
+            <div class="rv-insight-row">
+                <div class="rv-insight-icon red-bg">
+                    <i class="fa-solid fa-triangle-exclamation"></i>
+                </div>
+                <div>
+                    <div class="rv-insight-head">Needs Attention</div>
+                    <div class="rv-insight-sub">@Model.LowRatingCount reviews rated 1–2★</div>
+                </div>
+            </div>
+            <div class="rv-insight-row">
+                <div class="rv-insight-icon gold-bg">
+                    <i class="fa-solid fa-shield-halved"></i>
+                </div>
+                <div>
+                    <div class="rv-insight-head">Verified Purchases</div>
+                    <div class="rv-insight-sub">All reviews linked to real orders</div>
+                </div>
+            </div>
+        </div>
+
+    </aside>
+</div>
+
+<style>
+    /* ── LAYOUT ───────────────────────────────────────────────────── */
+    .rv-layout {
+        display: grid;
+        grid-template-columns: 1fr 300px;
+        gap: 20px;
+        align-items: start;
+    }
+
+    .rv-main {
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+
+    /* ── TABLE HELPERS ───────────────────────────────────────────── */
+    .rv-user-cell {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+
+    .rv-avatar {
+        width: 34px;
+        height: 34px;
+        border-radius: 10px;
+        background: var(--gold-alpha);
+        border: 1px solid var(--border-gold);
+        color: var(--gold);
+        font-weight: 700;
+        font-size: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        text-transform: uppercase;
+    }
+
+    .rv-username {
+        color: var(--text-primary);
+        font-weight: 600;
+        font-size: 13px;
+    }
+
+    .rv-email {
+        color: var(--text-muted);
+        font-size: 11px;
+    }
+
+    .rv-order-link {
+        color: var(--gold);
+        font-weight: 700;
+        font-size: 13px;
+        text-decoration: none;
+    }
+
+        .rv-order-link:hover {
+            color: var(--gold-dim);
+            text-decoration: underline;
+        }
+
+    .rv-stars {
+        letter-spacing: 2px;
+        font-size: 13px;
+    }
+
+    .rv-rating-sub {
+        color: var(--text-muted);
+        font-size: 11px;
+        margin-top: 2px;
+    }
+
+    .rv-text {
+        color: var(--text-muted);
+        font-size: 13px;
+        line-height: 1.5;
+    }
+
+    .rv-no-comment {
+        opacity: 0.45;
+    }
+
+    .rv-date {
+        color: var(--text-primary);
+        font-size: 13px;
+    }
+
+    .rv-timeago {
+        color: var(--text-muted);
+        font-size: 11px;
+    }
+
+    .rv-empty {
+        text-align: center;
+        padding: 60px 20px;
+        color: var(--text-muted);
+    }
+
+        .rv-empty i {
+            font-size: 40px;
+            opacity: 0.3;
+            display: block;
+            margin-bottom: 12px;
+        }
+
+    .rv-pagination {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 14px 16px;
+        border-top: 1px solid var(--border);
+    }
+
+    .rv-page-info {
+        color: var(--text-muted);
+        font-size: 13px;
+    }
+
+    .pagination .page-link {
+        background: var(--bg-card2);
+        border-color: var(--border);
+        color: var(--text-muted);
+    }
+
+    .pagination .page-item.active .page-link {
+        background: var(--gold);
+        border-color: var(--gold);
+        color: #000;
+    }
+
+    .pagination .page-item.disabled .page-link {
+        opacity: 0.4;
+    }
+
+    /* ── ANALYTICS SIDEBAR ───────────────────────────────────────── */
+    .rv-analytics {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+    }
+
+    .rv-analytics-card {
+        background: var(--bg-card);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 22px;
+    }
+
+    .rv-analytics-title {
+        font-size: 13px;
+        font-weight: 700;
+        color: var(--text-primary);
+        text-transform: uppercase;
+        letter-spacing: 0.07em;
+        margin-bottom: 20px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--border);
+    }
+
+    /* Donut */
+    .rv-donut-wrap {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        margin-bottom: 22px;
+    }
+
+    .rv-donut {
+        width: 120px;
+        height: 120px;
+        border-radius: 50%;
+        background: conic-gradient(var(--gold) 0% calc(var(--pct, 0) * 1%), var(--border) calc(var(--pct, 0) * 1%) 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        position: relative;
+        margin-bottom: 12px;
+        transition: --pct 1s ease;
+    }
+
+        .rv-donut::before {
+            content: '';
+            position: absolute;
+            width: 82px;
+            height: 82px;
+            border-radius: 50%;
+            background: var(--bg-card);
+        }
+
+    .rv-donut-inner {
+        position: relative;
+        z-index: 1;
+        text-align: center;
+    }
+
+    .rv-donut-avg {
+        display: block;
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--text-primary);
+        line-height: 1;
+    }
+
+    .rv-donut-lbl {
+        font-size: 10px;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+    }
+
+    .rv-donut-stars {
+        font-size: 14px;
+        letter-spacing: 3px;
+    }
+
+    /* Bars */
+    .rv-bars {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .rv-bar-row {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+
+    .rv-bar-label {
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--text-muted);
+        width: 10px;
+        text-align: right;
+        flex-shrink: 0;
+    }
+
+    .rv-bar-star {
+        font-size: 10px;
+        color: var(--gold);
+        flex-shrink: 0;
+    }
+
+    .rv-bar-track {
+        flex: 1;
+        height: 6px;
+        background: var(--border);
+        border-radius: 99px;
+        overflow: hidden;
+    }
+
+    .rv-bar-fill {
+        height: 100%;
+        border-radius: 99px;
+        transition: width 1s cubic-bezier(0.4,0,0.2,1);
+    }
+
+        .rv-bar-fill.gold {
+            background: var(--gold);
+        }
+
+        .rv-bar-fill.yellow {
+            background: var(--yellow);
+        }
+
+        .rv-bar-fill.red {
+            background: var(--red);
+        }
+
+    .rv-bar-pct {
+        font-size: 11px;
+        color: var(--text-muted);
+        width: 28px;
+        text-align: right;
+        flex-shrink: 0;
+    }
+
+    /* Footer */
+    .rv-analytics-footer {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-top: 20px;
+        padding-top: 16px;
+        border-top: 1px solid var(--border);
+    }
+
+    .rv-foot-label {
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: var(--text-muted);
+        margin-bottom: 4px;
+    }
+
+    .rv-foot-val {
+        font-size: 20px;
+        font-weight: 700;
+        color: var(--text-primary);
+    }
+
+    /* Insights */
+    .rv-insight-row {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        padding: 12px 0;
+        border-bottom: 1px solid var(--border);
+    }
+
+        .rv-insight-row:last-child {
+            border-bottom: none;
+        }
+
+    .rv-insight-icon {
+        width: 36px;
+        height: 36px;
+        border-radius: 10px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 15px;
+        flex-shrink: 0;
+    }
+
+        .rv-insight-icon.green-bg {
+            background: rgba(34,197,94,0.1);
+            color: var(--green);
+        }
+
+        .rv-insight-icon.red-bg {
+            background: rgba(239,68,68,0.1);
+            color: var(--red);
+        }
+
+        .rv-insight-icon.gold-bg {
+            background: var(--gold-alpha);
+            color: var(--gold);
+        }
+
+    .rv-insight-head {
+        font-size: 13px;
+        font-weight: 600;
+        color: var(--text-primary);
+    }
+
+    .rv-insight-sub {
+        font-size: 12px;
+        color: var(--text-muted);
+        margin-top: 2px;
+    }
+
+    /* Star colours */
+    .rating-high {
+        color: var(--gold);
+    }
+
+    .rating-mid {
+        color: var(--yellow);
+    }
+
+    .rating-low {
+        color: var(--red);
+        opacity: 0.85;
+    }
+
+    /* ── RESPONSIVE ──────────────────────────────────────────────── */
+    @@media (max-width: 1100px) {
+        .rv-layout {
+            grid-template-columns: 1fr;
+        }
+
+        .rv-analytics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+        }
+    }
+
+    @@media (max-width: 640px) {
+        .rv-analytics {
+            grid-template-columns: 1fr;
+        }
+
+        .filter-form-row {
+            flex-direction: column;
+            align-items: stretch;
+        }
+
+        .metal-chips {
+            flex-wrap: wrap;
+        }
+    }
+</style>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // ── Animate bar widths ─────────────────────────────────────
+            requestAnimationFrame(() => {
+                document.querySelectorAll('.rv-bar-anim').forEach(el => {
+                    el.style.width = el.dataset.width;
+                });
+            });
+
+            // ── Animate donut based on average rating / 5 ─────────────
+            const avg  = parseFloat('@Model.AverageRating.ToString("F1")') || 0;
+            const pct  = Math.round(avg / 5 * 100);
+            const donut = document.getElementById('rvDonut');
+            if (donut) {
+                // Small delay so transition plays on load
+                setTimeout(() => {
+                    donut.style.background =
+                        `conic-gradient(var(--gold) 0% ${pct}%, var(--border) ${pct}% 100%)`;
+                }, 200);
+            }
+
+            // ── Count-up animation for average number ─────────────────
+            const avgEl = document.getElementById('rvAvgNum');
+            if (avgEl && avg > 0) {
+                let current = 0;
+                const step  = avg / 30;
+                const timer = setInterval(() => {
+                    current += step;
+                    if (current >= avg) { current = avg; clearInterval(timer); }
+                    avgEl.textContent = current.toFixed(1);
+                }, 30);
+            }
+
+        });
+    </script>
+}

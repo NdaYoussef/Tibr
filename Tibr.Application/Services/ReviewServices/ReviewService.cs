@@ -2,19 +2,23 @@ using Tibr.Application.Dtos;
 using Tibr.Domain.Entities;
 using Tibr.Domain.IRepositories;
 using Tibr.Domain.ResultPattern;
-
+using Tibr.Application.Services.OrderServices;
+using Tibr.Application.Services.UserServices;
 namespace Tibr.Application.Services.ReviewServices;
 public class ReviewService : IReviewService
 {
     private readonly IGenericRepository<Review, long> _reviewRepo;
     private readonly IGenericRepository<Order, long> _orderRepo;
-
+    private readonly IUserRepository _userRepo;
     public ReviewService(
         IGenericRepository<Review, long> reviewRepo,
-        IGenericRepository<Order, long> orderRepo)
+        IGenericRepository<Order, long> orderRepo,
+        IUserRepository userRepo)
+
     {
         _reviewRepo = reviewRepo;
         _orderRepo = orderRepo;
+        _userRepo = userRepo;
     }
 
     public async Task<Result> CreateAsync(CreateReviewDto dto, long userId)
@@ -99,5 +103,68 @@ public class ReviewService : IReviewService
             return Result<ReviewDto>.Failure("Review not found.");
 
         return Result<ReviewDto>.Success(review);
+    }
+
+    public async Task<Result<IEnumerable<AdminReviewDto>>> GetAllForAdminAsync()
+    {
+        try
+        {
+            var reviews = await _reviewRepo.GetAllAsync();
+
+
+            var users = _userRepo.GetAll()
+                .ToDictionary(u => u.Id);
+
+            var orders = _orderRepo
+                .GetAll(o => !o.IsDeleted)
+                .ToDictionary(o => o.Id);
+
+            var adminReviews = reviews.Select(r =>
+            {
+                users.TryGetValue(r.UserId, out var user);
+                orders.TryGetValue(r.OrderId, out var order);
+
+                return new AdminReviewDto
+                {
+                    Id = r.Id,
+                    OrderId = r.OrderId,
+                    OrderNumber = order?.OrderNumber ?? "N/A",
+                    UserId = r.UserId,
+                    UserFullName = user is not null
+                        ? $"{user.FirstName} {user.LastName}"
+                        : "Unknown User",
+                    UserEmail = user?.Email ?? "N/A",
+                    Description = r.Description,
+                    Value = r.Value,
+                    CreatedAt = r.CreatedAt,
+                    UpdatedAt = r.UpdatedAt
+                };
+            }).OrderByDescending(r => r.CreatedAt);
+
+            return Result<IEnumerable<AdminReviewDto>>.Success(adminReviews);
+        }
+        catch (Exception ex)
+        {
+            return Result<IEnumerable<AdminReviewDto>>.Failure($"Failed to retrieve reviews: {ex.Message}");
+        }
+    }
+    public async Task<Result> AdminDeleteAsync(long reviewId)
+    {
+        try
+        {
+
+            var review = await _reviewRepo.GetByIdAsync(reviewId);
+            if (review is null)
+                return Result.Failure("Review not found.");
+
+            await _reviewRepo.DeleteAsync(review);
+            await _reviewRepo.SaveChangesAsync();
+
+            return Result.Success();
+        }
+        catch (Exception ex)
+        {
+            return Result.Failure($"Failed to delete review: {ex.Message}");
+        }
     }
 }

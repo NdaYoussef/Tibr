@@ -2,7 +2,7 @@
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
     ViewData["Title"] = $"Order Details - {Model.OrderNumber}";
-    
+
     // Milestones status helpers
     var isPending = Model.OrderStatus == "Pending";
     var isProcessing = Model.OrderStatus == "Processing";
@@ -26,33 +26,68 @@
             <!-- Ordered Step -->
             <div class="timeline-step-custom @(stepCode >= 1 ? "completed" : "")">
                 <div class="timeline-node-custom">
-                    @if (stepCode >= 1) { <i class="bi bi-check-lg" style="font-size: 0.9rem;"></i> } else { <span>1</span> }
+                    @if (stepCode >= 1)
+                    {
+                        <i class="bi bi-check-lg" style="font-size: 0.9rem;"></i>
+                    }
+                    else
+                    {
+
+                        <span>1</span>
+                    }
                 </div>
                 <div class="timeline-text-custom">Ordered</div>
             </div>
-            
+
             <!-- Processing Step -->
             <div class="timeline-step-custom @(stepCode >= 2 ? "completed" : "")">
                 <div class="timeline-node-custom">
-                    @if (stepCode >= 2) { <i class="bi bi-check-lg" style="font-size: 0.9rem;"></i> } else { <span>2</span> }
+                    @if (stepCode >= 2)
+                    {
+                        <i class="bi bi-check-lg" style="font-size: 0.9rem;"></i>
+                    }
+                    else
+                    {
+
+                        <span>2</span>
+                    }
                 </div>
                 <div class="timeline-text-custom">Processing</div>
             </div>
-            
+
             <!-- In Transit Step -->
             <div class="timeline-step-custom @(stepCode >= 3 ? (stepCode == 3 ? "active" : "completed") : "")">
                 <div class="timeline-node-custom">
-                    @if (stepCode > 3) { <i class="bi bi-check-lg" style="font-size: 0.9rem;"></i> }
-                    else if (stepCode == 3) { <i class="bi bi-truck" style="font-size: 0.9rem;"></i> }
-                    else { <span>3</span> }
+                    @if (stepCode > 3)
+                    {
+                        <i class="bi bi-check-lg" style="font-size: 0.9rem;"></i>
+                    }
+                    else if (stepCode == 3)
+                    {
+
+                        <i class="bi bi-truck" style="font-size: 0.9rem;"></i>
+                    }
+                    else
+                    {
+
+                        <span>3</span>
+                    }
                 </div>
                 <div class="timeline-text-custom">In Transit</div>
             </div>
-            
+
             <!-- Delivered Step -->
             <div class="timeline-step-custom @(stepCode >= 4 ? "completed" : "")">
                 <div class="timeline-node-custom">
-                    @if (stepCode >= 4) { <i class="bi bi-check-lg" style="font-size: 0.9rem;"></i> } else { <i class="bi bi-box-seam" style="font-size: 0.85rem;"></i> }
+                    @if (stepCode >= 4)
+                    {
+                        <i class="bi bi-check-lg" style="font-size: 0.9rem;"></i>
+                    }
+                    else
+                    {
+
+                        <i class="bi bi-box-seam" style="font-size: 0.85rem;"></i>
+                    }
                 </div>
                 <div class="timeline-text-custom">Delivered</div>
             </div>
@@ -61,7 +96,7 @@
 }
 else
 {
-    <div class="executive-card shadow-sm border-danger text-danger p-3 mb-4 d-flex align-items-center gap-3" style="background-color: rgba(239, 68, 68, 0.08); border-color: rgba(239, 68, 68, 0.25);">
+    <div class="executive-card shadow-sm bg-danger-subtle border-danger text-danger p-3 mb-4 d-flex align-items-center gap-3" style="background-color: #fef2f2;">
         <i class="bi bi-x-octagon-fill fs-4"></i>
         <div>
             <h6 class="fw-bold mb-0">Acquisition Cancelled</h6>
@@ -76,7 +111,7 @@ else
         <h4 class="mb-0 text-dark" style="font-size: 1.15rem; font-weight: 700;">Item Breakdown</h4>
         <span class="pill-badge badge-grey-light">@Model.Items.Sum(i => i.Quantity) ITEMS</span>
     </div>
-    
+
     <div class="item-list-container">
         @{
             int index = 0;
@@ -87,7 +122,7 @@ else
             // Mock premium product image links
             var imgUrl = "https://images.unsplash.com/photo-1523275335684-37898b6baf30?q=80&w=150&auto=format&fit=crop"; // Chronos
             var categorySubText = "Premium Wristwear";
-            
+
             if (index == 2)
             {
                 imgUrl = "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?q=80&w=150&auto=format&fit=crop"; // Aura Headphones
@@ -149,15 +184,15 @@ else
             <span class="text-muted">Tax</span>
             <span class="text-dark">$165.40</span>
         </div>
-        
+
         <div class="d-flex justify-content-between align-items-center mb-3">
             <span class="fw-bold text-dark fs-5">Total</span>
             <span class="fw-bold fs-4 text-warning" style="color: var(--accent-gold) !important;">
                 $@((Model.TotalAmount + 45.00m + 165.40m).ToString("N2"))
             </span>
         </div>
-        
-        <div class="p-3 d-flex justify-content-between align-items-center rounded bg-primary-subtle" style="font-weight: 700; font-size: 0.85rem; border: 1px solid transparent;">
+
+        <div class="p-3 d-flex justify-content-between align-items-center rounded bg-primary-subtle" style="background-color: #e0f2fe; color: #0369a1; font-weight: 700; font-size: 0.85rem; border: 1px solid rgba(3,105,161,0.1);">
             <span><i class="bi bi-credit-card-2-front me-2"></i> Amex •••• 9002</span>
             <span class="text-uppercase" style="letter-spacing: 0.5px;">PAID</span>
         </div>
@@ -167,7 +202,7 @@ else
 <!-- Estimated Arrival and Logs -->
 <div class="text-center mb-4">
     <span class="text-uppercase fw-bold text-muted d-block mb-1" style="font-size: 0.65rem; letter-spacing: 1px;">Estimated Arrival</span>
-    <h5 class="mb-0" style="color: var(--text-primary); font-weight: 700;">Oct 24, 2023 • 2:00 PM - 5:00 PM</h5>
+    <h5 class="text-dark mb-0" style="font-weight: 700;">Oct 24, 2023 • 2:00 PM - 5:00 PM</h5>
 </div>
 
 <!-- Logs expandable for admin audit -->
@@ -192,10 +227,10 @@ else
 <!-- Persistent Bottom Actions Drawer Drawer -->
 <div class="row g-2 mb-4">
     <div class="col-4">
-        <button type="button" class="btn btn-outline-gold w-100 py-3" style="font-weight: 700; font-size: 0.85rem;" data-bs-toggle="modal" data-bs-target="#updateStatusModal">Update</button>
+        <button type="button" class="btn btn-outline-gold w-100 py-3" style="font-weight: 700; font-size: 0.85rem; border-color: #cbd5e1; color: var(--text-dark);" data-bs-toggle="modal" data-bs-target="#updateStatusModal">Update</button>
     </div>
     <div class="col-4">
-        <button type="button" class="btn btn-outline-gold w-100 py-3" style="font-weight: 700; font-size: 0.85rem;" data-bs-toggle="modal" data-bs-target="#assignCourierModal">Assign</button>
+        <button type="button" class="btn btn-outline-gold w-100 py-3" style="font-weight: 700; font-size: 0.85rem; border-color: #cbd5e1; color: var(--text-dark);" data-bs-toggle="modal" data-bs-target="#assignCourierModal">Assign</button>
     </div>
     <div class="col-4">
         <a asp-action="Invoice" asp-route-id="@Model.Id" target="_blank" class="btn btn-gold w-100 py-3 d-flex align-items-center justify-content-center gap-1" style="font-weight: 700; font-size: 0.85rem;">
@@ -209,7 +244,7 @@ else
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content p-4 border-0" style="border-radius: 16px;">
             <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title font-bold text-white"><i class="bi bi-sliders me-2 text-warning"></i> Process Order</h5>
+                <h5 class="modal-title font-bold text-dark"><i class="bi bi-sliders me-2 text-warning"></i> Process Order</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form method="post" asp-action="UpdateStatus" asp-route-id="@Model.Id">
@@ -246,7 +281,7 @@ else
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content p-4 border-0" style="border-radius: 16px;">
             <div class="modal-header border-0 pb-0">
-                <h5 class="modal-title font-bold text-white"><i class="bi bi-truck me-2 text-warning"></i> Assign Courier</h5>
+                <h5 class="modal-title font-bold text-dark"><i class="bi bi-truck me-2 text-warning"></i> Assign Courier</h5>
                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form method="post" asp-action="AssignDelivery" asp-route-id="@Model.Id">
