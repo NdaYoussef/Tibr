@@ -533,8 +533,8 @@ namespace Tibr.Application.Services.AiChatServices
 
             if (a.IsNearMonthlyLow)
                 ctx += language == "ar"
-                    ? "\nالسعر قريب من أدنى مستوى شهري"
-                    : "\nPrice is near its monthly low";
+                    ? "\nالسعر في أدنى 10% من نطاق آخر 30 يومًا (أدنى: " + a.MinPriceLast30Days + ", أعلى: " + a.MaxPriceLast30Days + ", متوسط: " + a.AvgPriceLast30Days + "). هذه ملاحظة واقعية — وليست توصية أو توقع."
+                    : $"\nPrice position: current price ({a.CurrentPrice:N2} EGP/g) is in the bottom 10% of the 30-day range (low: {a.MinPriceLast30Days:N2}, high: {a.MaxPriceLast30Days:N2}, avg: {a.AvgPriceLast30Days:N2}). State this as a 30-day observation only — not a buy signal, not a prediction. Example: 'Gold is near its 30-day low, though this doesn't indicate future direction.'";
 
             return ctx;
         }

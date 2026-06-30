@@ -63,6 +63,7 @@ namespace Tibr.Application.Services.ResolutionServices
             {
                 if (TryTransitionStatus(order, OrderStatus.Expired))
                 {
+                    await _orderRepo.UpdateAsync(order);
                     await ReleaseReservationAsync(order);
                     await _orderRepo.SaveChangesAsync();
                     await NotifyExpiredAsync(order);

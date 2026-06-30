@@ -45,4 +45,5 @@ namespace Tibr.Application.Dtos
     {
         public int NewTimeframeWeeks { get; set; }
     }
+
 }

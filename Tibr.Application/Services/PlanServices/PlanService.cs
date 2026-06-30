@@ -1,6 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Tibr.Application.Dtos;
 using Tibr.Application.Dtos.ChatDtos;
+using Tibr.Application.Interfaces;
 using Tibr.Application.Services.AssetPriceServices;
 using Tibr.Application.Services.WalletServices;
 using Tibr.Domain.Entities;
@@ -15,19 +16,28 @@ namespace Tibr.Application.Services.PlanServices
     {
         private readonly IGenericRepository<Plan, long> _planRepo;
         private readonly IGenericRepository<Trade, long> _tradeRepo;
+        private readonly IGenericRepository<Notification, long> _notificationRepo;
+        private readonly IGenericRepository<User, long> _userRepo;
         private readonly IWalletService _walletService;
         private readonly IAssetPriceService _priceService;
+        private readonly IEmailService _emailService;
 
         public PlanService(
             IGenericRepository<Plan, long> planRepo,
             IGenericRepository<Trade, long> tradeRepo,
+            IGenericRepository<Notification, long> notificationRepo,
+            IGenericRepository<User, long> userRepo,
             IWalletService walletService,
-            IAssetPriceService priceService)
+            IAssetPriceService priceService,
+            IEmailService emailService)
         {
             _planRepo = planRepo;
             _tradeRepo = tradeRepo;
+            _notificationRepo = notificationRepo;
+            _userRepo = userRepo;
             _walletService = walletService;
             _priceService = priceService;
+            _emailService = emailService;
         }
 
         public async Task<Result<PlanDto>> CreateFromGoalAsync(
@@ -193,7 +203,14 @@ namespace Tibr.Application.Services.PlanServices
                 if (remainingWeeks <= 0)
                 {
                     plan.Status = PlanStatus.Expired;
+                    await _planRepo.UpdateAsync(plan);
                     await _planRepo.SaveChangesAsync();
+
+                    await SendPlanNotificationAsync(userId,
+                        language == "ar" ? "انتهت خطة الادخار" : "Savings Plan Expired",
+                        language == "ar"
+                            ? "انتهت المدة الزمنية لخطة الادخار الخاصة بك. يمكنك تمديد المهلة من لوحة التحكم."
+                            : "Your savings plan timeframe has expired. You can extend the deadline from your dashboard.");
 
                     result.Plan = MapToDto(plan);
                     result.Message = SystemMessages.PlanExpired(language);
@@ -220,11 +237,20 @@ namespace Tibr.Application.Services.PlanServices
                     {
                         SetPriceMovement(result, plan, goldPrice, silverPrice, currentPrice);
                         plan.Status = PlanStatus.Completed;
+                        await _planRepo.UpdateAsync(plan);
                         await _planRepo.SaveChangesAsync();
                         result.Completed = true;
                         result.Message = SystemMessages.PlanGoalReachedGrams(language);
                         result.ProgressPercent = 100;
                         result.Plan = MapToDto(plan);
+
+                        var assetLabel = plan.Asset == "silver" ? "silver" : "gold";
+                        await SendPlanNotificationAsync(userId,
+                            language == "ar" ? "تم تحقيق الهدف!" : "Goal Reached!",
+                            language == "ar"
+                                ? $"لقد حققت الكمية المستهدفة من {assetLabel}!"
+                                : $"You've reached your target amount of {assetLabel}!");
+
                         return Result<ReevaluatePlanResultDto>.Success(result);
                     }
 
@@ -258,11 +284,19 @@ namespace Tibr.Application.Services.PlanServices
                     {
                         SetPriceMovement(result, plan, goldPrice, silverPrice, currentPrice);
                         plan.Status = PlanStatus.Completed;
+                        await _planRepo.UpdateAsync(plan);
                         await _planRepo.SaveChangesAsync();
                         result.Completed = true;
                         result.Message = SystemMessages.PlanGoalReachedValue(language);
                         result.ProgressPercent = 100;
                         result.Plan = MapToDto(plan);
+
+                        await SendPlanNotificationAsync(userId,
+                            language == "ar" ? "تم تحقيق الهدف!" : "Goal Reached!",
+                            language == "ar"
+                                ? "محفظتك وصلت للقيمة المستهدفة!"
+                                : "Your portfolio has reached your target value!");
+
                         return Result<ReevaluatePlanResultDto>.Success(result);
                     }
 
@@ -318,6 +352,7 @@ namespace Tibr.Application.Services.PlanServices
             SetPriceMovement(result, plan, goldPrice, silverPrice, currentPrice);
 
             plan.LastReevaluatedAt = DateTime.UtcNow;
+            await _planRepo.UpdateAsync(plan);
             await _planRepo.SaveChangesAsync();
 
             result.Plan = MapToDto(plan);
@@ -337,6 +372,7 @@ namespace Tibr.Application.Services.PlanServices
 
             plan.TimeframeWeeks = newTimeframeWeeks;
             plan.Status = PlanStatus.Active;
+            await _planRepo.UpdateAsync(plan);
             await _planRepo.SaveChangesAsync();
 
             return Result<PlanDto>.Success(MapToDto(plan));
@@ -351,9 +387,34 @@ namespace Tibr.Application.Services.PlanServices
                 return Result<PlanDto>.Failure("You don't have an active plan.");
 
             plan.Status = PlanStatus.Cancelled;
+            await _planRepo.UpdateAsync(plan);
             await _planRepo.SaveChangesAsync();
 
             return Result<PlanDto>.Success(MapToDto(plan));
+        }
+
+        private async Task SendPlanNotificationAsync(long userId, string title, string message)
+        {
+            try
+            {
+                var user = await _userRepo.GetByIdAsync(userId);
+                if (user is null) return;
+
+                var notification = new Notification
+                {
+                    UserId = userId,
+                    Title = title,
+                    Message = message,
+                };
+                await _notificationRepo.AddAsync(notification);
+                await _notificationRepo.SaveChangesAsync();
+
+                await _emailService.SendEmailAsync(user.Email, title, $"<h2>{title}</h2><p>{message}</p><p><a href='http://localhost:4200'>Go to Tibr</a></p>");
+            }
+            catch (Exception ex)
+            {
+                System.Console.Error.WriteLine($"Failed to send plan notification: {ex.Message}");
+            }
         }
 
         private static void SetPriceMovement(ReevaluatePlanResultDto result, Plan plan,
