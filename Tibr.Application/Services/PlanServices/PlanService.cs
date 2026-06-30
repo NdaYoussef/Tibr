@@ -7,6 +7,7 @@ using Tibr.Domain.Entities;
 using Tibr.Domain.Enums;
 using Tibr.Domain.IRepositories;
 using Tibr.Domain.ResultPattern;
+using Tibr.Application.Services.AiChatServices;
 
 namespace Tibr.Application.Services.PlanServices
 {
@@ -30,19 +31,72 @@ namespace Tibr.Application.Services.PlanServices
         }
 
         public async Task<Result<PlanDto>> CreateFromGoalAsync(
-            long userId, GoalParseResult goal, decimal priceAtCreation, decimal? silverPriceAtCreation)
+            long userId, GoalParseResult goal, decimal priceAtCreation, decimal? silverPriceAtCreation, string language = "en")
         {
             var existing = await _planRepo.GetAll(p => p.UserId == userId && p.Status == PlanStatus.Active)
                 .FirstOrDefaultAsync();
 
             if (existing is not null)
-                return Result<PlanDto>.Failure("You already have an active plan. Complete or cancel it first.");
+                return Result<PlanDto>.Failure(language == "ar"
+                    ? "لديك بالفعل خطة نشطة. أكملها أو ألغها أولاً."
+                    : "You already have an active plan. Complete or cancel it first.");
 
             if (goal.Asset == "both" && goal.GoalType != "reach_value_egp")
-                return Result<PlanDto>.Failure("\"both\" asset only supports reach_value_egp goal type.");
+                return Result<PlanDto>.Failure(language == "ar"
+                    ? "الأصل \"كلاهما\" يدعم فقط نوع الهدف reach_value_egp."
+                    : "\"both\" asset only supports reach_value_egp goal type.");
 
             if (goal.GoalType != "monthly_budget" && goal.TimeframeWeeks <= 0)
-                return Result<PlanDto>.Failure("Timeframe is required for this goal type.");
+                return Result<PlanDto>.Failure(language == "ar"
+                    ? "المدة الزمنية مطلوبة لهذا النوع من الأهداف."
+                    : "Timeframe is required for this goal type.");
+
+            // Skip creation if user already meets the goal
+            if (goal.GoalType == "reach_grams")
+            {
+                var walletType = goal.Asset == "silver" ? WalletType.Silver : WalletType.Gold;
+                var balanceResult = await _walletService.GetAvailableBalanceAsync(userId, walletType);
+                if (balanceResult.IsSuccess && balanceResult.Data >= goal.TargetAmount)
+                {
+                    var metal = goal.Asset == "silver" ? "silver" : "gold";
+                    var metalAr = metal == "silver" ? "الفضة" : "الذهب";
+                    return Result<PlanDto>.Failure(language == "ar"
+                        ? $"أنت تملك بالفعل {balanceResult.Data:F4}g من {metalAr}، وهو ما يتجاوز هدفك البالغ {goal.TargetAmount:F4}g. لا حاجة لخطة!"
+                        : $"You already own {balanceResult.Data:F4}g of {metal}, which exceeds your target of {goal.TargetAmount:F4}g. No plan needed!");
+                }
+            }
+            else if (goal.GoalType == "reach_value_egp")
+            {
+                if (goal.Asset == "both")
+                {
+                    var goldBalance = await _walletService.GetAvailableBalanceAsync(userId, WalletType.Gold);
+                    var silverBalance = await _walletService.GetAvailableBalanceAsync(userId, WalletType.Silver);
+                    var goldVal = (goldBalance.IsSuccess ? goldBalance.Data : 0) * priceAtCreation;
+                    var silverVal = (silverBalance.IsSuccess ? silverBalance.Data : 0) * (silverPriceAtCreation ?? 0);
+                    var total = goldVal + silverVal;
+                    if (total >= goal.TargetAmount)
+                        return Result<PlanDto>.Failure(language == "ar"
+                            ? $"محفظتك من الذهب والفضة قيمتها {total:N2} جنيهاً، وهو ما يحقق هدفك البالغ {goal.TargetAmount:N2} جنيهاً. لا حاجة لخطة!"
+                            : $"Your gold + silver portfolio is worth {total:N2} EGP, which already meets your target of {goal.TargetAmount:N2} EGP. No plan needed!");
+                }
+                else
+                {
+                    var walletType = goal.Asset == "silver" ? WalletType.Silver : WalletType.Gold;
+                    var balanceResult = await _walletService.GetAvailableBalanceAsync(userId, walletType);
+                    if (balanceResult.IsSuccess)
+                    {
+                        var currentValue = balanceResult.Data * priceAtCreation;
+                        if (currentValue >= goal.TargetAmount)
+                        {
+                            var metal = goal.Asset == "silver" ? "silver" : "gold";
+                            var metalAr = metal == "silver" ? "الفضة" : "الذهب";
+                            return Result<PlanDto>.Failure(language == "ar"
+                                ? $"ممتلكاتك من {metalAr} بقيمة {currentValue:N2} جنيهاً تفي بالفعل بهدف {goal.TargetAmount:N2} جنيهاً. لا حاجة لخطة!"
+                                : $"Your {metal} holdings are worth {currentValue:N2} EGP, which already meets your target of {goal.TargetAmount:N2} EGP. No plan needed!");
+                        }
+                    }
+                }
+            }
 
             var plan = new Plan
             {
@@ -74,7 +128,7 @@ namespace Tibr.Application.Services.PlanServices
             return Result<PlanDto>.Success(MapToDto(plan));
         }
 
-        public async Task<Result<ReevaluatePlanResultDto>> ReevaluateAsync(long userId)
+        public async Task<Result<ReevaluatePlanResultDto>> ReevaluateAsync(long userId, string language = "en")
         {
             var plan = await _planRepo.GetAll(p => p.UserId == userId && p.Status == PlanStatus.Active)
                 .FirstOrDefaultAsync();
@@ -142,7 +196,7 @@ namespace Tibr.Application.Services.PlanServices
                     await _planRepo.SaveChangesAsync();
 
                     result.Plan = MapToDto(plan);
-                    result.Message = "Your original timeframe has passed. Would you like to set a new deadline?";
+                    result.Message = SystemMessages.PlanExpired(language);
                     return Result<ReevaluatePlanResultDto>.Success(result);
                 }
                 result.RemainingWeeks = remainingWeeks;
@@ -164,10 +218,11 @@ namespace Tibr.Application.Services.PlanServices
 
                     if (remainingGrams <= 0)
                     {
+                        SetPriceMovement(result, plan, goldPrice, silverPrice, currentPrice);
                         plan.Status = PlanStatus.Completed;
                         await _planRepo.SaveChangesAsync();
                         result.Completed = true;
-                        result.Message = "Goal reached! You've acquired your target amount.";
+                        result.Message = SystemMessages.PlanGoalReachedGrams(language);
                         result.ProgressPercent = 100;
                         result.Plan = MapToDto(plan);
                         return Result<ReevaluatePlanResultDto>.Success(result);
@@ -201,10 +256,11 @@ namespace Tibr.Application.Services.PlanServices
 
                     if (remainingValue <= 0)
                     {
+                        SetPriceMovement(result, plan, goldPrice, silverPrice, currentPrice);
                         plan.Status = PlanStatus.Completed;
                         await _planRepo.SaveChangesAsync();
                         result.Completed = true;
-                        result.Message = "Goal reached! Your portfolio has reached your target value.";
+                        result.Message = SystemMessages.PlanGoalReachedValue(language);
                         result.ProgressPercent = 100;
                         result.Plan = MapToDto(plan);
                         return Result<ReevaluatePlanResultDto>.Success(result);
@@ -259,23 +315,7 @@ namespace Tibr.Application.Services.PlanServices
             result.ProgressPercent = progressPercent;
             result.RequiredWeeklyEgp = requiredWeeklyEgp;
 
-            // Compute price movement
-            if (plan.Asset == "both")
-            {
-                result.PriceChangePercent = goldPrice > 0 && plan.PriceAtCreation > 0
-                    ? (goldPrice - plan.PriceAtCreation) / plan.PriceAtCreation * 100
-                    : null;
-                result.SilverPriceChangePercent = silverPrice > 0 && plan.SilverPriceAtCreation.HasValue && plan.SilverPriceAtCreation.Value > 0
-                    ? (silverPrice - plan.SilverPriceAtCreation.Value) / plan.SilverPriceAtCreation.Value * 100
-                    : null;
-            }
-            else
-            {
-                var price = currentPrice ?? 0;
-                result.PriceChangePercent = price > 0 && plan.PriceAtCreation > 0
-                    ? (price - plan.PriceAtCreation) / plan.PriceAtCreation * 100
-                    : null;
-            }
+            SetPriceMovement(result, plan, goldPrice, silverPrice, currentPrice);
 
             plan.LastReevaluatedAt = DateTime.UtcNow;
             await _planRepo.SaveChangesAsync();
@@ -314,6 +354,27 @@ namespace Tibr.Application.Services.PlanServices
             await _planRepo.SaveChangesAsync();
 
             return Result<PlanDto>.Success(MapToDto(plan));
+        }
+
+        private static void SetPriceMovement(ReevaluatePlanResultDto result, Plan plan,
+            decimal goldPrice, decimal silverPrice, decimal? currentPrice)
+        {
+            if (plan.Asset == "both")
+            {
+                result.PriceChangePercent = goldPrice > 0 && plan.PriceAtCreation > 0
+                    ? (goldPrice - plan.PriceAtCreation) / plan.PriceAtCreation * 100
+                    : null;
+                result.SilverPriceChangePercent = silverPrice > 0 && plan.SilverPriceAtCreation.HasValue && plan.SilverPriceAtCreation.Value > 0
+                    ? (silverPrice - plan.SilverPriceAtCreation.Value) / plan.SilverPriceAtCreation.Value * 100
+                    : null;
+            }
+            else
+            {
+                var price = currentPrice ?? 0;
+                result.PriceChangePercent = price > 0 && plan.PriceAtCreation > 0
+                    ? (price - plan.PriceAtCreation) / plan.PriceAtCreation * 100
+                    : null;
+            }
         }
 
         private static PlanDto MapToDto(Plan plan)

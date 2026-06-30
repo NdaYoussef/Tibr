@@ -409,7 +409,7 @@ namespace Tibr.Application.Services.AiChatServices
             var adviceResponse = await _aiProvider.ChatAsync(advisePrompt, messages);
 
             // Persist plan after generating advice
-            var planResult = await _planService.CreateFromGoalAsync(userId, goal, creationPrice, silverCreationPrice);
+            var planResult = await _planService.CreateFromGoalAsync(userId, goal, creationPrice, silverCreationPrice, language);
 
             if (adviceResponse.Content is not null)
                 return (adviceResponse.Content, "ai", false);
@@ -419,9 +419,9 @@ namespace Tibr.Application.Services.AiChatServices
         public async Task<(string Reply, string Source, bool ClarificationNeeded)> HandlePlanUpdateAsync(
             long userId, string language)
         {
-            var result = await _planService.ReevaluateAsync(userId);
+            var result = await _planService.ReevaluateAsync(userId, language);
             if (result.IsFailure)
-                return (result.ErrorMessage ?? "Could not re-evaluate plan.", "system", false);
+                return (result.ErrorMessage ?? SystemMessages.PlanReevaluateFailed(language), "system", false);
 
             var data = result.Data!;
             var reply = data.Message;
@@ -429,14 +429,14 @@ namespace Tibr.Application.Services.AiChatServices
             if (data.PriceChangePercent.HasValue && data.CurrentPrice.HasValue)
             {
                 var metal = data.Plan.Asset == "silver" ? "Silver" : "Gold";
-                reply += $" {metal} has moved {data.PriceChangePercent.Value:+0.00;-0.00}% since you started ({data.Plan.PriceAtCreation:N2} → {data.CurrentPrice:N2} EGP/g).";
+                reply += SystemMessages.PlanPriceMovement(language, metal, (double)data.PriceChangePercent.Value, data.Plan.PriceAtCreation, data.CurrentPrice.Value);
             }
             if (data.SilverPriceChangePercent.HasValue && data.SilverCurrentPrice.HasValue)
             {
-                reply += $" Silver has moved {data.SilverPriceChangePercent.Value:+0.00;-0.00}% since you started ({data.Plan.SilverPriceAtCreation:N2} → {data.SilverCurrentPrice:N2} EGP/g).";
+                reply += SystemMessages.PlanSilverPriceMovement(language, (double)data.SilverPriceChangePercent.Value, data.Plan.SilverPriceAtCreation!.Value, data.SilverCurrentPrice.Value);
             }
 
-            reply += " These numbers are based on today's price. Prices fluctuate — check back for an updated projection.";
+            reply += SystemMessages.PlanReevaluateSuffix(language);
             return (reply, "system", false);
         }
 
