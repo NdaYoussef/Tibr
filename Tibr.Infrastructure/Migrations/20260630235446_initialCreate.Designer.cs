@@ -12,8 +12,8 @@ using Tibr.Infrastructure.Contexts;
 namespace Tibr.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20260622083838_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20260630235446_initialCreate")]
+    partial class initialCreate
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -497,6 +497,12 @@ namespace Tibr.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
+                    b.Property<string>("ActionUrl")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<long?>("AdminId")
+                        .HasColumnType("bigint");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -510,17 +516,25 @@ namespace Tibr.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<long?>("RelatedEntityId")
+                        .HasColumnType("bigint");
+
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<long>("UserId")
+                    b.Property<long?>("UserId")
                         .HasColumnType("bigint");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("AdminId");
 
                     b.HasIndex("UserId");
 
@@ -1366,11 +1380,16 @@ namespace Tibr.Infrastructure.Migrations
 
             modelBuilder.Entity("Tibr.Domain.Entities.Notification", b =>
                 {
+                    b.HasOne("Tibr.Domain.Entities.Admin", "Admin")
+                        .WithMany("Notifications")
+                        .HasForeignKey("AdminId");
+
                     b.HasOne("Tibr.Domain.Entities.User", "User")
                         .WithMany("Notifications")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
+
+                    b.Navigation("Admin");
 
                     b.Navigation("User");
                 });
@@ -1579,6 +1598,8 @@ namespace Tibr.Infrastructure.Migrations
             modelBuilder.Entity("Tibr.Domain.Entities.Admin", b =>
                 {
                     b.Navigation("AuditLogs");
+
+                    b.Navigation("Notifications");
 
                     b.Navigation("ReviewedDocuments");
 

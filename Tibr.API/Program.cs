@@ -1,7 +1,7 @@
-using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using System.Text;
 using Tibr.Application;
 using Tibr.Application.Interfaces;
 using Tibr.Application.Services.Email;
@@ -11,6 +11,7 @@ using Tibr.Infrastructure;
 using Tibr.Infrastructure.Config;
 using Tibr.Infrastructure.Contexts;
 using Tibr.Infrastructure.Services;
+using Tibr.Infrastructure.Services.NotificationServices;
 
 namespace Tibr.API
 {
@@ -121,6 +122,8 @@ namespace Tibr.API
             app.UseAuthorization();
 
             app.MapControllers();
+
+            app.MapHub<NotificationHub>("/hubs/notifications");
 
             app.Run();
         }

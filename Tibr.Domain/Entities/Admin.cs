@@ -12,5 +12,7 @@ namespace Tibr.Domain.Entities
         public virtual ICollection<KYCDocument> ReviewedDocuments { get; set; } = [];
         public virtual ICollection<Ticket> TicketReplies { get; set; } = [];
         public virtual ICollection<AuditLog> AuditLogs { get; set; } = [];
+        public virtual ICollection<Notification> Notifications { get; set; } = [];
+
     }
 }

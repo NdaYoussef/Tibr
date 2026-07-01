@@ -54,21 +54,22 @@ namespace Tibr.MVC.Controllers
                     return View(model);
                 }
 
-                var isAdmin = await _context.Set<Admin>()
-                    .AnyAsync(x => x.Email == model.Email);
+                var admin = await _context.Set<Admin>()
+                    .FirstOrDefaultAsync(x => x.Email == model.Email);
 
-                if (!isAdmin)
+                if (admin == null)
                 {
                     ModelState.AddModelError("", "You are not admin");
                     return View(model);
                 }
 
                 var claims = new List<Claim>
-        {
-            new Claim(ClaimTypes.Name, user.Email),
-            new Claim(ClaimTypes.Email, user.Email),
-            new Claim(ClaimTypes.Role, "Admin")
-        };
+                {
+                    new Claim(ClaimTypes.NameIdentifier, admin.Id.ToString()),
+                    new Claim(ClaimTypes.Name, user.Email),
+                    new Claim(ClaimTypes.Email, user.Email),
+                    new Claim(ClaimTypes.Role, "Admin")
+                };
 
                 var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
                 var principal = new ClaimsPrincipal(identity);
@@ -90,6 +91,7 @@ namespace Tibr.MVC.Controllers
                 return View(model);
             }
         }
+
         [HttpGet]
         [HttpPost]
         public async Task<IActionResult> Logout()

@@ -5,10 +5,12 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using System.Reflection;
 using Tibr.Application.InfrastructureContracts;
+using Tibr.Application.Interfaces;
 using Tibr.Application.Services.AdminServices;
 using Tibr.Application.Services.CartServices;
 using Tibr.Application.Services.CategoryServices;
 using Tibr.Application.Services.FavoriteServices;
+using Tibr.Application.Services.NotificationServices;
 using Tibr.Application.Services.ProductServices;
 using Tibr.Application.Services.SuppoertServices;
 using Tibr.Application.Services.SupportServices;
@@ -21,6 +23,7 @@ using Tibr.Domain.IRepositories;
 using Tibr.Infrastructure.Contexts;
 using Tibr.Infrastructure.Queries;
 using Tibr.Infrastructure.Repositories;
+using Tibr.Infrastructure.Services.NotificationServices;
 
 namespace Tibr.Infrastructure
 {
@@ -77,6 +80,10 @@ namespace Tibr.Infrastructure
 
             services.AddScoped<IAssetPriceRepository, AssetPriceRepository>();
 
+
+            services.AddScoped<INotificationService, NotificationService>();
+            services.AddScoped<IAdminNotificationPublisher, SignalRNotificationPublisher>();
+            services.AddSignalR();
             return services;
         }
     }
