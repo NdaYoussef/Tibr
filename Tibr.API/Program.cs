@@ -109,22 +109,27 @@ namespace Tibr.API
 
             var app = builder.Build();
 
-            if (args.Contains("--seed"))
+            // Apply migrations and seed if database is fresh
+            using (var scope = app.Services.CreateScope())
             {
-                Console.WriteLine("Seeding database with Bogus...");
-                using var scope = app.Services.CreateScope();
                 var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-                var seeder = new MassDataSeeder(context);
-                await seeder.SeedAllAsync(userCount: 2000);
-                Console.WriteLine("Database seeding complete.");
-                return;
+
+                await context.Database.MigrateAsync();
+
+                if (!await context.Users.AnyAsync())
+                {
+                    Console.WriteLine("Database is empty. Seeding...");
+                    var seeder = new MassDataSeeder(context);
+                    await seeder.SeedAllAsync(userCount: 2000);
+                    Console.WriteLine("Database seeding complete.");
+                }
             }
 
             if (args.Contains("--clear"))
             {
                 Console.WriteLine("Clearing all data...");
-                using var scope = app.Services.CreateScope();
-                var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                using var clearScope = app.Services.CreateScope();
+                var context = clearScope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
                 var cleaner = new DatabaseCleaner(context);
                 await cleaner.ClearAllAsync();
                 Console.WriteLine("All data cleared.");
