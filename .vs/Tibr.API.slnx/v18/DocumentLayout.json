@@ -146,8 +146,7 @@
               "RelativeToolTip": "Tibr.MVC\\Views\\Withdraw\\Index.cshtml",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2026-06-30T23:40:49.798Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-30T23:40:49.798Z"
             },
             {
               "$type": "Document",
@@ -159,8 +158,7 @@
               "RelativeToolTip": "Tibr.MVC\\Views\\Shared\\_AdminLayout.cshtml",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAANgAAAAmAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2026-06-30T23:34:31.703Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-30T23:34:31.703Z"
             },
             {
               "$type": "Document",
@@ -172,8 +170,7 @@
               "RelativeToolTip": "Tibr.MVC\\Views\\Dashboard\\Reports.cshtml",
               "ViewState": "AgIAAO4BAAAAAAAAAAAwwAUCAAALAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2026-06-30T23:30:59.977Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-30T23:30:59.977Z"
             },
             {
               "$type": "Document",
@@ -185,8 +182,7 @@
               "RelativeToolTip": "Tibr.MVC\\Controllers\\UsersController.cs",
               "ViewState": "AgIAAHYAAAAAAAAAAAAYwI0AAAAZAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-30T23:10:46.357Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-30T23:10:46.357Z"
             },
             {
               "$type": "Document",
@@ -198,8 +194,7 @@
               "RelativeToolTip": "Tibr.MVC\\Views\\AdminAuth\\Login.cshtml",
               "ViewState": "AgIAAHgAAAAAAAAAAAAwwL8AAAAGAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2026-06-29T15:22:16.86Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-29T15:22:16.86Z"
             },
             {
               "$type": "Document",
@@ -209,7 +204,7 @@
               "RelativeDocumentMoniker": "Tibr.MVC\\Views\\Admin\\Index.cshtml",
               "ToolTip": "H:\\Tibr\\Tibr\\Tibr.MVC\\Views\\Admin\\Index.cshtml",
               "RelativeToolTip": "Tibr.MVC\\Views\\Admin\\Index.cshtml",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAJwAAAAAAAAAAAAAAA==",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAkAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
               "WhenOpened": "2026-06-30T23:03:33.39Z",
               "EditorCaption": ""
@@ -224,8 +219,7 @@
               "RelativeToolTip": "Tibr.MVC\\Controllers\\DashboardController.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAG0AAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-30T23:29:31.377Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-30T23:29:31.377Z"
             },
             {
               "$type": "Document",
@@ -237,8 +231,7 @@
               "RelativeToolTip": "Tibr.MVC\\Mapping\\DashboardMappingConfig.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAA4AAABGAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-30T23:28:17.579Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-30T23:28:17.579Z"
             },
             {
               "$type": "Document",
@@ -250,8 +243,7 @@
               "RelativeToolTip": "Tibr.MVC\\Models\\DashboardViewModel.cs",
               "ViewState": "AgIAAH0AAAAAAAAAAAA/wIsAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-30T23:25:22.107Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-30T23:25:22.107Z"
             },
             {
               "$type": "Document",
@@ -263,8 +255,7 @@
               "RelativeToolTip": "Tibr.Application\\Services\\AdminServices\\IAnalyticsService.cs",
               "ViewState": "AgIAAAYAAAAAAAAAAAAAABoAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-30T23:24:08.514Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-30T23:24:08.514Z"
             },
             {
               "$type": "Document",
@@ -276,8 +267,7 @@
               "RelativeToolTip": "Tibr.Application\\Services\\AdminServices\\AnalyticsService.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAoAAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-30T23:23:11.311Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-30T23:23:11.311Z"
             },
             {
               "$type": "Document",
@@ -289,8 +279,7 @@
               "RelativeToolTip": "Tibr.Application\\Dtos\\DashboardDtos\\DashboardDto.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAE8AAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-30T23:22:26.153Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-30T23:22:26.153Z"
             },
             {
               "$type": "Document",
@@ -302,8 +291,7 @@
               "RelativeToolTip": "Tibr.MVC\\Models\\Orders\\OrderViewModels.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAwAAABBAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-30T23:20:20.246Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-30T23:20:20.246Z"
             },
             {
               "$type": "Document",
@@ -315,8 +303,7 @@
               "RelativeToolTip": "Tibr.MVC\\wwwroot\\css\\Admin.css",
               "ViewState": "AgIAACgIAAAAAAAAAAAcwFAIAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003000|",
-              "WhenOpened": "2026-06-30T23:16:24.532Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-30T23:16:24.532Z"
             },
             {
               "$type": "Document",
@@ -328,8 +315,7 @@
               "RelativeToolTip": "Tibr.Application\\Services\\UserServices\\UserService.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAL8AAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-30T23:09:56.633Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-30T23:09:56.633Z"
             },
             {
               "$type": "Document",
@@ -341,8 +327,7 @@
               "RelativeToolTip": "Tibr.Application\\Dtos\\UserDtos.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAADwAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-30T23:09:27.202Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-30T23:09:27.202Z"
             },
             {
               "$type": "Document",
@@ -354,8 +339,7 @@
               "RelativeToolTip": "Tibr.MVC\\Views\\Users\\Edit.cshtml",
               "ViewState": "AgIAAGwAAAAAAAAAAAAwwJMAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2026-06-30T23:06:53.763Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-30T23:06:53.763Z"
             },
             {
               "$type": "Document",
@@ -367,8 +351,7 @@
               "RelativeToolTip": "Tibr.MVC\\Views\\Orders\\Details.cshtml",
               "ViewState": "AgIAAK4AAAAAAAAAAAAwwCwBAAAGAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2026-06-30T23:04:38.764Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-30T23:04:38.764Z"
             },
             {
               "$type": "Document",
@@ -380,8 +363,7 @@
               "RelativeToolTip": "Tibr.MVC\\Views\\Users\\Create.cshtml",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAABAAAAAhAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000759|",
-              "WhenOpened": "2026-06-30T23:05:57.081Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-30T23:05:57.081Z"
             },
             {
               "$type": "Document",
@@ -393,8 +375,7 @@
               "RelativeToolTip": "Tibr.MVC\\Models\\Users\\UserViewModels.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAJkAAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-30T23:03:05.171Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-30T23:03:05.171Z"
             },
             {
               "$type": "Document",
@@ -406,8 +387,7 @@
               "RelativeToolTip": "Tibr.MVC\\Controllers\\OrdersController.cs",
               "ViewState": "AgIAAAgBAAAAAAAAAAAwwC8BAAABAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-06-30T23:02:16.232Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-30T23:02:16.232Z"
             },
             {
               "$type": "Document",
@@ -467,8 +447,7 @@
               "RelativeToolTip": "Tibr.MVC\\appsettings.json",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAUAAAAFAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.001642|",
-              "WhenOpened": "2026-06-29T08:46:55.863Z",
-              "EditorCaption": ""
+              "WhenOpened": "2026-06-29T08:46:55.863Z"
             },
             {
               "$type": "Document",

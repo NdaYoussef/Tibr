@@ -1,0 +1,7 @@
+bin/
+obj/
+vs/
+*.user
+Tibr.API/appsettings.json
+Tibr.API/appsettings.Development.json
+Tibr.MVC/appsettings.json
