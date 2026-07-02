@@ -1,5 +1,0 @@
-H:\Tibr\Tibr\Tibr.MVC\wwwroot\css\Admin.css
-H:\Tibr\Tibr\Tibr.MVC\wwwroot\css\admin-theme.css
-H:\Tibr\Tibr\Tibr.MVC\wwwroot\js\Admin.js
-H:\Tibr\Tibr\Tibr.MVC\wwwroot\css\admin-products.css
-H:\Tibr\Tibr\Tibr.MVC\wwwroot\css\admin-support.css

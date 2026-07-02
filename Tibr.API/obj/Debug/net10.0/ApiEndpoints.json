@@ -620,6 +620,32 @@
     ]
   },
   {
+    "ContainingType": "Tibr.API.Controllers.DepositController",
+    "Method": "Verify",
+    "RelativePath": "api/Deposit/verify/{depositId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "depositId",
+        "Type": "System.Int64",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "Tibr.Application.Dtos.Payment.VerifyStatusResponse",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
     "ContainingType": "Tibr.API.Controllers.FavoriteController",
     "Method": "IsFavorite",
     "RelativePath": "api/Favorite/check/{productId}",
@@ -948,6 +974,118 @@
     "ReturnTypes": [
       {
         "Type": "Tibr.Application.Dtos.Paymob.PaymentInitiateResponse",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Tibr.API.Controllers.PaymentController",
+    "Method": "Verify",
+    "RelativePath": "api/Payment/verify/{paymentId}",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "paymentId",
+        "Type": "System.Int64",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "Tibr.Application.Dtos.Payment.VerifyStatusResponse",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Tibr.API.Controllers.PlansController",
+    "Method": "GetActive",
+    "RelativePath": "api/plans/active",
+    "HttpMethod": "GET",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "Tibr.Application.Dtos.PlanDto",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Tibr.API.Controllers.PlansController",
+    "Method": "Cancel",
+    "RelativePath": "api/plans/cancel",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "Tibr.Application.Dtos.PlanDto",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Tibr.API.Controllers.PlansController",
+    "Method": "ExtendDeadline",
+    "RelativePath": "api/plans/extend-deadline",
+    "HttpMethod": "PUT",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [
+      {
+        "Name": "dto",
+        "Type": "Tibr.Application.Dtos.ExtendDeadlineDto",
+        "IsRequired": true
+      }
+    ],
+    "ReturnTypes": [
+      {
+        "Type": "Tibr.Application.Dtos.PlanDto",
+        "MediaTypes": [
+          "text/plain",
+          "application/json",
+          "text/json"
+        ],
+        "StatusCode": 200
+      }
+    ]
+  },
+  {
+    "ContainingType": "Tibr.API.Controllers.PlansController",
+    "Method": "Reevaluate",
+    "RelativePath": "api/plans/reevaluate",
+    "HttpMethod": "POST",
+    "IsController": true,
+    "Order": 0,
+    "Parameters": [],
+    "ReturnTypes": [
+      {
+        "Type": "Tibr.Application.Dtos.ReevaluatePlanResultDto",
         "MediaTypes": [
           "text/plain",
           "application/json",
