@@ -9,6 +9,7 @@ namespace Tibr.Application.Services.AiChatServices
         Planner = 5,
         Agentic = 6,
         ConditionalOrder = 7,
-        OutOfScope = 8
+        PlanUpdate = 8,
+        OutOfScope = 9
     }
 }

@@ -15,7 +15,9 @@ namespace Tibr.Infrastructure.Services
 
         public async Task IndexFaqAsync(List<FaqEntry> entries)
         {
-            var texts = entries.Select(e => $"Q: {e.Question}\nA: {e.Answer}").ToList();
+            var texts = entries.Select(e => e.QuestionAr is not null
+                ? $"Q: {e.Question}\nA: {e.Answer}\nس: {e.QuestionAr}\nج: {e.AnswerAr ?? e.Answer}"
+                : $"Q: {e.Question}\nA: {e.Answer}").ToList();
             var vectors = await _aiProvider.EmbedBatchAsync(texts);
             for (int i = 0; i < entries.Count; i++)
                 _faqStore.Add(new FaqVector(entries[i], vectors[i]));
@@ -58,7 +60,7 @@ namespace Tibr.Infrastructure.Services
             return new FaqRetrievalResult(results, isDirect);
         }
 
-        public async Task<List<FactEntry>> SearchFactsAsync(string query, float minScore = 0.4f)
+        public async Task<List<ScoredFact>> SearchFactsAsync(string query, int topK = 3, float minScore = 0.4f)
         {
             var queryVec = await _aiProvider.EmbedAsync(query);
 
@@ -66,7 +68,8 @@ namespace Tibr.Infrastructure.Services
                 .Select(f => (f, score: CosineSimilarity(queryVec, f.Vector)))
                 .Where(x => x.score > minScore)
                 .OrderByDescending(x => x.score)
-                .Select(x => x.f.Entry)
+                .Take(topK)
+                .Select(x => new ScoredFact(x.f.Entry, x.score))
                 .ToList();
         }
 

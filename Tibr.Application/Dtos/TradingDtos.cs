@@ -22,6 +22,7 @@ namespace Tibr.Application.Dtos
         public OrderType OrderType { get; set; }
         public ExecutionType ExecutionType { get; set; }
         public decimal Quantity { get; set; }
+        public decimal? MaxAmountEgp { get; set; }
         public DateTime? ExpiryDate { get; set; }
         public List<OrderConditionDto> Conditions { get; set; } = [];
     }
@@ -42,6 +43,7 @@ namespace Tibr.Application.Dtos
         public ExecutionMode ExecutionMode { get; set; }
         public ExecutionType ExecutionType { get; set; }
         public decimal Quantity { get; set; }
+        public decimal? MaxAmountEgp { get; set; }
         public decimal RequestedPrice { get; set; }
         public decimal CurrentPrice { get; set; }
         public OrderStatus Status { get; set; }

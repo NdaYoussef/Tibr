@@ -8,5 +8,6 @@ namespace Tibr.Application.Services.AssetPriceServices
     {
         Task<Result<AssetPriceDto?>> GetCurrentPriceAsync(AssetType assetType);
         Task<Result> RecordPriceAsync(AssetType assetType, decimal buyPrice, decimal sellPrice, string source);
+        Task<Result<PriceAnalyticsDto>> GetPriceAnalyticsAsync(AssetType assetType);
     }
 }

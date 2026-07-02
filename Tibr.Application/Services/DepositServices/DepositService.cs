@@ -1,5 +1,6 @@
 using Microsoft.Extensions.Logging;
 using Tibr.Application.Dtos;
+using Tibr.Application.Dtos.Payment;
 using Tibr.Domain.Entities;
 using Tibr.Domain.Enums;
 using Tibr.Domain.IRepositories;
@@ -57,7 +58,7 @@ public class DepositService : IDepositService
         var email = user?.Email ?? "";
         var phone = user?.Phone ?? "0000000000";
 
-        var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        var timestamp = new DateTimeOffset(deposit.CreatedAt).ToUnixTimeSeconds();
         var specialReference = $"deposit:{deposit.Id}:{timestamp}";
 
         deposit.TransactionRef = specialReference;
@@ -161,5 +162,86 @@ public class DepositService : IDepositService
         }).ToList();
 
         return Result<List<DepositDto>>.Success(dtos);
+    }
+
+    public async Task<Result<VerifyStatusResponse>> VerifyDepositAsync(long depositId)
+    {
+        var deposit = await _depositRepo.GetByIdAsync(depositId);
+        if (deposit is null)
+            return Result<VerifyStatusResponse>.Failure("Deposit not found.");
+
+        if (deposit.Status == DepositStatus.Completed)
+        {
+            return Result<VerifyStatusResponse>.Success(new VerifyStatusResponse
+            {
+                EntityId = deposit.Id,
+                EntityType = "deposit",
+                Status = "Completed",
+                IsCompleted = true,
+                InquiredPaymob = false,
+                Message = "Deposit is already completed.",
+            });
+        }
+
+        if (deposit.Status != DepositStatus.Pending)
+        {
+            return Result<VerifyStatusResponse>.Success(new VerifyStatusResponse
+            {
+                EntityId = deposit.Id,
+                EntityType = "deposit",
+                Status = deposit.Status.ToString(),
+                IsCompleted = false,
+                InquiredPaymob = false,
+                Message = $"Deposit is {deposit.Status}.",
+            });
+        }
+
+        if (string.IsNullOrEmpty(deposit.TransactionRef))
+            return Result<VerifyStatusResponse>.Failure("Deposit has no transaction reference to inquire.");
+
+        var inquiry = await _paymentGateway.InquireByMerchantOrderAsync(deposit.TransactionRef);
+        if (!inquiry.IsSuccess)
+            return Result<VerifyStatusResponse>.Failure(inquiry.ErrorMessage!);
+
+        if (inquiry.IsPaid)
+        {
+            deposit.Status = DepositStatus.Completed;
+            await _depositRepo.UpdateAsync(deposit);
+
+            var cashWallet = _walletRepo
+                .GetAll(w => w.UserId == deposit.UserId && w.WalletType == WalletType.Cash)
+                .FirstOrDefault();
+
+            if (cashWallet is null)
+                return Result<VerifyStatusResponse>.Failure("Cash wallet not found.");
+
+            var creditResult = await _walletService.CreditAsync(
+                cashWallet.Id, deposit.Amount, ReferenceType.Deposit, deposit.Id);
+
+            if (creditResult.IsFailure)
+                return Result<VerifyStatusResponse>.Failure(creditResult.ErrorMessage!);
+
+            await _depositRepo.SaveChangesAsync();
+
+            return Result<VerifyStatusResponse>.Success(new VerifyStatusResponse
+            {
+                EntityId = deposit.Id,
+                EntityType = "deposit",
+                Status = "Completed",
+                IsCompleted = true,
+                InquiredPaymob = true,
+                Message = "Deposit confirmed via Paymob inquiry.",
+            });
+        }
+
+        return Result<VerifyStatusResponse>.Success(new VerifyStatusResponse
+        {
+            EntityId = deposit.Id,
+            EntityType = "deposit",
+            Status = "Pending",
+            IsCompleted = false,
+            InquiredPaymob = true,
+            Message = "Deposit is still pending on Paymob's side.",
+        });
     }
 }

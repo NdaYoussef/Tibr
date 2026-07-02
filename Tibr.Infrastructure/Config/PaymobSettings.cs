@@ -11,5 +11,6 @@ namespace Tibr.Infrastructure.Config
         public string IframeId { get; set; } = string.Empty;
         public string BaseUrl { get; set; } = "https://accept.paymob.com";
         public string FrontendBaseUrl { get; set; } = "http://localhost:4200";
+        public string ApiKey { get; set; } = string.Empty;
     }
 }

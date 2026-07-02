@@ -67,7 +67,23 @@ namespace Tibr.Infrastructure
 
             services.AddScoped<ITicketRepository, TicketRepository>();
 
+
             services.AddSingleton<IVectorStoreService, InMemoryVectorStoreService>();
+
+            var vectorStoreType = configuration.GetValue<string>("VectorStore");
+
+            if (vectorStoreType == "Qdrant")
+            {
+                services.Configure<QdrantSettings>(
+                    configuration.GetSection(QdrantSettings.SectionName));
+
+                services.AddHttpClient<IVectorStoreService, QdrantVectorStoreService>();
+            }
+            else
+            {
+                services.AddSingleton<IVectorStoreService, InMemoryVectorStoreService>();
+            }
+
             services.AddHostedService<ChatSeedHostedService>();
 
             services.AddHttpClient<GeminiProviderService>();

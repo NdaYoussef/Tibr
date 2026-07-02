@@ -1,3 +1,4 @@
+using System.Security.Claims;
 using System.Text.Json;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -5,6 +6,7 @@ using Microsoft.Extensions.Options;
 using Tibr.Application.Dtos.Paymob;
 using Tibr.Application.Services.PaymentServices;
 using Tibr.Infrastructure.Config;
+using Tibr.Application.Dtos.Payment;
 
 namespace Tibr.API.Controllers;
 
@@ -29,6 +31,14 @@ public class PaymentController : ControllerBase
         _settings = settings.Value;
     }
 
+    private long? GetUserId()
+    {
+        var claim = User.FindFirst(ClaimTypes.NameIdentifier);
+        if (claim is null || !long.TryParse(claim.Value, out var userId))
+            return null;
+        return userId;
+    }
+
     [HttpPost("initiate")]
     public async Task<ActionResult<PaymentInitiateResponse>> Initiate(
         [FromBody] CreatePaymentRequest request)
@@ -39,6 +49,19 @@ public class PaymentController : ControllerBase
             return BadRequest(result.ErrorMessage);
 
         return Ok(new PaymentInitiateResponse(result.Data!));
+    }
+
+    [HttpGet("verify/{paymentId:long}"), Authorize]
+    public async Task<ActionResult<VerifyStatusResponse>> Verify(long paymentId)
+    {
+        var userId = GetUserId();
+        if (userId is null) return Unauthorized();
+
+        var result = await _paymentService.VerifyPaymentAsync(paymentId);
+        if (result.IsFailure)
+            return BadRequest(result.ErrorMessage);
+
+        return Ok(result.Data);
     }
 
     [HttpPost("callback/processed"), AllowAnonymous]

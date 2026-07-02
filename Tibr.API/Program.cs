@@ -5,19 +5,21 @@ using Microsoft.IdentityModel.Tokens;
 using Tibr.API.BackgroundServices;
 using Tibr.Application;
 using Tibr.Application.Interfaces;
+using Tibr.Application.Services.AiChatServices;
 using Tibr.Application.Services.Email;
 using Tibr.Application.Services.MarketPriceService;
 using Tibr.Application.Services.PaymentServices;
 using Tibr.Infrastructure;
 using Tibr.Infrastructure.Config;
 using Tibr.Infrastructure.Contexts;
+using Tibr.Infrastructure.Seed;
 using Tibr.Infrastructure.Services;
 
 namespace Tibr.API
 {
     public class Program
     {
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             var builder = WebApplication.CreateBuilder(args);
 
@@ -90,6 +92,15 @@ namespace Tibr.API
             builder.Services.Configure<PaymobSettings>(
                 configuration.GetSection(PaymobSettings.SectionName)
             );
+
+            builder.Services.Configure<PricingSettings>(
+                configuration.GetSection(PricingSettings.SectionName)
+            );
+
+            var routingOptions = configuration
+                .GetSection(ChatRoutingOptions.SectionName)
+                .Get<ChatRoutingOptions>() ?? new ChatRoutingOptions();
+            builder.Services.AddSingleton(routingOptions);
             builder.Services.AddHttpClient<IPaymentGateway, PaymobPaymentGateway>();
 
             builder.Services.AddHttpClient<IMarketPriceService, MarketPriceService>();
@@ -97,6 +108,28 @@ namespace Tibr.API
             builder.Services.AddHostedService<ResolutionBackgroundService>();
 
             var app = builder.Build();
+
+            if (args.Contains("--seed"))
+            {
+                Console.WriteLine("Seeding database with Bogus...");
+                using var scope = app.Services.CreateScope();
+                var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                var seeder = new MassDataSeeder(context);
+                await seeder.SeedAllAsync(userCount: 2000);
+                Console.WriteLine("Database seeding complete.");
+                return;
+            }
+
+            if (args.Contains("--clear"))
+            {
+                Console.WriteLine("Clearing all data...");
+                using var scope = app.Services.CreateScope();
+                var context = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+                var cleaner = new DatabaseCleaner(context);
+                await cleaner.ClearAllAsync();
+                Console.WriteLine("All data cleared.");
+                return;
+            }
 
             if (app.Environment.IsDevelopment())
             {

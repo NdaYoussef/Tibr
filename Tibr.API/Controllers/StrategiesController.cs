@@ -79,12 +79,22 @@ namespace Tibr.API.Controllers
             if (execType is null)
                 return BadRequest("Invalid executionType. Allowed: alert_only, auto_execute, alert_and_execute.");
 
+            if (orderType == OrderType.Buy && dto.MaxAmountEgp is null)
+                return BadRequest("MaxAmountEgp is required for buy strategies.");
+
+            if (orderType == OrderType.Buy && dto.MaxAmountEgp <= 0)
+                return BadRequest("MaxAmountEgp must be greater than zero.");
+
+            if (orderType == OrderType.Sell && dto.Quantity is null)
+                return BadRequest("Quantity is required for sell strategies.");
+
             var serviceDto = new CreateStrategyOrderDto
             {
                 AssetType = assetType.Value,
                 OrderType = orderType.Value,
                 ExecutionType = execType.Value,
-                Quantity = dto.Quantity,
+                Quantity = dto.Quantity ?? 0,
+                MaxAmountEgp = orderType == OrderType.Buy ? dto.MaxAmountEgp : null,
                 ExpiryDate = dto.ExpiresAt,
                 Conditions =
                 [

@@ -1,4 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.ChangeTracking;
+using Tibr.Domain.Common.Classes;
 using Tibr.Domain.Entities;
 
 namespace Tibr.Infrastructure.Contexts
@@ -8,6 +10,39 @@ namespace Tibr.Infrastructure.Contexts
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options)
             : base(options) { }
 
+        public override Task<int> SaveChangesAsync(CancellationToken cancellationToken = default)
+        {
+            ApplyTimestamps();
+            return base.SaveChangesAsync(cancellationToken);
+        }
+
+        public override int SaveChanges()
+        {
+            ApplyTimestamps();
+            return base.SaveChanges();
+        }
+
+        private void ApplyTimestamps()
+        {
+            var now = DateTime.UtcNow;
+            foreach (var entry in ChangeTracker.Entries<BaseEntity<long>>())
+            {
+                switch (entry.State)
+                {
+                    case EntityState.Added:
+                        if (entry.Entity.CreatedAt == default)
+                            entry.Entity.CreatedAt = now;
+                        entry.Entity.UpdatedAt = now;
+                        break;
+
+                    case EntityState.Modified:
+                        entry.Entity.UpdatedAt = now;
+                        break;
+                }
+            }
+        }
+
+        // User and Admin entities
         public DbSet<User> Users { get; set; }
         public DbSet<Admin> Admins { get; set; }
         public DbSet<Product> Products { get; set; }
@@ -29,6 +64,7 @@ namespace Tibr.Infrastructure.Contexts
         public DbSet<WalletTransaction> WalletTransactions { get; set; }
         public DbSet<Deposit> Deposits { get; set; }
         public DbSet<AssetPrice> AssetPrices { get; set; }
+        public DbSet<PriceSnapshot> PriceSnapshots { get; set; }
         public DbSet<OrdersInvestment> OrdersInvestments { get; set; }
         public DbSet<OrderCondition> OrderConditions { get; set; }
         public DbSet<Reservation> Reservations { get; set; }
@@ -41,6 +77,7 @@ namespace Tibr.Infrastructure.Contexts
         public DbSet<Review> Reviews { get; set; }
 
         // Chat entities
+        public DbSet<Plan> Plans { get; set; }
         public DbSet<ChatConversation> ChatConversations { get; set; }
         public DbSet<ChatMessage> ChatMessages { get; set; }
         public DbSet<ChatOrderProposal> ChatOrderProposals { get; set; }
@@ -240,6 +277,13 @@ namespace Tibr.Infrastructure.Contexts
             modelBuilder.Entity<AssetPrice>()
                 .Property(x => x.SellPrice).HasPrecision(18, 4);
 
+            modelBuilder.Entity<PriceSnapshot>(entity =>
+            {
+                entity.ToTable("PriceSnapshots");
+                entity.HasIndex(e => new { e.AssetType, e.SnapshotDate }).IsUnique();
+                entity.Property(e => e.Price).HasPrecision(18, 4);
+            });
+
             modelBuilder.Entity<OrdersInvestment>()
                 .Property(x => x.Quantity).HasPrecision(18, 4);
 
@@ -248,6 +292,9 @@ namespace Tibr.Infrastructure.Contexts
 
             modelBuilder.Entity<OrdersInvestment>()
                 .Property(x => x.CurrentPrice).HasPrecision(18, 4);
+
+            modelBuilder.Entity<OrdersInvestment>()
+                .Property(x => x.MaxBudgetEgp).HasPrecision(18, 2);
 
             modelBuilder.Entity<OrderCondition>()
                 .Property(x => x.TargetValue).HasPrecision(18, 4);
@@ -269,6 +316,33 @@ namespace Tibr.Infrastructure.Contexts
 
             modelBuilder.Entity<DeliveryRequest>()
                 .Property(x => x.Quantity).HasPrecision(18, 4);
+
+            #endregion
+
+            #region Plan
+
+            modelBuilder.Entity<Plan>()
+                .HasOne(p => p.User)
+                .WithMany(u => u.Plans)
+                .HasForeignKey(p => p.UserId)
+                .OnDelete(DeleteBehavior.Cascade);
+
+            modelBuilder.Entity<Plan>()
+                .Property(p => p.TargetAmount).HasPrecision(18, 4);
+
+            modelBuilder.Entity<Plan>()
+                .Property(p => p.PriceAtCreation).HasPrecision(18, 2);
+
+            modelBuilder.Entity<Plan>()
+                .Property(p => p.SilverPriceAtCreation).HasPrecision(18, 2);
+
+            modelBuilder.Entity<Plan>()
+                .Property(p => p.MonthlyBudgetEgp).HasPrecision(18, 2);
+
+            modelBuilder.Entity<Plan>()
+                .Property(p => p.Status)
+                .HasConversion<string>()
+                .HasMaxLength(20);
 
             #endregion
 

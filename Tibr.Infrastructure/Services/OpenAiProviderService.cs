@@ -78,6 +78,7 @@ namespace Tibr.Infrastructure.Services
             request.Content = JsonContent.Create(body, options: JsonOpts);
 
             HttpResponseMessage? res = null;
+            string? errorBody = null;
             try
             {
                 res = await _http.SendAsync(request);
@@ -85,8 +86,9 @@ namespace Tibr.Infrastructure.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "OpenAI ChatAsync failed ({StatusCode})",
-                    res?.StatusCode.ToString() ?? "no response");
+                try { errorBody = res?.Content is not null ? await res.Content.ReadAsStringAsync() : null; } catch { }
+                _logger.LogError(ex, "OpenAI ChatAsync failed ({StatusCode}): {ErrorBody}",
+                    res?.StatusCode.ToString() ?? "no response", errorBody ?? "(no body)");
                 return new AssistantResponse(
                     "I'm sorry, the AI service is temporarily unavailable. Please try again shortly.", null);
             }
@@ -130,6 +132,7 @@ namespace Tibr.Infrastructure.Services
             request.Content = JsonContent.Create(body, options: JsonOpts);
 
             HttpResponseMessage? res = null;
+            string? errorBody = null;
             try
             {
                 res = await _http.SendAsync(request);
@@ -137,8 +140,9 @@ namespace Tibr.Infrastructure.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "OpenAI EmbedBatchAsync failed ({StatusCode})",
-                    res?.StatusCode.ToString() ?? "no response");
+                try { errorBody = res?.Content is not null ? await res.Content.ReadAsStringAsync() : null; } catch { }
+                _logger.LogError(ex, "OpenAI EmbedBatchAsync failed ({StatusCode}): {ErrorBody}",
+                    res?.StatusCode.ToString() ?? "no response", errorBody ?? "(no body)");
                 return texts.Select(_ => Array.Empty<float>()).ToList();
             }
 

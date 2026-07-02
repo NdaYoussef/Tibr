@@ -93,6 +93,7 @@ namespace Tibr.Infrastructure.Services
                 + $":generateContent?key={_settings.ChatApiKey}";
 
             HttpResponseMessage? res = null;
+            string? errorBody = null;
             try
             {
                 res = await _http.PostAsJsonAsync(url, body);
@@ -100,8 +101,9 @@ namespace Tibr.Infrastructure.Services
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Gemini ChatAsync failed ({StatusCode})", 
-                    res?.StatusCode.ToString() ?? "no response");
+                try { errorBody = res?.Content is not null ? await res.Content.ReadAsStringAsync() : null; } catch { }
+                _logger.LogError(ex, "Gemini ChatAsync failed ({StatusCode}): {ErrorBody}",
+                    res?.StatusCode.ToString() ?? "no response", errorBody ?? "(no body)");
                 return new AssistantResponse(
                     "I'm sorry, the AI service is temporarily unavailable. Please try again shortly.", null);
             }

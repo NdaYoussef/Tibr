@@ -10,9 +10,10 @@ namespace Tibr.Application.Dtos
         [Required]
         public string Side { get; set; } = string.Empty;
 
-        [Required]
-        [Range(0.0001, double.MaxValue)]
-        public decimal Quantity { get; set; }
+        public decimal? Quantity { get; set; }
+
+        [Range(0.01, double.MaxValue)]
+        public decimal? MaxAmountEgp { get; set; }
 
         [Required]
         public string Operator { get; set; } = string.Empty;

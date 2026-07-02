@@ -31,5 +31,6 @@ namespace Tibr.Domain.Entities
         public ICollection<Address> Addresses { get; set; } = new List<Address>();
         public ICollection<Withdraw> Withdraws { get; set; } = new List<Withdraw>();
         public ICollection<Review> Reviews { get; set; } = new List<Review>();
+        public ICollection<Plan> Plans { get; set; } = new List<Plan>();
     }
 }

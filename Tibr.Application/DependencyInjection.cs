@@ -18,7 +18,7 @@ using Tibr.Application.Services.TradeServices;
 using Tibr.Application.Services.UserServices;
 using Tibr.Application.Services.WalletServices;
 using Tibr.Application.Services.WithdrawServices;
-
+using Tibr.Application.Services.PlanServices;
 namespace Tibr.Application
 {
     public static class DependencyInjection
@@ -36,6 +36,7 @@ namespace Tibr.Application
             services.AddScoped<IDeliveryService, DeliveryService>();
             services.AddScoped<IWithdrawService, WithdrawService>();
             services.AddScoped<IReviewService, ReviewService>();
+            services.AddScoped<IPlanService, PlanService>();
             services.AddScoped<PaymentService>();
             services.AddScoped<IAdminService, AdminService>();
             services.AddScoped<IAnalyticsService, AnalyticsService>();

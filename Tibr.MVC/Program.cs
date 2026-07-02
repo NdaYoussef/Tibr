@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.EntityFrameworkCore;
 using Tibr.Application;
 using Tibr.Application.Interfaces;
+using Tibr.Application.Services.AiChatServices;
 using Tibr.Application.Services.Email;
 using Tibr.Application.Services.MarketPriceService;
 using Tibr.Application.Services.PaymentServices;
@@ -42,8 +43,11 @@ namespace Tibr.MVC
             // ================= Services =================
             builder.Services.AddTransient<IEmailService, EmailService>();
             builder.Services.AddHttpClient<IPaymentGateway, PaymobPaymentGateway>();
-            builder.Services.AddHttpClient< IMarketPriceService, MarketPriceService>();
-
+            builder.Services.AddHttpClient<IMarketPriceService, MarketPriceService>();
+            var routingOptions = configuration
+                .GetSection(ChatRoutingOptions.SectionName)
+                .Get<ChatRoutingOptions>() ?? new ChatRoutingOptions();
+            builder.Services.AddSingleton(routingOptions);
             TypeAdapterConfig.GlobalSettings.Scan(
                         typeof(Tibr.Application.Mappers.ProductMappingConfig).Assembly,
                         typeof(Tibr.MVC.Mapping.DashboardMappingConfig).Assembly);
