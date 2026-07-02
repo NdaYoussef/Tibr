@@ -27,6 +27,8 @@ namespace Tibr.Domain.Entities
 
         public ExecutionType ExecutionType { get; set; }
 
+        public decimal? MaxBudgetEgp { get; set; }
+
         public DateTime? ExpiryDate { get; set; }
 
         public ICollection<OrderCondition> Conditions { get; set; } = [];

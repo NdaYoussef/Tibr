@@ -1,4 +1,5 @@
 using Microsoft.Extensions.Logging;
+using Tibr.Application.Dtos.Payment;
 using Tibr.Application.Dtos.Paymob;
 using Tibr.Application.Services.DepositServices;
 using Tibr.Domain.Entities;
@@ -59,7 +60,7 @@ public class PaymentService
         await _paymentRepo.AddAsync(payment);
         await _paymentRepo.SaveChangesAsync();
 
-        var timestamp = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+        var timestamp = new DateTimeOffset(payment.CreatedAt).ToUnixTimeSeconds();
         var specialReference = $"payment:{payment.Id}:{orderId}:{timestamp}";
 
         var intentionRequest = new Dtos.Payment.PaymentIntentionRequest
@@ -84,6 +85,83 @@ public class PaymentService
         }
 
         return Result<string>.Success(result.CheckoutUrl);
+    }
+
+    public async Task<Result<VerifyStatusResponse>> VerifyPaymentAsync(long paymentId)
+    {
+        var payment = await _paymentRepo.GetByIdAsync(paymentId);
+        if (payment is null)
+            return Result<VerifyStatusResponse>.Failure("Payment not found.");
+
+        if (payment.Status == "Completed")
+        {
+            return Result<VerifyStatusResponse>.Success(new VerifyStatusResponse
+            {
+                EntityId = payment.Id,
+                EntityType = "payment",
+                Status = "Completed",
+                IsCompleted = true,
+                InquiredPaymob = false,
+                Message = "Payment is already completed.",
+            });
+        }
+
+        if (payment.Status != "Pending")
+        {
+            return Result<VerifyStatusResponse>.Success(new VerifyStatusResponse
+            {
+                EntityId = payment.Id,
+                EntityType = "payment",
+                Status = payment.Status,
+                IsCompleted = false,
+                InquiredPaymob = false,
+                Message = $"Payment is {payment.Status}.",
+            });
+        }
+
+        var timestamp = new DateTimeOffset(payment.CreatedAt).ToUnixTimeSeconds();
+        var merchantOrderId = $"payment:{payment.Id}:{payment.OrderId}:{timestamp}";
+
+        var inquiry = await _gateway.InquireByMerchantOrderAsync(merchantOrderId);
+        if (!inquiry.IsSuccess)
+            return Result<VerifyStatusResponse>.Failure(inquiry.ErrorMessage!);
+
+        if (inquiry.IsPaid)
+        {
+            payment.Status = "Completed";
+            payment.PaidAt = DateTime.UtcNow;
+            await _paymentRepo.UpdateAsync(payment);
+
+            var order = await _orderRepo.GetByIdAsync(payment.OrderId);
+            if (order is not null)
+            {
+                order.PaymentStatus = "Paid";
+                order.OrderStatus = "Processing";
+                await _orderRepo.UpdateAsync(order);
+            }
+
+            await _paymentRepo.SaveChangesAsync();
+
+            return Result<VerifyStatusResponse>.Success(new VerifyStatusResponse
+            {
+                EntityId = payment.Id,
+                EntityType = "payment",
+                Status = "Completed",
+                IsCompleted = true,
+                InquiredPaymob = true,
+                Message = "Payment confirmed via Paymob inquiry.",
+            });
+        }
+
+        return Result<VerifyStatusResponse>.Success(new VerifyStatusResponse
+        {
+            EntityId = payment.Id,
+            EntityType = "payment",
+            Status = "Pending",
+            IsCompleted = false,
+            InquiredPaymob = true,
+            Message = "Payment is still pending on Paymob's side.",
+        });
     }
 
     public async Task HandlePaymentCallbackAsync(string rawBody)

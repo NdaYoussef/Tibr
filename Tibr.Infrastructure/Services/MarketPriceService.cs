@@ -1,10 +1,14 @@
 ﻿using System;
 using System.Net.Http.Json;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
 using Tibr.Application.Dtos.MarketPrices;
 using Tibr.Application.Services.MarketPriceService;
 using Tibr.Domain.Entities;
 using Tibr.Domain.Enums;
 using Tibr.Domain.IRepositories;
+using Tibr.Infrastructure.Config;
+using Tibr.Infrastructure.Contexts;
 
 namespace Tibr.Infrastructure.Services
 {
@@ -12,15 +16,21 @@ namespace Tibr.Infrastructure.Services
     {
         private readonly HttpClient _httpClient;
         private readonly IAssetPriceRepository _assetPriceRepository;
+        private readonly ApplicationDbContext _dbContext;
+        private readonly IOptions<PricingSettings> _pricingSettings;
 
         private const decimal TroyOunceToGram = 31.1034768m;
 
         public MarketPriceService(
         HttpClient httpClient,
-        IAssetPriceRepository assetPriceRepository)
+        IAssetPriceRepository assetPriceRepository,
+        ApplicationDbContext dbContext,
+        IOptions<PricingSettings> pricingSettings)
         {
             _httpClient = httpClient;
             _assetPriceRepository = assetPriceRepository;
+            _dbContext = dbContext;
+            _pricingSettings = pricingSettings;
         }
 
         public async Task UpdateAssetPricesAsync()
@@ -42,6 +52,8 @@ namespace Tibr.Infrastructure.Services
                     AssetType.Gold,
                     goldGramPrice,
                     "gold-api + fxapi");
+
+                await EnsureDailySnapshotAsync(AssetType.Gold, Math.Round(goldGramPrice, 2));
             }
 
             if (silverPriceUsd > 0)
@@ -53,9 +65,12 @@ namespace Tibr.Infrastructure.Services
                     AssetType.Silver,
                     silverGramPrice,
                     "gold-api + fxapi");
+
+                await EnsureDailySnapshotAsync(AssetType.Silver, Math.Round(silverGramPrice, 2));
             }
 
             await _assetPriceRepository.SaveChangesAsync();
+            await _dbContext.SaveChangesAsync();
         }
         private async Task<decimal> GetGoldPriceAsync()
         {
@@ -90,13 +105,15 @@ namespace Tibr.Infrastructure.Services
                 .GetAll(x => x.AssetType == assetType)
                 .FirstOrDefault();
 
+            var spread = _pricingSettings.Value.Spread;
+
             if (asset == null)
             {
                 asset = new AssetPrice
                 {
                     AssetType = assetType,
-                    BuyPrice = Math.Round(gramPrice, 2),
-                    SellPrice = Math.Round(gramPrice * 1.05m, 2),
+                    BuyPrice = Math.Round(gramPrice * (1 - spread), 2),
+                    SellPrice = Math.Round(gramPrice * (1 + spread), 2),
                     Source = source
                 };
 
@@ -104,10 +121,41 @@ namespace Tibr.Infrastructure.Services
             }
             else
             {
-                asset.BuyPrice = Math.Round(gramPrice, 2);
-                asset.SellPrice = Math.Round(gramPrice * 1.05m, 2);
+                asset.BuyPrice = Math.Round(gramPrice * (1 - spread), 2);
+                asset.SellPrice = Math.Round(gramPrice * (1 + spread), 2);
                 asset.Source = source;
             }
         }
+
+        private async Task EnsureDailySnapshotAsync(AssetType assetType, decimal price)
+        {
+            var today = DateTime.UtcNow.Date;
+            var existing = await _dbContext.PriceSnapshots
+                .FirstOrDefaultAsync(ps => ps.AssetType == assetType && ps.SnapshotDate == today);
+
+            if (existing != null)
+                return;
+
+            var snapshot = new PriceSnapshot
+            {
+                AssetType = assetType,
+                Price = price,
+                SnapshotDate = today
+            };
+
+            try
+            {
+                _dbContext.PriceSnapshots.Add(snapshot);
+                await _dbContext.SaveChangesAsync();
+            }
+            catch (DbUpdateException ex) when (IsUniqueViolation(ex))
+            {
+                _dbContext.Entry(snapshot).State = EntityState.Detached;
+            }
+        }
+
+        private static bool IsUniqueViolation(DbUpdateException ex)
+            => ex.InnerException?.Message?.Contains("UNIQUE") == true
+            || ex.InnerException?.Message?.Contains("unique") == true;
     }
 }

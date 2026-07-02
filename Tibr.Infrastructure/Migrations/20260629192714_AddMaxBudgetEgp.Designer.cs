@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Tibr.Infrastructure.Contexts;
 
@@ -11,9 +12,11 @@ using Tibr.Infrastructure.Contexts;
 namespace Tibr.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260629192714_AddMaxBudgetEgp")]
+    partial class AddMaxBudgetEgp
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -861,68 +864,6 @@ namespace Tibr.Infrastructure.Migrations
                     b.ToTable("Payments");
                 });
 
-            modelBuilder.Entity("Tibr.Domain.Entities.Plan", b =>
-                {
-                    b.Property<long>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("bigint");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
-
-                    b.Property<string>("Asset")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("GoalType")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<bool>("IsDeleted")
-                        .HasColumnType("bit");
-
-                    b.Property<DateTime?>("LastReevaluatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<decimal?>("MonthlyBudgetEgp")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal>("PriceAtCreation")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<decimal?>("SilverPriceAtCreation")
-                        .HasPrecision(18, 2)
-                        .HasColumnType("decimal(18,2)");
-
-                    b.Property<string>("Status")
-                        .IsRequired()
-                        .HasMaxLength(20)
-                        .HasColumnType("nvarchar(20)");
-
-                    b.Property<decimal>("TargetAmount")
-                        .HasPrecision(18, 4)
-                        .HasColumnType("decimal(18,4)");
-
-                    b.Property<int?>("TimeframeWeeks")
-                        .HasColumnType("int");
-
-                    b.Property<DateTime?>("UpdatedAt")
-                        .HasColumnType("datetime2");
-
-                    b.Property<long>("UserId")
-                        .HasColumnType("bigint");
-
-                    b.HasKey("Id");
-
-                    b.HasIndex("UserId");
-
-                    b.ToTable("Plans");
-                });
-
             modelBuilder.Entity("Tibr.Domain.Entities.PriceSnapshot", b =>
                 {
                     b.Property<long>("Id")
@@ -1671,17 +1612,6 @@ namespace Tibr.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
-            modelBuilder.Entity("Tibr.Domain.Entities.Plan", b =>
-                {
-                    b.HasOne("Tibr.Domain.Entities.User", "User")
-                        .WithMany("Plans")
-                        .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.Navigation("User");
-                });
-
             modelBuilder.Entity("Tibr.Domain.Entities.Product", b =>
                 {
                     b.HasOne("Tibr.Domain.Entities.Category", "Category")
@@ -1889,8 +1819,6 @@ namespace Tibr.Infrastructure.Migrations
                     b.Navigation("Orders");
 
                     b.Navigation("Payments");
-
-                    b.Navigation("Plans");
 
                     b.Navigation("Reviews");
 

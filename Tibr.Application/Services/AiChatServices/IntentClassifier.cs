@@ -1,26 +1,53 @@
 using System.Text.Json;
+using Microsoft.Extensions.Logging;
 
 namespace Tibr.Application.Services.AiChatServices
 {
     public class IntentClassifier
     {
         private readonly IAiProviderService _aiProvider;
+        private readonly ILogger<IntentClassifier> _logger;
 
         private const string SystemPrompt = """
             You are an intent classifier for Tibr, a fractional gold investment app.
             Classify the user's message into exactly one intent and return ONLY valid JSON.
+            The user may write in English or Arabic — respond with the correct intent regardless.
 
-            Intents:
-            - "faq": questions about how Tibr works, fractional investment, gold concepts
+            Intents with examples in both languages:
+
+            - "price": questions about current prices or market timing
+              AR: سعر الذهب, سعر الفضة, كم سعر الذهب اليوم, هل الوقت مناسب للشراء, أسعار اليوم
+              EN: gold price, silver price, current rate, is now a good time to buy, market price
+
+            - "faq": questions about how Tibr works, fractional investment, general gold concepts
+              AR: كيف يعمل تبر, ما هو, شرح, كيف أبدأ, ما معنى الاستثمار الجزئي
+              EN: how does Tibr work, what is fractional, explain, minimum investment, how to start
+
             - "facts": questions about Tibr's specific policies, fees, limits, rules
-            - "price": questions about current gold prices or market context
-            - "portfolio_read": questions about the user's own holdings or profitability (ANALYZE only, no action)
-            - "planner": user wants to set a savings goal or simulate a scenario
-            - "agentic": requests to buy/sell/trade gold or silver NOW. Examples: "buy 10g gold", "sell my silver", "place an order", "make a trade", "sell profitable fractions", "execute an order"
-            - "conditional_order": user wants to set a condition on a future price before buying or selling. Examples: "buy when gold drops below 8000", "sell silver if it reaches 140", "set a strategy for gold", "alert me when gold hits 8500"
-            - "out_of_scope": anything unrelated to gold, investment, or Tibr
+              AR: رسوم, سياسة, حد أدنى, عمولة, مصاريف, شروط
+              EN: fees, policy, limits, rules, commission, charges
 
-            Priority rule: if the user asks to execute, perform, or make a trade/order, classify as "agentic", not "portfolio_read". The phrase "profitable fractions" in context of selling is agentic, not a portfolio query. If the user mentions a future price condition, classify as "conditional_order", not "agentic".
+            - "portfolio_read": questions about the user's own holdings or profitability (ANALYZE only, no action)
+              AR: محفظتي, أرباحي, كم عندي ذهب, رصيدي, مشترياتي, صافي الربح
+              EN: my portfolio, my holdings, my profit, my balance, show my trades
+
+            - "planner": user wants a savings/investment plan, portfolio allocation, or has a specific goal
+              AR: كيف أوزع ميزانيتي, خطة استثمار, عمل خطة, خطط لي, أريد ادخار 10 جرام ذهب في 3 شهور, وفر 500 جنيه شهرياً, توزيع المحفظة
+              EN: how should I distribute my budget, make a plan for me, investment plan, I want to save 10g of gold in 3 months, help me invest 500 EGP per month, portfolio allocation
+
+            - "agentic": requests to buy/sell/trade gold or silver NOW
+              AR: اشتري ذهب, بيع فضة, شراء سبائك, نفذ أمر, أريد شراء, أريد بيع
+              EN: buy 10g gold, sell my silver, place an order, make a trade, execute an order, purchase gold
+
+            - "conditional_order": user wants to set a condition on a future price before buying/selling
+              AR: اشتري إذا انخفض السعر, بيع عندما يصل, أمر معلق, أوقف الخسارة
+              EN: buy when gold drops below 8000, sell silver if it reaches 140, set a strategy, alert me when
+
+            - "plan_update": user wants to check progress on their savings plan or update it
+              AR: تقدم خطتي, كيف خطتي, حدث خطتي, مراجعة الادخار, أين وصلت في خطتي
+              EN: how's my plan, update my plan, check my savings plan, plan progress, review my plan
+
+            - "out_of_scope": anything unrelated to gold, investment, or Tibr
 
             Also detect the language of the user's message. Use ISO 639-1 codes (e.g. "en" for English, "ar" for Arabic).
 
@@ -38,15 +65,20 @@ namespace Tibr.Application.Services.AiChatServices
             - Never add explanation outside the JSON
             """;
 
-        public IntentClassifier(IAiProviderService aiProvider)
+        public IntentClassifier(IAiProviderService aiProvider, ILogger<IntentClassifier> logger)
         {
             _aiProvider = aiProvider;
+            _logger = logger;
         }
 
         public async Task<ClassificationResult> ClassifyAsync(string userPrompt)
         {
             var history = new List<Message> { new("user", userPrompt) };
             var response = await _aiProvider.ChatAsync(SystemPrompt, history);
+
+            _logger.LogInformation(
+                "Classifier raw response for \"{Message}\": {Raw}",
+                userPrompt, response.Content);
 
             var raw = response.Content ?? "{}";
             raw = raw.Trim();
@@ -69,6 +101,7 @@ namespace Tibr.Application.Services.AiChatServices
                     "planner" => Intent.Planner,
                     "agentic" => Intent.Agentic,
                     "conditional_order" => Intent.ConditionalOrder,
+                    "plan_update" => Intent.PlanUpdate,
                     _ => Intent.OutOfScope,
                 };
 
@@ -83,7 +116,14 @@ namespace Tibr.Application.Services.AiChatServices
             }
             catch
             {
-                return new ClassificationResult(Intent.OutOfScope, 0, "Failed to parse classifier response");
+                _logger.LogWarning("Failed to parse classifier JSON for \"{Message}\". Raw: {Raw}", userPrompt, raw);
+                var reason = raw switch
+                {
+                    "I'm sorry, the AI service is temporarily unavailable. Please try again shortly." => "AI_SERVICE_UNAVAILABLE",
+                    { Length: > 0 } and not "{}" => raw,
+                    _ => "Failed to parse classifier response"
+                };
+                return new ClassificationResult(Intent.OutOfScope, 0, reason);
             }
         }
     }

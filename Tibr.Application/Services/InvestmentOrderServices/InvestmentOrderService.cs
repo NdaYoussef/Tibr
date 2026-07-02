@@ -12,6 +12,7 @@ namespace Tibr.Application.Services.InvestmentOrderServices
     {
         private readonly IGenericRepository<OrdersInvestment, long> _orderRepository;
         private readonly IGenericRepository<OrderCondition, long> _conditionRepository;
+        private readonly IGenericRepository<Reservation, long> _reservationRepo;
         private readonly IGenericRepository<Wallet, long> _walletRepo;
         private readonly IWalletService _walletService;
         private readonly IAssetPriceService _assetPriceService;
@@ -19,12 +20,14 @@ namespace Tibr.Application.Services.InvestmentOrderServices
         public InvestmentOrderService(
             IGenericRepository<OrdersInvestment, long> orderRepository,
             IGenericRepository<OrderCondition, long> conditionRepository,
+            IGenericRepository<Reservation, long> reservationRepo,
             IGenericRepository<Wallet, long> walletRepo,
             IWalletService walletService,
             IAssetPriceService assetPriceService)
         {
             _orderRepository = orderRepository;
             _conditionRepository = conditionRepository;
+            _reservationRepo = reservationRepo;
             _walletRepo = walletRepo;
             _walletService = walletService;
             _assetPriceService = assetPriceService;
@@ -36,13 +39,15 @@ namespace Tibr.Application.Services.InvestmentOrderServices
             if (priceResult.IsFailure)
                 return Result<InvestmentOrderDto>.Failure(priceResult.ErrorMessage!);
 
-            var currentPrice = priceResult.Data?.SellPrice ?? 0;
+            var currentPrice = dto.OrderType == OrderType.Buy
+                ? priceResult.Data?.SellPrice ?? 0
+                : priceResult.Data?.BuyPrice ?? 0;
 
             var walletType = dto.OrderType == OrderType.Buy ? WalletType.Cash
                 : dto.AssetType == AssetType.Gold ? WalletType.Gold : WalletType.Silver;
 
             var reserveAmount = dto.OrderType == OrderType.Buy
-                ? dto.Quantity * currentPrice
+                ? (dto.MaxAmountEgp ?? dto.Quantity * currentPrice)
                 : dto.Quantity;
 
             var wallet = _walletRepo.GetAll(w => w.UserId == userId && w.WalletType == walletType).FirstOrDefault();
@@ -62,6 +67,7 @@ namespace Tibr.Application.Services.InvestmentOrderServices
                 ExecutionMode = ExecutionMode.Strategy,
                 ExecutionType = dto.ExecutionType,
                 Quantity = dto.Quantity,
+                MaxBudgetEgp = dto.MaxAmountEgp,
                 RequestedPrice = 0,
                 CurrentPrice = currentPrice,
                 Status = OrderStatus.Pending,
@@ -104,6 +110,13 @@ namespace Tibr.Application.Services.InvestmentOrderServices
 
             order.Status = OrderStatus.Cancelled;
             await _orderRepository.UpdateAsync(order);
+
+            var reservation = _reservationRepo.GetAll(r => r.OrderId == order.Id && r.Status == ReservationStatus.Active).FirstOrDefault();
+            if (reservation is not null)
+            {
+                await _walletService.ReleaseReservationAsync(reservation.Id);
+            }
+
             await _orderRepository.SaveChangesAsync();
 
             return Result.Success();
@@ -122,6 +135,7 @@ namespace Tibr.Application.Services.InvestmentOrderServices
                 ExecutionMode = o.ExecutionMode,
                 ExecutionType = o.ExecutionType,
                 Quantity = o.Quantity,
+                MaxAmountEgp = o.MaxBudgetEgp,
                 RequestedPrice = o.RequestedPrice,
                 CurrentPrice = o.CurrentPrice,
                 Status = o.Status,
@@ -159,6 +173,7 @@ namespace Tibr.Application.Services.InvestmentOrderServices
                 ExecutionMode = o.ExecutionMode,
                 ExecutionType = o.ExecutionType,
                 Quantity = o.Quantity,
+                MaxAmountEgp = o.MaxBudgetEgp,
                 RequestedPrice = o.RequestedPrice,
                 CurrentPrice = o.CurrentPrice,
                 Status = o.Status,
@@ -198,6 +213,7 @@ namespace Tibr.Application.Services.InvestmentOrderServices
                 ExecutionMode = order.ExecutionMode,
                 ExecutionType = order.ExecutionType,
                 Quantity = order.Quantity,
+                MaxAmountEgp = order.MaxBudgetEgp,
                 RequestedPrice = order.RequestedPrice,
                 CurrentPrice = order.CurrentPrice,
                 Status = order.Status,
@@ -233,6 +249,7 @@ namespace Tibr.Application.Services.InvestmentOrderServices
                 ExecutionMode = order.ExecutionMode,
                 ExecutionType = order.ExecutionType,
                 Quantity = order.Quantity,
+                MaxAmountEgp = order.MaxBudgetEgp,
                 RequestedPrice = order.RequestedPrice,
                 CurrentPrice = order.CurrentPrice,
                 Status = order.Status,

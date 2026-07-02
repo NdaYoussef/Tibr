@@ -8,6 +8,7 @@ namespace Tibr.Domain.Entities
         public long UserId { get; set; }
         public string? Title { get; set; }
         public bool IsActive { get; set; } = true;
+        public string? PendingClarification { get; set; }
 
         public ICollection<ChatMessage> Messages { get; set; } = [];
     }

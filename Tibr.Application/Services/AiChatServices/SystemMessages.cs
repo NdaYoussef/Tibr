@@ -35,8 +35,8 @@ public static class SystemMessages
         : "Sorry, I could not analyze your portfolio.";
 
     public static string PlannerClarify(string lang) => lang == "ar"
-        ? "هل يمكنك تقديم المزيد من التفاصيل حول هدف الادخار الخاص بك؟"
-        : "Could you provide more details about your savings goal?";
+        ? "لتقديم خطة ادخار، أحتاج إلى: المبلغ المستهدف (بالجرام أو الجنيه)، نوع المعدن (ذهب أو فضة)، والمدة الزمنية بالأسابيع أو الأشهر."
+        : "To create a savings plan, I need: the target amount (in grams or EGP), the metal type (gold or silver), and the time period in weeks or months.";
 
     public static string PlannerFallback(string lang) => lang == "ar"
         ? "هذه هي خطة الادخار الخاصة بك. تابع تقدمك!"
@@ -53,6 +53,10 @@ public static class SystemMessages
     public static string ConditionalFallback(string lang) => lang == "ar"
         ? "يمكنني مساعدتك في إعداد أوامر شرطية للذهب والفضة. مثال: 'اشتر 10 جرام ذهب عندما ينخفض السعر عن 8000 جنيها للجرام'."
         : "I can help you set conditional orders for gold and silver. For example: 'buy 10g of gold when price drops below 8000 EGP/g'.";
+
+    public static string ConditionalDisabled(string lang) => lang == "ar"
+        ? "الأوامر الشرطية غير متاحة في المحادثة حالياً. يرجى استخدام صفحة الاستراتيجيات في لوحة التحكم."
+        : "Conditional orders are not available in chat at this time. Please use the Strategies page on your dashboard.";
 
     public static string ConditionalCreateFailed(string lang) => lang == "ar"
         ? "تعذر إنشاء أمر الاستراتيجية."
@@ -146,16 +150,63 @@ public static class SystemMessages
         ? $"تم تنفيذ الطلب! تم بيع {grams:F4}g {TranslateAsset(asset, lang)} بسعر {price:N2} جنيها للجرام."
         : $"Order executed! Sold {grams:F4}g {asset} at {price:N2} EGP/g.";
 
-    public static string StrategyCreated(string lang, string side, decimal quantity, string asset, string opLabel, decimal targetPrice, int expiresInDays, string execLabel)
+    public static string StrategyCreated(string lang, string side, decimal quantity, string asset, string opLabel, decimal targetPrice, int expiresInDays, string execLabel, decimal? maxAmountEgp = null)
     {
         if (lang == "ar")
         {
             var sideAr = side == "buy" ? "شراء" : "بيع";
             var opAr = opLabel == "rises above" ? "يرتفع عن" : "ينخفض عن";
             var execAr = execLabel == "automatically executed" ? "سيتم تنفيذه تلقائياً" : "سيتم إعلامك";
+            if (side == "buy" && maxAmountEgp.HasValue)
+                return $"✅ تم إنشاء الاستراتيجية! سأنفق حتى {maxAmountEgp:N2} جنيهاً على {TranslateAsset(asset, lang)} عندما {opAr} {targetPrice:N2} جنيها للجرام. تنتهي في {expiresInDays} يوماً و{execAr}.";
             return $"✅ تم إنشاء الاستراتيجية! سأقوم بـ {sideAr} {quantity:F4}g {TranslateAsset(asset, lang)} عندما {opAr} {targetPrice:N2} جنيها للجرام. تنتهي في {expiresInDays} يوماً و{execAr}.";
         }
 
+        if (side == "buy" && maxAmountEgp.HasValue)
+            return $"✅ Strategy created! I'll spend up to {maxAmountEgp:N2} EGP on {asset} when the price {opLabel} {targetPrice:N2} EGP/g. It expires in {expiresInDays} days and will be {execLabel}.";
         return $"✅ Strategy created! I'll {side} {quantity:F4}g of {asset} when the price {opLabel} {targetPrice:N2} EGP/g. It expires in {expiresInDays} days and will be {execLabel}.";
     }
+
+    public static string PlanNoActive(string lang) => lang == "ar"
+        ? "ليس لديك خطة ادخار نشطة."
+        : "You don't have an active savings plan.";
+
+    public static string PlanReevaluateFailed(string lang) => lang == "ar"
+        ? "تعذر إعادة تقييم الخطة."
+        : "Could not re-evaluate your savings plan.";
+
+    public static string PlanPriceMovement(string lang, string metal, double pct, decimal fromPrice, decimal toPrice)
+    {
+        if (lang == "ar")
+            return $" {TranslateAsset(metal.ToLowerInvariant(), lang)} تحرك بنسبة {pct:+0.00;-0.00}% منذ بدء خطتك ({fromPrice:N2} ← {toPrice:N2} جنيها للجرام).";
+        return $" {metal} has moved {pct:+0.00;-0.00}% since you started ({fromPrice:N2} → {toPrice:N2} EGP/g).";
+    }
+
+    public static string PlanSilverPriceMovement(string lang, double pct, decimal fromPrice, decimal toPrice) => lang == "ar"
+        ? $" الفضة تحركت بنسبة {pct:+0.00;-0.00}% منذ بدء خطتك ({fromPrice:N2} ← {toPrice:N2} جنيها للجرام)."
+        : $" Silver has moved {pct:+0.00;-0.00}% since you started ({fromPrice:N2} → {toPrice:N2} EGP/g).";
+
+    public static string PlanReevaluateSuffix(string lang) => lang == "ar"
+        ? " هذه الأرقام مبنية على سعر اليوم. الأسعار تتغير — تابع التحديثات."
+        : " These numbers are based on today's price. Prices fluctuate — check back for an updated projection.";
+
+    public static string PlanGoalReachedGrams(string lang) => lang == "ar"
+        ? "تم الوصول للهدف! لقد حصلت على الكمية المستهدفة."
+        : "Goal reached! You've acquired your target amount.";
+
+    public static string PlanGoalReachedValue(string lang) => lang == "ar"
+        ? "تم الوصول للهدف! محفظتك وصلت للقيمة المستهدفة."
+        : "Goal reached! Your portfolio has reached your target value.";
+
+    public static string PlanExpired(string lang) => lang == "ar"
+        ? "انتهت المدة الزمنية المحددة لخططك. هل ترغب في تعيين مهلة جديدة؟"
+        : "Your original timeframe has passed. Would you like to set a new deadline?";
+
+    public static string PlanCancelled(string lang) => lang == "ar"
+        ? "تم إلغاء الخطة."
+        : "Your savings plan has been cancelled.";
+
+    public static string PlanAlreadyMet(string lang, string metal, decimal currentValue, decimal target) => lang == "ar"
+        ? $"ممتلكاتك من {metal} بقيمة {currentValue:N2} جنيهاً تفي بالفعل بهدف {target:N2} جنيهاً. لا حاجة لخطة!"
+        : $"Your {metal} holdings are worth {currentValue:N2} EGP, which already meets your target of {target:N2} EGP. No plan needed!";
 }

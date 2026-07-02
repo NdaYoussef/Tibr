@@ -63,6 +63,7 @@ namespace Tibr.Application.Services.ResolutionServices
             {
                 if (TryTransitionStatus(order, OrderStatus.Expired))
                 {
+                    await _orderRepo.UpdateAsync(order);
                     await ReleaseReservationAsync(order);
                     await _orderRepo.SaveChangesAsync();
                     await NotifyExpiredAsync(order);
@@ -100,6 +101,7 @@ namespace Tibr.Application.Services.ResolutionServices
                             await TryFireAlertAsync(order, currentPrice);
                             break;
                         case ExecutionType.AlertAndExecute:
+                            await TryFireAlertAsync(order, currentPrice);
                             await TryAutoExecuteAsync(order, currentPrice);
                             break;
                     }
@@ -148,7 +150,7 @@ namespace Tibr.Application.Services.ResolutionServices
             }
 
             var totalAmount = order.OrderType == OrderType.Buy
-                ? order.Quantity * currentPrice
+                ? (order.MaxBudgetEgp ?? order.Quantity * currentPrice)
                 : order.Quantity * currentPrice;
 
             if (totalAmount > StrategyDefaults.MaxAutoAmountEgp)
@@ -163,19 +165,24 @@ namespace Tibr.Application.Services.ResolutionServices
             order.CurrentPrice = currentPrice;
             await _orderRepo.UpdateAsync(order);
 
+            var tradeQuantity = order.OrderType == OrderType.Buy && order.MaxBudgetEgp.HasValue
+                ? order.MaxBudgetEgp.Value / currentPrice
+                : order.Quantity;
+
             var trade = new Trade
             {
                 OrderId = order.Id,
                 UserId = order.UserId,
                 AssetType = order.AssetType,
                 Side = order.OrderType == OrderType.Buy ? TradeSide.Buy : TradeSide.Sell,
-                Quantity = order.Quantity,
+                Quantity = tradeQuantity,
                 ExecutedPrice = currentPrice,
                 TotalAmount = totalAmount,
                 ExecutedAt = DateTime.UtcNow,
                 CreatedAt = DateTime.UtcNow,
             };
             await _tradeRepo.AddAsync(trade);
+            await _tradeRepo.SaveChangesAsync();
 
             var transaction = new Transaction
             {
@@ -204,14 +211,14 @@ namespace Tibr.Application.Services.ResolutionServices
                         var metalWallet = _walletRepo.GetAll(w => w.UserId == order.UserId && w.WalletType == metalType).FirstOrDefault();
                         if (metalWallet is not null)
                         {
-                            metalWallet.Balance += order.Quantity;
+                            metalWallet.Balance += tradeQuantity;
                             await _walletRepo.UpdateAsync(metalWallet);
 
                             await _walletTransactionRepo.AddAsync(new WalletTransaction
                             {
                                 WalletId = metalWallet.Id,
                                 Type = WalletTransactionType.Credit,
-                                Amount = order.Quantity,
+                                Amount = tradeQuantity,
                                 ReferenceType = ReferenceType.Trade,
                                 ReferenceId = trade.Id,
                                 CreatedAt = DateTime.UtcNow,
@@ -293,7 +300,7 @@ namespace Tibr.Application.Services.ResolutionServices
                 var subject = $"Tibr Strategy Alert — {assetLabel} target price reached";
                 var body = $@"
                     <h2>Your strategy has been triggered!</h2>
-                    <p>Your {sideLabel} strategy for {order.Quantity:F4}g of {assetLabel} was triggered at {currentPrice:N2} EGP/g.</p>
+                    <p>{GetTriggerMessage(order, sideLabel, assetLabel, currentPrice)}</p>
                     <p>Log in to Tibr to review and execute your strategy manually.</p>
                     <p><a href='{GetBaseUrl()}'>Go to Tibr</a></p>
                 ";
@@ -317,7 +324,7 @@ namespace Tibr.Application.Services.ResolutionServices
                 var subject = $"Tibr Execution — {sideLabel} {order.Quantity:F4}g of {assetLabel}";
                 var body = $@"
                     <h2>Strategy executed successfully</h2>
-                    <p>We've {sideLabel} <strong>{order.Quantity:F4}g</strong> of {assetLabel} on your behalf.</p>
+                    <p>{GetExecutedMessage(order, sideLabel, assetLabel, totalAmount)}</p>
                     <p>Total amount: <strong>{totalAmount:N2} EGP</strong></p>
                     <p><a href='{GetBaseUrl()}'>View in Tibr</a></p>
                 ";
@@ -373,6 +380,20 @@ namespace Tibr.Application.Services.ResolutionServices
             {
                 _logger.LogError(ex, "Failed to send limit notification for order {OrderId}", order.Id);
             }
+        }
+
+        private static string GetTriggerMessage(OrdersInvestment order, string sideLabel, string assetLabel, decimal currentPrice)
+        {
+            if (order.OrderType == OrderType.Buy && order.MaxBudgetEgp.HasValue)
+                return $"Your buy strategy to spend up to {order.MaxBudgetEgp:N2} EGP on {assetLabel} was triggered at {currentPrice:N2} EGP/g.";
+            return $"Your {sideLabel} strategy for {order.Quantity:F4}g of {assetLabel} was triggered at {currentPrice:N2} EGP/g.";
+        }
+
+        private static string GetExecutedMessage(OrdersInvestment order, string sideLabel, string assetLabel, decimal totalAmount)
+        {
+            if (order.OrderType == OrderType.Buy && order.MaxBudgetEgp.HasValue)
+                return $"We've spent <strong>{order.MaxBudgetEgp:N2} EGP</strong> on {assetLabel} on your behalf.";
+            return $"We've {sideLabel} <strong>{order.Quantity:F4}g</strong> of {assetLabel} on your behalf.";
         }
 
         private static string GetBaseUrl() => "http://localhost:5151";
