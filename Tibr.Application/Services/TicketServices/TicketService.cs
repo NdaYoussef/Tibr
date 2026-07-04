@@ -47,36 +47,23 @@ namespace Tibr.Application.Services.TicketServices
 
         public async Task<Result<TicketDto>> ReplyToTicketAsync(CreateTicketDto dto, long adminId)
         {
-            var support = await _supportRepository.GetById(dto.SupportId);
+            var support = await _supportRepository.GetSupportWithTicketsAsync(dto.SupportId);
             if (support == null)
             {
                 return Result<TicketDto>.Failure("Support ticket not found.");
             }
 
-          
             if (support.Status == Support.SupportStatus.Closed)
             {
                 return Result<TicketDto>.Failure("Cannot reply to a closed support ticket.");
             }
 
-            
             var ticketMessage = _mapper.Map<Ticket>(dto);
             ticketMessage.AdminId = adminId;
             ticketMessage.CreatedAt = DateTime.UtcNow;
 
-          
-            //if (adminId.HasValue)
-            //{
-            //    support.Status = Support.SupportStatus.Pending; 
-            //}
-            //else
-            //{
-            //    support.Status = Support.SupportStatus.Open; 
-            //}
-
-          
             await _ticketRepository.AddAsync(ticketMessage);
-            await _supportRepository.UpdateAsync(support); 
+            await _supportRepository.UpdateAsync(support);
 
             var result = await _ticketRepository.SaveChangesAsync();
             if (result <= 0)
@@ -89,8 +76,10 @@ namespace Tibr.Application.Services.TicketServices
                 support.User.FirstName,
                 support.Subject,
                 dto.Message);
+
             var responseDto = ticketMessage.Adapt<TicketDto>();
             responseDto.EmailSent = emailResult.IsSuccess;
+
             return Result<TicketDto>.Success(responseDto);
         }
     }

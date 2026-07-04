@@ -141,6 +141,21 @@ namespace Tibr.MVC.Controllers
                 SentAt = DateTime.UtcNow
             });
 
+            // Admin replies (Ticket entities linked to this Support)
+            if (support.Tickets != null)
+            {
+                messages.AddRange(support.Tickets
+                    .OrderBy(t => t.CreatedAt)
+                    .Select(t => new MessageViewModel
+                    {
+                        Id = t.Id,
+                        Text = t.Message,
+                        SenderName = "Admin",
+                        IsFromAdmin = true,
+                        SentAt = t.CreatedAt
+                    }));
+            }
+
             var vm = new SupportDetailViewModel
             {
                 Id = support.Id,
@@ -150,6 +165,8 @@ namespace Tibr.MVC.Controllers
                 CustomerName = string.IsNullOrWhiteSpace(support.UserFullName)
                     ? $"Customer #{support.UserId}"
                     : support.UserFullName,
+                CustomerEmail = support.UserEmail,
+                CustomerPhone = support.UserPhone,
                 CustomerId = support.UserId,
                 CreatedAt = DateTime.UtcNow,
                 Messages = messages,
@@ -162,28 +179,35 @@ namespace Tibr.MVC.Controllers
         //  POST /Support/Reply 
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Reply(ReplyViewModel model)
+        public async Task<IActionResult> Reply(ReplyViewModel Reply)
         {
             if (!ModelState.IsValid)
             {
                 TempData["Error"] = "Please enter a valid reply message (5–2000 characters).";
-                return RedirectToAction(nameof(Details), new { id = model.SupportId });
+                return RedirectToAction(nameof(Details), new { id = Reply.SupportId });
             }
 
             var dto = new CreateTicketDto
             {
-                SupportId = model.SupportId,
-                Message = model.Message.Trim()
+                SupportId = Reply.SupportId,
+                Message = Reply.Message.Trim()
             };
 
             var result = await _ticketService.ReplyToTicketAsync(dto, TEMP_ADMIN_ID);
 
-            TempData[result.IsSuccess ? "Success" : "Error"] =
-                result.IsSuccess ? "Reply sent successfully." : result.ErrorMessage;
+            if (result.IsSuccess)
+            {
+                TempData["Success"] = result.Data!.EmailSent
+                    ? "Reply sent successfully and emailed to the customer."
+                    : "Reply saved, but the email to the customer failed to send.";
+            }
+            else
+            {
+                TempData["Error"] = result.ErrorMessage;
+            }
 
-            return RedirectToAction(nameof(Details), new { id = model.SupportId });
+            return RedirectToAction(nameof(Details), new { id = Reply.SupportId });
         }
-
         //  POST /Support/UpdateStatus 
         [HttpPost]
         [ValidateAntiForgeryToken]

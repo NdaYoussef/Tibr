@@ -64,7 +64,7 @@ namespace Tibr.Application.Services.Email
                 var email = new MimeMessage();
                 email.From.Add(MailboxAddress.Parse(_configuration["EmailSettings:SenderEmail"]!));
                 email.To.Add(MailboxAddress.Parse(toEmail));
-                email.Subject = $" Reply sent successfully: {subject}";
+                email.Subject = $"Reply sent successfully: {subject}";
 
                 var builder = new BodyBuilder
                 {
@@ -79,8 +79,15 @@ namespace Tibr.Application.Services.Email
                 email.Body = builder.ToMessageBody();
 
                 using var smtp = new SmtpClient();
-                await smtp.ConnectAsync(_configuration["EmailSettings:SmtpServer"]!, int.Parse(_configuration["EmailSettings:Port"]!), SecureSocketOptions.StartTls);
-                await smtp.AuthenticateAsync(_configuration["EmailSettings:SenderEmail"]!, _configuration["EmailSettings:Password"]!);
+                await smtp.ConnectAsync(
+                    _configuration["EmailSettings:Host"]!,
+                    int.Parse(_configuration["EmailSettings:Port"]!),
+                    SecureSocketOptions.StartTls);
+
+                await smtp.AuthenticateAsync(
+                    _configuration["EmailSettings:SenderEmail"]!,
+                    _configuration["EmailSettings:Password"]!);
+
                 await smtp.SendAsync(email);
                 await smtp.DisconnectAsync(true);
 
@@ -90,6 +97,7 @@ namespace Tibr.Application.Services.Email
             {
                 return Result.Failure($"Failed to send email: {ex.Message}");
             }
-        }
+        
+    }
     }
 }
