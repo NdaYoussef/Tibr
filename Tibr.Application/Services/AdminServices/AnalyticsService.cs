@@ -99,6 +99,55 @@ namespace Tibr.Application.Services.AdminServices
                 .ToListAsync();
         }
 
+        //  REVENUE REPORT (Paid orders, grouped by product)
+        //   - only Paid orders are counted
+        //   - grouped by Product (not by Order)
+        //   - calculates TotalCost (BuyPrice * Qty) and NetMargin per product
+        public async Task<List<RevenueReportDto>> GetRevenueReportAsync(
+           DateTime fromDate,
+           DateTime toDate)
+        {
+            _logger.LogDebug("GetRevenueReportAsync {From} – {To}", fromDate, toDate);
+
+            var from = fromDate.Date.ToUniversalTime();
+            var to = toDate.Date.AddDays(1).ToUniversalTime();
+
+            var raw = await _orderItemRepo
+                .GetAll(oi =>
+                    !oi.Order.IsDeleted
+                    && oi.Order.PaymentStatus == PaymentStatusConstants.Paid
+                    && oi.Order.CreatedAt >= from
+                    && oi.Order.CreatedAt < to)
+                .GroupBy(oi => new
+                {
+                    oi.ProductId,
+                    oi.Product.Name,
+                    oi.Product.MetalType,   
+                    oi.Product.BuyPrice
+                })
+                .Select(g => new
+                {
+                    g.Key.Name,
+                    g.Key.MetalType,
+                    g.Key.BuyPrice,
+                    UnitsSold = g.Sum(x => x.Quantity),
+                    TotalRevenue = g.Sum(x => x.Price * x.Quantity)
+                })
+                .ToListAsync();  
+
+            return raw
+                .Select(r => new RevenueReportDto
+                {
+                    ProductName = r.Name,
+                    MetalType = r.MetalType.ToString(),  
+                    UnitsSold = r.UnitsSold,
+                    TotalRevenue = r.TotalRevenue,
+                    TotalCost = r.BuyPrice * r.UnitsSold
+                })
+                .OrderByDescending(r => r.NetMargin)  
+                .ToList();
+        }
+
         //  PRODUCT PERFORMANCE 
         public async Task<List<ProductPerformanceDto>> GetProductPerformanceReportAsync(
             DateTime fromDate,
