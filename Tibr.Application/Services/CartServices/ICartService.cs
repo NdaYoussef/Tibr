@@ -10,5 +10,6 @@ namespace Tibr.Application.Services.CartServices
         Task<Result<CartDto>> AddToCartAsync(long userId, AddToCartDto dto);
         Task<Result<CartDto>> RemoveFromCartAsync(long userId, long cartItemId);
         Task<Result<bool>> ClearCartAsync(long userId);
+        Task<Result<CartDto>> UpdateCartItemQuantityAsync(long userId, long cartItemId, int quantity);
     }
 }

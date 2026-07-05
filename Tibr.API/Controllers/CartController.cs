@@ -100,5 +100,30 @@ namespace Tibr.API.Controllers
 
             return NoContent();
         }
+
+        [HttpPatch("items/{cartItemId:long}")]
+        public async Task<IActionResult> UpdateCartItemQuantity(long cartItemId, [FromBody] UpdateCartItemQuantityDto dto)
+        {
+            if (dto == null)
+            {
+                return BadRequest(new { error = "Invalid cart update request data." });
+            }
+
+            var userIdClaim = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+
+            if (string.IsNullOrEmpty(userIdClaim) || !long.TryParse(userIdClaim, out long currentUserId))
+            {
+                return Unauthorized(new { message = "Unauthorized: Missing user ID." });
+            }
+
+            var result = await _cartService.UpdateCartItemQuantityAsync(currentUserId, cartItemId, dto.Quantity);
+
+            if (result.IsFailure)
+            {
+                return BadRequest(new { error = result.ErrorMessage });
+            }
+
+            return Ok(result.Data);
+        }
     }
 }
