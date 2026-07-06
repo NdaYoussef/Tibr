@@ -120,7 +120,7 @@ namespace Tibr.API
                 {
                     Console.WriteLine("Database is empty. Seeding...");
                     var seeder = new MassDataSeeder(context);
-                    await seeder.SeedAllAsync(userCount: 2000);
+                    await seeder.SeedAllAsync(userCount: 500);
                     Console.WriteLine("Database seeding complete.");
                 }
             }

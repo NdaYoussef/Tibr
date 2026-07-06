@@ -2,8 +2,10 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Tibr.Domain.Entities;
+using Tibr.Domain.Enums;
 using Tibr.Infrastructure.Contexts;
 using Tibr.Infrastructure.Exceptions;
+using Tibr.Infrastructure.Seed;
 
 
 namespace Tibr.Infrastructure.Seeds
@@ -65,6 +67,53 @@ namespace Tibr.Infrastructure.Seeds
                 await context.Admins.AddAsync(superAdmin);
                 await context.SaveChangesAsync();
                 _logger?.LogInformation("Admin record created successfully. Async seeding completed.");
+            }
+
+            await SeedProductsAsync(context);
+        }
+
+        public static async Task SeedProductsAsync(ApplicationDbContext context)
+        {
+            var existingCategories = await context.Categories.Select(c => c.Name).ToListAsync();
+            var existingProductNames = await context.Products.Select(p => p.Name).ToListAsync();
+
+            var newCategories = ProductCatalog.Categories
+                .Where(c => !existingCategories.Contains(c))
+                .Select(c => new Category { Name = c, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow, IsDeleted = false })
+                .ToList();
+
+            if (newCategories.Count != 0)
+            {
+                context.Categories.AddRange(newCategories);
+                await context.SaveChangesAsync();
+            }
+
+            var allCategories = await context.Categories.ToDictionaryAsync(c => c.Name, c => c.Id);
+
+            var newProducts = ProductCatalog.Products
+                .Where(p => !existingProductNames.Contains(p.Name))
+                .Select(p => new Product
+                {
+                    CategoryId = allCategories[p.Category],
+                    Name = p.Name,
+                    MetalType = p.Metal,
+                    Purity = p.Purity,
+                    Weight = p.Weight,
+                    BuyPrice = p.BuyPrice,
+                    SellPrice = p.SellPrice,
+                    Status = ProductStatus.Active,
+                    Stock = p.Stock,
+                    CreatedAt = DateTime.UtcNow,
+                    UpdatedAt = DateTime.UtcNow,
+                    IsDeleted = false
+                })
+                .ToList();
+
+            if (newProducts.Count != 0)
+            {
+                context.Products.AddRange(newProducts);
+                await context.SaveChangesAsync();
+                _logger?.LogInformation("Seeded {Count} products across {CatCount} categories.", newProducts.Count, newCategories.Count);
             }
         }
 

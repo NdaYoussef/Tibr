@@ -93,10 +93,9 @@ namespace Tibr.Infrastructure.Seed
             await _context.BulkInsertAsync(admins, bulkConfig);
 
             // 3. Categories
-            var categoryNames = new[] { "Bars", "Coins", "Rings", "Necklaces" };
-            var categories = categoryNames.Select(name => new Category
+            var categories = ProductCatalog.Categories.Select(c => new Category
             {
-                Name = name,
+                Name = c,
                 CreatedAt = seedTime,
                 UpdatedAt = seedTime,
                 IsDeleted = false
@@ -126,21 +125,22 @@ namespace Tibr.Infrastructure.Seed
             // ==========================================
 
             // 4. Products
-            var productFaker = new Faker<Product>()
-                .RuleFor(p => p.CategoryId, fk => fk.PickRandom(categories).Id)
-                .RuleFor(p => p.Name, fk => $"{fk.Commerce.ProductAdjective()} {fk.PickRandom("Tibr", "Pharaonic", "Investment")} Piece")
-                .RuleFor(p => p.MetalType, fk => fk.PickRandom<MetalType>())
-                .RuleFor(p => p.Purity, fk => Math.Round(fk.Random.Decimal(0.8750m, 0.9999m), 4))
-                .RuleFor(p => p.Weight, fk => Math.Round(fk.Random.Decimal(1m, 100m), 3))
-                .RuleFor(p => p.BuyPrice, fk => Math.Round(fk.Random.Decimal(3000m, 4500m), 2))
-                .RuleFor(p => p.SellPrice, (fk, p) => Math.Round(p.BuyPrice * 1.025m, 2))
-                .RuleFor(p => p.Status, ProductStatus.Active)
-                .RuleFor(p => p.Stock, fk => fk.Random.Long(100, 5000))
-                .RuleFor(p => p.CreatedAt, seedTime)
-                .RuleFor(p => p.UpdatedAt, seedTime)
-                .RuleFor(p => p.IsDeleted, false);
-
-            var products = productFaker.Generate(40);
+            var catMap = categories.ToDictionary(c => c.Name, c => c.Id);
+            var products = ProductCatalog.Products.Select(p => new Product
+            {
+                CategoryId = catMap[p.Category],
+                Name = p.Name,
+                MetalType = p.Metal,
+                Purity = p.Purity,
+                Weight = p.Weight,
+                BuyPrice = p.BuyPrice,
+                SellPrice = p.SellPrice,
+                Status = ProductStatus.Active,
+                Stock = p.Stock,
+                CreatedAt = seedTime,
+                UpdatedAt = seedTime,
+                IsDeleted = false
+            }).ToList();
             await _context.BulkInsertAsync(products, bulkConfig);
 
             // Collection builders for tier 2-4
