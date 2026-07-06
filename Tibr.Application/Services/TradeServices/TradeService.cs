@@ -91,6 +91,7 @@ namespace Tibr.Application.Services.TradeServices
                     AssetType = dto.AssetType,
                     Side = TradeSide.Buy,
                     Quantity = dto.Quantity,
+                    RemainingQuantity = dto.Quantity,
                     ExecutedPrice = price.SellPrice,
                     TotalAmount = totalCost,
                     ExecutedAt = DateTime.UtcNow,
@@ -233,6 +234,7 @@ namespace Tibr.Application.Services.TradeServices
                     AssetType = dto.AssetType,
                     Side = TradeSide.Sell,
                     Quantity = dto.Quantity,
+                    RemainingQuantity = 0,
                     ExecutedPrice = price.BuyPrice,
                     TotalAmount = totalProceeds,
                     ExecutedAt = DateTime.UtcNow,
@@ -240,6 +242,27 @@ namespace Tibr.Application.Services.TradeServices
                 };
 
                 await _tradeRepo.AddAsync(trade);
+                await _tradeRepo.SaveChangesAsync();
+
+                // FIFO by price: deduct from cheapest-purchased buy lots first
+                var remainingToDeduct = dto.Quantity;
+                var buyTrades = await _tradeRepo
+                    .GetAll(t => t.UserId == userId
+                              && t.AssetType == dto.AssetType
+                              && t.Side == TradeSide.Buy
+                              && t.RemainingQuantity > 0)
+                    .OrderBy(t => t.ExecutedPrice)
+                    .ToListAsync();
+
+                foreach (var buyTrade in buyTrades)
+                {
+                    if (remainingToDeduct <= 0) break;
+                    var deduction = Math.Min(buyTrade.RemainingQuantity, remainingToDeduct);
+                    buyTrade.RemainingQuantity -= deduction;
+                    remainingToDeduct -= deduction;
+                    await _tradeRepo.UpdateAsync(buyTrade);
+                }
+
                 await _tradeRepo.SaveChangesAsync();
 
                 // 3) Transaction

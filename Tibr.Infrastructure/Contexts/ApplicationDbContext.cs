@@ -306,6 +306,9 @@ namespace Tibr.Infrastructure.Contexts
                 .Property(x => x.Quantity).HasPrecision(18, 4);
 
             modelBuilder.Entity<Trade>()
+                .Property(x => x.RemainingQuantity).HasPrecision(18, 4);
+
+            modelBuilder.Entity<Trade>()
                 .Property(x => x.ExecutedPrice).HasPrecision(18, 4);
 
             modelBuilder.Entity<Trade>()
