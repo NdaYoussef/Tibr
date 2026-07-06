@@ -17,6 +17,8 @@ namespace Tibr.Domain.Entities
 
         public decimal Quantity { get; set; }
 
+        public decimal RemainingQuantity { get; set; }
+
         public decimal ExecutedPrice { get; set; }
 
         public decimal TotalAmount { get; set; }

@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Tibr.Infrastructure.Contexts;
 
@@ -11,9 +12,11 @@ using Tibr.Infrastructure.Contexts;
 namespace Tibr.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260706003808_AddRemainingQuantityToTrades")]
+    partial class AddRemainingQuantityToTrades
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -604,12 +607,6 @@ namespace Tibr.Infrastructure.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<long>("Id"));
 
-                    b.Property<string>("ActionUrl")
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<long?>("AdminId")
-                        .HasColumnType("bigint");
-
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("datetime2");
 
@@ -623,25 +620,17 @@ namespace Tibr.Infrastructure.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<long?>("RelatedEntityId")
-                        .HasColumnType("bigint");
-
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<int>("Type")
-                        .HasColumnType("int");
-
                     b.Property<DateTime?>("UpdatedAt")
                         .HasColumnType("datetime2");
 
-                    b.Property<long?>("UserId")
+                    b.Property<long>("UserId")
                         .HasColumnType("bigint");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("AdminId");
 
                     b.HasIndex("UserId");
 
@@ -1614,16 +1603,11 @@ namespace Tibr.Infrastructure.Migrations
 
             modelBuilder.Entity("Tibr.Domain.Entities.Notification", b =>
                 {
-                    b.HasOne("Tibr.Domain.Entities.Admin", "Admin")
-                        .WithMany("Notifications")
-                        .HasForeignKey("AdminId");
-
                     b.HasOne("Tibr.Domain.Entities.User", "User")
                         .WithMany("Notifications")
                         .HasForeignKey("UserId")
-                        .OnDelete(DeleteBehavior.Cascade);
-
-                    b.Navigation("Admin");
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("User");
                 });
@@ -1843,8 +1827,6 @@ namespace Tibr.Infrastructure.Migrations
             modelBuilder.Entity("Tibr.Domain.Entities.Admin", b =>
                 {
                     b.Navigation("AuditLogs");
-
-                    b.Navigation("Notifications");
 
                     b.Navigation("ReviewedDocuments");
 

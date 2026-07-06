@@ -202,7 +202,7 @@ namespace Tibr.Application.Services.AiChatServices
                     : "Price data temporarily unavailable.";
 
             var buyTrades = trades
-                .Where(t => t.Side == TradeSide.Buy)
+                .Where(t => t.Side == TradeSide.Buy && t.RemainingQuantity > 0)
                 .OrderBy(t => t.ExecutedAt)
                 .ToList();
 
@@ -218,8 +218,8 @@ namespace Tibr.Application.Services.AiChatServices
                                         ? priceResult.Data.SellPrice
                                         : t.ExecutedPrice;
                                 var plPerGram = currentSellPrice - t.ExecutedPrice;
-                                var totalPl = plPerGram * t.Quantity;
-                                return $"- Trade #{i + 1}: {t.Quantity:F4}g at {t.ExecutedPrice:N2} EGP/g "
+                                var totalPl = plPerGram * t.RemainingQuantity;
+                                return $"- Trade #{i + 1}: {t.RemainingQuantity:F4}/{t.Quantity:F4}g at {t.ExecutedPrice:N2} EGP/g "
                                     + $"on {t.ExecutedAt:yyyy-MM-dd}  "
                                     + $"P/L: {plPerGram:+N2;-N2} EGP/g, total: {totalPl:+N2;-N2} EGP";
                             }
