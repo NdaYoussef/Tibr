@@ -87,6 +87,8 @@ namespace Tibr.MVC.Models.Support
         public string CustomerName { get; set; } = string.Empty;
         public long CustomerId { get; set; }
         public DateTime CreatedAt { get; set; }
+        public string CustomerEmail { get; set; } = string.Empty;
+        public string CustomerPhone { get; set; } = string.Empty;
 
         // Status helpers
         public string StatusLabel => Status switch

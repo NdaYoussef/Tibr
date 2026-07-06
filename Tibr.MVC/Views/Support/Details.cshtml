@@ -205,6 +205,41 @@
                     <span class="cust-id">ID: @Model.CustomerId</span>
                 </div>
             </div>
+
+            @if (!string.IsNullOrWhiteSpace(Model.CustomerEmail) || !string.IsNullOrWhiteSpace(Model.CustomerPhone))
+            {
+                <div class="info-rows mt-3">
+                    @if (!string.IsNullOrWhiteSpace(Model.CustomerEmail))
+                    {
+                        <div class="info-row">
+                            <span class="info-label"><i class="fa-solid fa-envelope"></i> Email</span>
+                            <span class="info-val">@Model.CustomerEmail</span>
+                        </div>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Model.CustomerPhone))
+                    {
+                        <div class="info-row">
+                            <span class="info-label"><i class="fa-solid fa-phone"></i> Phone</span>
+                            <span class="info-val">@Model.CustomerPhone</span>
+                        </div>
+                    }
+                </div>
+
+                <div class="d-flex gap-2 mt-3">
+                    @if (!string.IsNullOrWhiteSpace(Model.CustomerPhone))
+                    {
+                        <a href="tel:@Model.CustomerPhone" class="btn-tibr btn-tibr-outline w-100">
+                            <i class="fa-solid fa-phone"></i> Call
+                        </a>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(Model.CustomerEmail))
+                    {
+                        <a href="mailto:@Model.CustomerEmail" class="btn-tibr btn-tibr-outline w-100">
+                            <i class="fa-solid fa-envelope"></i> Email
+                        </a>
+                    }
+                </div>
+            }
         </div>
 
         <!-- Update Status -->
@@ -222,7 +257,7 @@
                         <label class="status-pick-option">
                             <input type="radio" name="Status"
                                    value="@GetStatusEnumValue(val)"
-                            @(Model.Status == val ? "checked" : "") />
+                                   @(Model.Status == val ? "checked" : "") />
                             <span class="status-pick-card @GetStatusPickClass(val)">
                                 <i class="@GetStatusIcon(val)"></i>
                                 @lbl

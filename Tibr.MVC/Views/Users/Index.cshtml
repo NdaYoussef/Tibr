@@ -20,7 +20,7 @@
             <input type="text" name="searchQuery" value="@Model.SearchQuery" class="form-control executive-input w-100" placeholder="Search elite members..." />
         </div>
     </form>
-    
+
     <!-- Filter Toggle -->
     <details class="executive-card p-3 mb-4 shadow-sm" style="border-radius: 14px;">
         <summary class="accordion-summary text-muted fw-semibold" style="font-size: 0.85rem;">
@@ -42,7 +42,7 @@
                     <label class="form-label text-muted text-uppercase fw-semibold" style="font-size: 0.65rem;">KYC Verification</label>
                     <select name="kycStatusFilter" class="form-select executive-input" onchange="this.form.submit()">
                         <option value="">All Verifications</option>
-                        <option value="Approved" selected="@(Model.KycStatusFilter == "Approved" ? "selected" : null)">Approved</option>
+                        <option value="Verified" selected="@(Model.KycStatusFilter == "Verified" ? "selected" : null)">Verified</option>
                         <option value="Pending" selected="@(Model.KycStatusFilter == "Pending" ? "selected" : null)">Pending</option>
                         <option value="Rejected" selected="@(Model.KycStatusFilter == "Rejected" ? "selected" : null)">Rejected</option>
                     </select>
@@ -68,7 +68,7 @@
             // Status helper badge matching mockup: VERIFIED / PENDING / INACTIVE
             var statusClass = "badge-pending";
             var statusLabel = "PENDING";
-            if (user.KycStatus == "Approved" && user.Status == "Active")
+            if (user.KycStatus == "Verified" && user.Status == "Active")
             {
                 statusClass = "badge-verified";
                 statusLabel = "VERIFIED";
@@ -78,7 +78,7 @@
                 statusClass = "badge-inactive";
                 statusLabel = "INACTIVE";
             }
-            
+
             // Circular portrait matching mockup image links
             var avatarUrl = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=150&auto=format&fit=crop"; // Male profile
             if (user.FirstName.Equals("Sarah", StringComparison.OrdinalIgnoreCase) || user.FirstName.Equals("Fatima", StringComparison.OrdinalIgnoreCase) || user.FirstName.Equals("Aria", StringComparison.OrdinalIgnoreCase) || user.FirstName.Equals("Elena", StringComparison.OrdinalIgnoreCase))
@@ -101,7 +101,7 @@
                         <span class="pill-badge @statusClass">@statusLabel</span>
                     </div>
                 </div>
-                
+
                 <div class="row g-2 mt-2">
                     <div class="col-6">
                         <a asp-action="Details" asp-route-id="@user.Id" class="btn btn-outline-gold w-100 py-2" style="font-size: 0.8rem; font-weight: 700;">Details</a>
@@ -126,7 +126,7 @@
     <nav aria-label="Page navigation" class="mt-4">
         <ul class="pagination pagination-custom justify-content-center">
             <li class="page-item @(!Model.HasPreviousPage ? "disabled" : "")">
-                <a class="page-link" asp-action="Index" 
+                <a class="page-link" asp-action="Index"
                    asp-route-page="@(Model.CurrentPage - 1)"
                    asp-route-searchQuery="@Model.SearchQuery"
                    asp-route-statusFilter="@Model.StatusFilter"
@@ -142,7 +142,7 @@
                 </li>
             }
             <li class="page-item @(!Model.HasNextPage ? "disabled" : "")">
-                <a class="page-link" asp-action="Index" 
+                <a class="page-link" asp-action="Index"
                    asp-route-page="@(Model.CurrentPage + 1)"
                    asp-route-searchQuery="@Model.SearchQuery"
                    asp-route-statusFilter="@Model.StatusFilter"

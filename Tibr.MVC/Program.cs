@@ -11,8 +11,8 @@ using Tibr.Infrastructure;
 using Tibr.Infrastructure.Contexts;
 using Tibr.Infrastructure.Seeds;
 using Tibr.Infrastructure.Services;
-
-
+using Tibr.Infrastructure.Services.NotificationServices;
+using Tibr.Application.Services.NotificationServices;
 namespace Tibr.MVC
 {
     public class Program
@@ -27,6 +27,10 @@ namespace Tibr.MVC
             // Add services to the container.
             builder.Services.AddControllersWithViews();
             builder.Services.AddInfrastructure(builder.Configuration);
+
+            builder.Services.AddSignalR();
+            builder.Services.AddScoped<INotificationService, NotificationService>();
+            builder.Services.AddScoped<IAdminNotificationPublisher, SignalRNotificationPublisher>();
 
             // Add MediatR for CQRS pattern
             builder.Services.AddMediatR(cfg =>
@@ -111,6 +115,8 @@ namespace Tibr.MVC
                 name: "default",
                 pattern: "{controller=AdminAuth}/{action=Login}/{id?}")
                 .WithStaticAssets();
+
+            app.MapHub<NotificationHub>("/hubs/notifications");
 
             await app.RunAsync();
         }

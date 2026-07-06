@@ -82,11 +82,11 @@
         <label>To Date</label>
         <input type="date" name="to" value="@Model.ToDate?.ToString("yyyy-MM-dd")" class="filter-input" />
     </div>
-    <button type="submit" class="btn-tibr btn-tibr-gold">
+    <button type="submit" class="btn-tibr btn-tibr-gold mt-4">
         <i class="fa-solid fa-filter"></i>
         Apply Filter
     </button>
-    <a asp-action="Reports" asp-route-reportType="@Model.ReportType" class="btn-tibr btn-tibr-outline">
+    <a asp-action="Reports" asp-route-reportType="@Model.ReportType" class="btn-tibr btn-tibr-outline mt-4">
         <i class="fa-solid fa-rotate-left"></i>
         Reset
     </a>
@@ -165,7 +165,8 @@
     <div class="table-responsive">
 
         @* ── Sales / Revenue ── *@
-        @if ((Model.ReportType == "sales" || Model.ReportType == "revenue") && Model.SalesRows.Any())
+        @* ── Sales ── all orders, order-level view *@
+        @if (Model.ReportType == "sales" && Model.SalesRows.Any())
         {
             <table class="tibr-table" id="dataTable">
                 <thead>
@@ -196,6 +197,50 @@
                                 <span class="status-badge @(row.OrderStatus == "Delivered" ? "badge-success" : row.OrderStatus == "Cancelled" ? "badge-danger" : row.OrderStatus == "Processing" ? "badge-info" : "badge-warning")">
                                     <span class="status-dot"></span>
                                     @row.OrderStatus
+                                </span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+
+        @* ── Revenue ── Paid orders only, grouped by product, with margin *@
+        @if (Model.ReportType == "revenue" && Model.RevenueRows.Any())
+        {
+            <table class="tibr-table" id="dataTable">
+                <thead>
+                    <tr>
+                        <th>Product</th>
+                        <th>Metal</th>
+                        <th>Units Sold</th>
+                        <th>Total Revenue</th>
+                        <th>Total Cost</th>
+                        <th>Net Margin</th>
+                        <th>Margin %</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var row in Model.RevenueRows)
+                    {
+                        <tr class="table-row-anim">
+                            <td><strong>@row.ProductName</strong></td>
+                            <td>
+                                <span class="metal-badge @(row.MetalType == "Gold" ? "metal-gold" : "metal-silver")">
+                                    @row.MetalType
+                                </span>
+                            </td>
+                            <td>@row.UnitsSold units</td>
+                            <td><strong class="price-cell">@row.TotalRevenue.ToString("N0") EGP</strong></td>
+                            <td>@row.TotalCost.ToString("N0") EGP</td>
+                            <td>
+                                <strong class="@(row.NetMargin >= 0 ? "price-cell" : "text-danger")">
+                                    @row.NetMargin.ToString("N0") EGP
+                                </strong>
+                            </td>
+                            <td>
+                                <span class="@(row.MarginPercent >= 20 ? "text-success fw-bold" : row.MarginPercent >= 10 ? "text-warning fw-bold" : "text-danger fw-bold")">
+                                    @row.MarginPercent %
                                 </span>
                             </td>
                         </tr>
@@ -332,7 +377,7 @@
             </table>
         }
 
-        @if (!Model.SalesRows.Any() && !Model.ProductRows.Any() && !Model.InventoryRows.Any() && !Model.CustomerRows.Any())
+        @if (!Model.SalesRows.Any() && !Model.RevenueRows.Any() && !Model.ProductRows.Any() && !Model.InventoryRows.Any() && !Model.CustomerRows.Any())
         {
             <div class="empty-row py-5">
                 <i class="fa-solid fa-chart-bar fa-2x mb-2"></i>

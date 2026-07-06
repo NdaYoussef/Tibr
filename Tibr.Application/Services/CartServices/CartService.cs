@@ -139,5 +139,33 @@ namespace Tibr.Application.Services.CartServices
 
             return Result<bool>.Success(true);
         }
+
+        public async Task<Result<CartDto>> UpdateCartItemQuantityAsync(long userId, long cartItemId, int quantity)
+        {
+            if (quantity <= 0)
+            {
+                return Result<CartDto>.Failure("Quantity must be greater than zero.");
+            }
+
+            var cart = await _cartRepository.GetCartByUserIdAsync(userId);
+
+            if (cart == null)
+            {
+                return Result<CartDto>.Failure("Cart not found.");
+            }
+
+            var cartItem = cart.CartItems.FirstOrDefault(ci => ci.Id == cartItemId && !ci.IsDeleted);
+            if (cartItem == null)
+            {
+                return Result<CartDto>.Failure($"Cart item with ID {cartItemId} not found in user's cart.");
+            }
+
+            cartItem.Quantity = quantity;
+            cartItem.UpdatedAt = DateTime.UtcNow;
+
+            await _cartRepository.SaveChangesAsync();
+
+            return await GetCartByUserIdAsync(userId);
+        }
     }
 }

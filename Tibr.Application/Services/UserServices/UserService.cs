@@ -62,10 +62,13 @@ namespace Tibr.Application.Services.UserServices
             {
                 var user = await _userRepository.GetAll()
                     .Include(u => u.Orders)
+                    .Include(u => u.KYCDocuments)
                     .FirstOrDefaultAsync(u => u.Id == id);
 
                 if (user == null)
                     return Result<UserDetailsDto>.Failure("User not found");
+
+                var kyc = user.KYCDocuments.FirstOrDefault();
 
                 var dto = new UserDetailsDto
                 {
@@ -79,6 +82,9 @@ namespace Tibr.Application.Services.UserServices
                     KycStatus = user.KycStatus,
                     CreatedAt = user.CreatedAt,
                     UpdatedAt = user.UpdatedAt,
+                    KycDocumentFront = kyc?.DocumentFront,
+                    KycDocumentBack = kyc?.DocumentBack,
+                    KycSelfieImage = kyc?.SelfieImage,
                     Orders = user.Orders.Select(o => new UserOrderHistoryDto
                     {
                         OrderId = o.Id,

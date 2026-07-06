@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Tibr.Application")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+b4391f410a4a8effda25dd6dbca8d6842b100907")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3b8b244c461d593c271cb47626ba2b49c64a2981")]
 [assembly: System.Reflection.AssemblyProductAttribute("Tibr.Application")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Tibr.Application")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

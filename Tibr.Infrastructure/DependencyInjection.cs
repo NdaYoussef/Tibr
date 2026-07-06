@@ -18,6 +18,9 @@ using Tibr.Infrastructure.Contexts;
 using Tibr.Infrastructure.Queries;
 using Tibr.Infrastructure.Repositories;
 using Tibr.Infrastructure.Services;
+using Tibr.Application.Interfaces;
+using Tibr.Application.Services.NotificationServices;
+using Tibr.Infrastructure.Services.NotificationServices;
 
 namespace Tibr.Infrastructure
 {
@@ -97,6 +100,9 @@ namespace Tibr.Infrastructure
             services.Configure<AiChatSettings>(
                 configuration.GetSection(AiChatSettings.SectionName)
             );
+            services.AddScoped<INotificationService, NotificationService>();
+            services.AddScoped<IAdminNotificationPublisher, SignalRNotificationPublisher>();
+            services.AddSignalR();
 
             return services;
         }

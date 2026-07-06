@@ -20,7 +20,7 @@ namespace Tibr.Infrastructure.Repositories
         public async Task<Support?> GetSupportWithTicketsAsync(long id)
         {
             return await _context.Supports
-        .Include(s => s.Tickets)         
+        .Include(s => s.Tickets).Where(t => !t.IsDeleted)
         .Include(s => s.User)            
         .FirstOrDefaultAsync(s => s.Id == id);
         }

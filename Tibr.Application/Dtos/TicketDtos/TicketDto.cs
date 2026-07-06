@@ -9,7 +9,8 @@ namespace Tibr.Application.Dtos.TicketDtos
         public long Id { get; set; }
         public long SupportId { get; set; }
         public long? AdminId { get; set; }
-        public string? AdminName { get; set; } 
+        public string? AdminName { get; set; }
+        public bool EmailSent { get; set; } = false;
         public bool IsFromAdmin => AdminId.HasValue; 
         public string Message { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }

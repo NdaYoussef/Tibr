@@ -2,7 +2,7 @@
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
     ViewData["Title"] = $"Member Profile - {Model.FullName}";
-    
+
     // Status helper badge matching mockup: VERIFIED / PENDING / INACTIVE
     var statusClass = "badge-pending";
     var statusLabel = "PENDING";
@@ -37,16 +37,16 @@
             <div class="mb-3 position-relative d-inline-block">
                 <img src="@avatarUrl" class="rounded-circle border border-warning" alt="Avatar" style="width: 80px; height: 80px; object-fit: cover; border-width: 2px !important;" />
             </div>
-            
+
             <h3 class="mb-1 text-dark" style="font-size: 1.4rem;">@Model.FullName</h3>
-            <p class="text-muted mb-3" style="font-size: 0.8rem;">Elite Member ID: #@Model.Id</p>
-            
+
+
             <div class="mb-4">
                 <span class="pill-badge @statusClass">@statusLabel</span>
             </div>
 
             <hr class="border-light my-3">
-            
+
             <div class="text-start px-2">
                 <div class="mb-3">
                     <label class="text-muted text-uppercase fw-semibold" style="font-size: 0.65rem; letter-spacing: 0.5px;">Email Address</label>
@@ -118,9 +118,9 @@
                         <tbody>
                             @foreach (var order in Model.Orders)
                             {
-                                var formattedNum = order.OrderNumber.Contains("-") 
-                                    ? order.OrderNumber.Replace("TIBR-9821-", "TR-").Replace("TIBR-", "TR-") 
-                                    : order.OrderNumber;
+                                var formattedNum = order.OrderNumber.Contains("-")
+                                ? order.OrderNumber.Replace("TIBR-9821-", "TR-").Replace("TIBR-", "TR-")
+                                : order.OrderNumber;
 
                                 <tr>
                                     <td>

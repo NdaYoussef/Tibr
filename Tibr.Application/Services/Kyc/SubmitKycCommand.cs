@@ -2,7 +2,14 @@
 using Microsoft.EntityFrameworkCore;
 using Tibr.Application.Dtos;
 using Tibr.Domain.Entities;
+using Tibr.Domain.Enums; 
 using Microsoft.AspNetCore.Http;
+using System.IO;
+using System.Collections.Generic;
+using System.Threading;
+using System.Threading.Tasks;
+using System;
+
 namespace Tibr.Application.Services.Kyc
 {
     public record SubmitKycCommand(
@@ -21,7 +28,7 @@ namespace Tibr.Application.Services.Kyc
 
         public async Task<AuthResponse> Handle(SubmitKycCommand request, CancellationToken cancellationToken)
         {
-            var user = await _context.Set<User>().FindAsync(new object[] { (long)request.UserId }, cancellationToken);
+            var user = await _context.Set<User>().FindAsync(new object[] { request.UserId }, cancellationToken);
             if (user == null) return new AuthResponse(false, "المستخدم غير موجود.", "User not found.");
 
             var uploadsFolder = Path.Combine(Directory.GetCurrentDirectory(), "wwwroot", "kyc_documents");
@@ -41,7 +48,7 @@ namespace Tibr.Application.Services.Kyc
 
             var kycDoc = new KYCDocument
             {
-                UserId =(long)request.UserId,
+                UserId = request.UserId,
                 DocumentType = request.DocumentType,
                 DocumentNumber = request.DocumentNumber,
                 DocumentFront = "/kyc_documents/" + frontFileName,
@@ -52,11 +59,26 @@ namespace Tibr.Application.Services.Kyc
             };
 
             user.KycStatus = "Pending";
-
             await _context.Set<KYCDocument>().AddAsync(kycDoc, cancellationToken);
+
+
+            var hasWallets = await _context.Set<Wallet>().AnyAsync(w => w.UserId == request.UserId, cancellationToken);
+
+            if (!hasWallets)
+            {
+                var userWallets = new List<Wallet>
+                {
+                    new Wallet { UserId = request.UserId, WalletType = WalletType.Cash, Balance = 0, ReservedBalance = 0 },
+                    new Wallet { UserId = request.UserId, WalletType = WalletType.Gold, Balance = 0, ReservedBalance = 0 },
+                    new Wallet { UserId = request.UserId, WalletType = WalletType.Silver, Balance = 0, ReservedBalance = 0 }
+                };
+
+                await _context.Set<Wallet>().AddRangeAsync(userWallets, cancellationToken);
+            }
+
             await _context.SaveChangesAsync(cancellationToken);
 
-            return new AuthResponse(true, "تم رفع مستندات التوثيق بنجاح وهي قيد المراجعة حاليًا من قبل الإدارة.", "The documentation documents have been successfully uploaded and are currently under review by management.");
+            return new AuthResponse(true, "تم رفع مستندات التوثيق وإنشاء المحافظ بنجاح وهي قيد المراجعة حاليًا من قبل الإدارة.", "The documentation documents have been successfully uploaded and are currently under review by management.");
         }
     }
 }

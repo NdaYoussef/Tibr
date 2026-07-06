@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.Text;
 using Tibr.Application.Dtos.SupportDtos;
 using Tibr.Application.Dtos.TicketDtos;
+using Tibr.Application.Interfaces;
 using Tibr.Domain.Entities;
 using Tibr.Domain.IRepositories;
 
@@ -13,14 +14,16 @@ namespace Tibr.Application.Services.TicketServices
     public class TicketService : ITicketService
     {
         private readonly ITicketRepository _ticketRepository;
-        private readonly ISupportRepository _supportRepository; 
+        private readonly ISupportRepository _supportRepository;
         private readonly IMapper _mapper;
+        private readonly IEmailService _emailService;
 
-        public TicketService(ITicketRepository ticketRepository, ISupportRepository supportRepository, IMapper mapper)
+        public TicketService(ITicketRepository ticketRepository, ISupportRepository supportRepository, IMapper mapper, IEmailService emailService)
         {
             _ticketRepository = ticketRepository;
             _supportRepository = supportRepository;
             _mapper = mapper;
+            _emailService = emailService;
         }
 
         public async Task<Result<string>> DeleteMessageAsync(long ticketId)
@@ -44,36 +47,23 @@ namespace Tibr.Application.Services.TicketServices
 
         public async Task<Result<TicketDto>> ReplyToTicketAsync(CreateTicketDto dto, long adminId)
         {
-            var support = await _supportRepository.GetById(dto.SupportId);
+            var support = await _supportRepository.GetSupportWithTicketsAsync(dto.SupportId);
             if (support == null)
             {
                 return Result<TicketDto>.Failure("Support ticket not found.");
             }
 
-          
             if (support.Status == Support.SupportStatus.Closed)
             {
                 return Result<TicketDto>.Failure("Cannot reply to a closed support ticket.");
             }
 
-            
             var ticketMessage = _mapper.Map<Ticket>(dto);
             ticketMessage.AdminId = adminId;
             ticketMessage.CreatedAt = DateTime.UtcNow;
 
-          
-            //if (adminId.HasValue)
-            //{
-            //    support.Status = Support.SupportStatus.Pending; 
-            //}
-            //else
-            //{
-            //    support.Status = Support.SupportStatus.Open; 
-            //}
-
-          
             await _ticketRepository.AddAsync(ticketMessage);
-            await _supportRepository.UpdateAsync(support); 
+            await _supportRepository.UpdateAsync(support);
 
             var result = await _ticketRepository.SaveChangesAsync();
             if (result <= 0)
@@ -81,8 +71,15 @@ namespace Tibr.Application.Services.TicketServices
                 return Result<TicketDto>.Failure("Failed to send your reply.");
             }
 
-          
+            var emailResult = await _emailService.SendTicketReplyEmailAsync(
+                support.User.Email,
+                support.User.FirstName,
+                support.Subject,
+                dto.Message);
+
             var responseDto = ticketMessage.Adapt<TicketDto>();
+            responseDto.EmailSent = emailResult.IsSuccess;
+
             return Result<TicketDto>.Success(responseDto);
         }
     }

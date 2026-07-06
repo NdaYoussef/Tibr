@@ -29,7 +29,6 @@
             </button>
         </div>
         <h5 class="mb-1 text-white" style="font-size: 1rem; font-weight: 700;">@Model.FirstName @Model.LastName</h5>
-        <p class="text-muted mb-0" style="font-size: 0.8rem;">User ID: #@Model.Id</p>
     </div>
 
     <!-- Personal Information Card -->
@@ -77,23 +76,88 @@
                 <label class="form-label text-muted text-uppercase fw-semibold" style="font-size: 0.7rem; letter-spacing: 0.5px;">KYC Verification status</label>
                 <select asp-for="KycStatus" class="form-select executive-input">
                     <option value="Pending">Pending</option>
-                    <option value="Approved">Approved</option>
+                    <option value="Verified">Verified</option>
                     <option value="Rejected">Rejected</option>
                 </select>
                 <span asp-validation-for="KycStatus" class="text-danger mt-1 d-block" style="font-size: 0.75rem;"></span>
             </div>
 
-            <div class="col-12">
-                <label class="form-label text-muted text-uppercase fw-semibold" style="font-size: 0.7rem; letter-spacing: 0.5px;">Organizational Role</label>
-                <select asp-for="Role" class="form-select executive-input">
-                    <option value="Administrator">Administrator</option>
-                    <option value="Manager">Manager</option>
-                    <option value="Executive Member">Executive Member</option>
-                    <option value="Standard User">Standard User</option>
-                </select>
-                <span asp-validation-for="Role" class="text-danger mt-1 d-block" style="font-size: 0.75rem;"></span>
-            </div>
         </div>
+    </div>
+
+    <!-- KYC Documents Verification Card -->
+    <div class="executive-card shadow-sm p-4 mb-4">
+        <div class="d-flex align-items-center gap-2 mb-4 border-bottom pb-2">
+            <i class="bi bi-shield-check text-warning fs-5"></i>
+            <h4 class="mb-0 text-white" style="font-size: 1.1rem; font-weight: 700;">KYC Documents Verification</h4>
+            @if (!string.IsNullOrEmpty(Model.KycStatus))
+            {
+                var badgeClass = Model.KycStatus switch
+                {
+                            "Verified" => "badge-success",
+                            "Rejected" => "badge-danger",
+                    _ => "badge-warning"
+                };
+                <span class="status-badge @badgeClass ms-auto">
+                    <span class="status-dot"></span>
+                    @Model.KycStatus
+                </span>
+            }
+        </div>
+
+        @if (string.IsNullOrEmpty(Model.KycDocumentFront) && string.IsNullOrEmpty(Model.KycDocumentBack) && string.IsNullOrEmpty(Model.KycSelfieImage))
+        {
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-file-earmark-image" style="font-size: 3rem; opacity: 0.3;"></i>
+                <p class="mt-2 mb-0" style="font-size: 0.9rem;">No KYC documents uploaded yet.</p>
+            </div>
+        }
+        else
+        {
+            <div class="kyc-grid">
+                <div class="kyc-doc-item" data-bs-toggle="kyc-lightbox" data-src="@Model.KycDocumentFront">
+                    <div class="kyc-thumb-wrap">
+                        @if (!string.IsNullOrEmpty(Model.KycDocumentFront))
+                        {
+                            <img src="https://tibr.runasp.net/@Model.KycDocumentFront" alt="National ID Front" class="kyc-thumb" />
+                        }
+                        else
+                        {
+                            <div class="kyc-thumb-placeholder"><i class="bi bi-image text-muted"></i></div>
+                        }
+                    </div>
+                    <span class="kyc-label">National ID (Front)</span>
+                </div>
+
+                <div class="kyc-doc-item" data-bs-toggle="kyc-lightbox" data-src="@Model.KycDocumentBack">
+                    <div class="kyc-thumb-wrap">
+                        @if (!string.IsNullOrEmpty(Model.KycDocumentBack))
+                        {
+                            <img src="https://tibr.runasp.net/@Model.KycDocumentBack" alt="National ID Back" class="kyc-thumb" />
+                        }
+                        else
+                        {
+                            <div class="kyc-thumb-placeholder"><i class="bi bi-image text-muted"></i></div>
+                        }
+                    </div>
+                    <span class="kyc-label">National ID (Back)</span>
+                </div>
+
+                <div class="kyc-doc-item" data-bs-toggle="kyc-lightbox" data-src="@Model.KycSelfieImage">
+                    <div class="kyc-thumb-wrap">
+                        @if (!string.IsNullOrEmpty(Model.KycSelfieImage))
+                        {
+                            <img src="https://tibr.runasp.net/@Model.KycSelfieImage" alt="Selfie holding National ID" class="kyc-thumb" />
+                        }
+                        else
+                        {
+                            <div class="kyc-thumb-placeholder"><i class="bi bi-image text-muted"></i></div>
+                        }
+                    </div>
+                    <span class="kyc-label">Selfie holding National ID</span>
+                </div>
+            </div>
+        }
     </div>
 
     <!-- Access & Permissions Card -->
@@ -104,7 +168,7 @@
         </div>
 
         <!-- Permission toggle 1 -->
-        <div class="executive-card p-3 d-flex justify-content-between align-items-center shadow-none mb-3" style="background-color: #f8fafc;">
+        <div class="executive-card p-3 d-flex justify-content-between align-items-center shadow-none mb-3" style="background-color: var(--bg-card2);">
             <div style="max-width: 75%;">
                 <div class="d-flex align-items-center gap-2 mb-1">
                     <i class="bi bi-bar-chart-line text-warning"></i>
@@ -118,7 +182,7 @@
         </div>
 
         <!-- Permission toggle 2 -->
-        <div class="executive-card p-3 d-flex justify-content-between align-items-center shadow-none mb-0" style="background-color: #f8fafc;">
+        <div class="executive-card p-3 d-flex justify-content-between align-items-center shadow-none mb-0" style="background-color: var(--bg-card2);">
             <div style="max-width: 75%;">
                 <div class="d-flex align-items-center gap-2 mb-1">
                     <i class="bi bi-card-list text-warning"></i>
@@ -135,7 +199,7 @@
     <!-- Submit buttons -->
     <div class="row g-2 mb-4">
         <div class="col-6">
-            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-gold w-100 py-3" style="font-weight: 700; border-color: #cbd5e1; color: var(--text-dark);">CANCEL</a>
+            <a asp-action="Details" asp-route-id="@Model.Id" class="btn btn-outline-gold w-100 py-3" style="font-weight: 700;">CANCEL</a>
         </div>
         <div class="col-6">
             <button type="submit" class="btn btn-gold w-100 py-3" style="font-weight: 700;"><i class="bi bi-save me-1"></i> SAVE CHANGES</button>
@@ -143,6 +207,99 @@
     </div>
 </form>
 
+<!-- KYC Lightbox Modal -->
+<div class="kyc-lightbox-overlay" id="kycLightbox" style="display: none;">
+    <div class="kyc-lightbox-modal">
+        <div class="kyc-lightbox-header">
+            <span class="kyc-lightbox-title" id="kycLightboxTitle">Document Preview</span>
+            <div class="kyc-lightbox-tools">
+                <button type="button" class="kyc-tool-btn" id="kycZoomIn" title="Zoom In"><i class="bi bi-zoom-in"></i></button>
+                <button type="button" class="kyc-tool-btn" id="kycZoomOut" title="Zoom Out"><i class="bi bi-zoom-out"></i></button>
+                <button type="button" class="kyc-tool-btn" id="kycRotate" title="Rotate"><i class="bi bi-arrow-clockwise"></i></button>
+                <button type="button" class="kyc-tool-btn kyc-tool-close" id="kycLightboxClose" title="Close"><i class="bi bi-x-lg"></i></button>
+            </div>
+        </div>
+        <div class="kyc-lightbox-body">
+            <img id="kycLightboxImg" src="" alt="Document Preview" />
+        </div>
+    </div>
+</div>
+
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        (function () {
+            var overlay = document.getElementById('kycLightbox');
+            var img = document.getElementById('kycLightboxImg');
+            var title = document.getElementById('kycLightboxTitle');
+            var closeBtn = document.getElementById('kycLightboxClose');
+            var zoomIn = document.getElementById('kycZoomIn');
+            var zoomOut = document.getElementById('kycZoomOut');
+            var rotateBtn = document.getElementById('kycRotate');
+
+            var scale = 1;
+            var rotation = 0;
+            var MIN_SCALE = 0.25;
+            var MAX_SCALE = 10;
+
+            function resetTransform() {
+                scale = 1;
+                rotation = 0;
+                img.style.transform = 'scale(' + scale + ') rotate(' + rotation + 'deg)';
+            }
+
+            function updateTransform() {
+                img.style.transform = 'scale(' + scale + ') rotate(' + rotation + 'deg)';
+            }
+
+            document.querySelectorAll('[data-bs-toggle="kyc-lightbox"]').forEach(function (el) {
+                el.addEventListener('click', function () {
+                    var src = el.getAttribute('data-src');
+                    if (!src) return;
+                    img.src = src;
+                    var label = el.querySelector('.kyc-label');
+                    title.textContent = label ? label.textContent : 'Document Preview';
+                    resetTransform();
+                    overlay.style.display = 'flex';
+                    document.body.style.overflow = 'hidden';
+                });
+            });
+
+            function closeLightbox() {
+                overlay.style.display = 'none';
+                document.body.style.overflow = '';
+                img.src = '';
+            }
+
+            closeBtn.addEventListener('click', closeLightbox);
+            overlay.addEventListener('click', function (e) {
+                if (e.target === overlay) closeLightbox();
+            });
+            document.addEventListener('keydown', function (e) {
+                if (e.key === 'Escape') closeLightbox();
+            });
+
+            zoomIn.addEventListener('click', function () {
+                scale = Math.min(scale + 0.25, MAX_SCALE);
+                updateTransform();
+            });
+
+            zoomOut.addEventListener('click', function () {
+                scale = Math.max(scale - 0.25, MIN_SCALE);
+                updateTransform();
+            });
+
+            rotateBtn.addEventListener('click', function () {
+                rotation = (rotation + 90) % 360;
+                updateTransform();
+            });
+
+            img.addEventListener('wheel', function (e) {
+                e.preventDefault();
+                var delta = e.deltaY > 0 ? -0.25 : 0.25;
+                scale = Math.max(MIN_SCALE, Math.min(MAX_SCALE, scale + delta));
+                updateTransform();
+            }, { passive: false });
+        })();
+    </script>
 }

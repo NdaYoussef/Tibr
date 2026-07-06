@@ -27,6 +27,7 @@ namespace Tibr.MVC.Mapping
             // ── Report DTOs → ViewModel types ────────────────────────────
             config.NewConfig<ReportsSummaryDto, ReportsSummaryViewModel>();
             config.NewConfig<SalesReportDto, SalesReportRow>();
+            config.NewConfig<RevenueReportDto, RevenueReportRow>();
             config.NewConfig<ProductPerformanceDto, ProductPerformanceRow>();
             config.NewConfig<InventoryDto, InventoryRow>();
             config.NewConfig<CustomerReportDto, CustomerReportRow>();

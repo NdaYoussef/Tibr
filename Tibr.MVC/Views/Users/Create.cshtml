@@ -1,158 +1,123 @@
-@model Tibr.MVC.Models.Users.UserDetailsViewModel
+@model Tibr.MVC.Models.Users.UserCreateViewModel
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
-    ViewData["Title"] = $"Member Profile - {Model.FullName}";
-
-    // Status helper badge matching mockup: VERIFIED / PENDING / INACTIVE
-    var statusClass = "badge-pending";
-    var statusLabel = "PENDING";
-    if (Model.KycStatus == "Approved" && Model.Status == "Active")
-    {
-        statusClass = "badge-verified";
-        statusLabel = "VERIFIED";
-    }
-    else if (Model.Status == "Suspended" || Model.KycStatus == "Rejected")
-    {
-        statusClass = "badge-inactive";
-        statusLabel = "INACTIVE";
-    }
-
-    var avatarUrl = "https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=150&auto=format&fit=crop";
-    if (Model.FirstName.Equals("Sarah", StringComparison.OrdinalIgnoreCase) || Model.FirstName.Equals("Fatima", StringComparison.OrdinalIgnoreCase) || Model.FirstName.Equals("Aria", StringComparison.OrdinalIgnoreCase) || Model.FirstName.Equals("Elena", StringComparison.OrdinalIgnoreCase))
-    {
-        avatarUrl = "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=150&auto=format&fit=crop";
-    }
+    ViewData["Title"] = "Add New User";
 }
 
-<div class="mb-4">
-    <a asp-action="Index" class="btn btn-outline-gold px-3 py-2" style="font-weight: 600; border-color: #cbd5e1; color: var(--text-dark);">
-        <i class="bi bi-arrow-left me-1"></i> Back to Members Directory
-    </a>
-</div>
+<form method="post" asp-action="Create">
+    <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-<div class="row">
-    <!-- User Profile Card -->
-    <div class="col-lg-4">
-        <div class="executive-card accent-top shadow-sm text-center py-4">
-            <div class="mb-3 position-relative d-inline-block">
-                <img src="@avatarUrl" class="rounded-circle border border-warning" alt="Avatar" style="width: 80px; height: 80px; object-fit: cover; border-width: 2px !important;" />
+    <!-- Portrait Headshot Card -->
+    <div class="executive-card text-center py-4 mb-4 shadow-sm">
+        <div class="position-relative d-inline-block mb-3">
+            <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=150&auto=format&fit=crop"
+                 class="rounded-circle border border-light shadow-sm"
+                 alt="Portrait Placeholder"
+                 style="width: 100px; height: 100px; object-fit: cover; background-color: #f1f5f9;" />
+            <button type="button" class="btn btn-warning rounded-circle position-absolute bottom-0 end-0 p-0 d-flex align-items-center justify-content-center shadow-sm"
+                    style="width: 32px; height: 32px; border: 2px solid #ffffff; background-color: var(--accent-gold); color: #ffffff;">
+                <i class="bi bi-pencil-fill" style="font-size: 0.8rem;"></i>
+            </button>
+        </div>
+        <h5 class="mb-1 text-white" style="font-size: 1rem; font-weight: 700;">User Portrait</h5>
+        <p class="text-muted mb-0" style="font-size: 0.8rem;">Upload a high-resolution professional headshot (Max 5MB)</p>
+    </div>
+
+    <!-- Personal Information Card -->
+    <div class="executive-card shadow-sm p-4 mb-4">
+        <div class="d-flex align-items-center gap-2 mb-4 border-bottom pb-2">
+            <i class="bi bi-person-badge text-warning fs-5"></i>
+            <h4 class="mb-0 text-white" style="font-size: 1.1rem; font-weight: 700;">Personal Information</h4>
+        </div>
+
+        <div class="row g-3">
+            <div class="col-md-6">
+                <label class="form-label text-muted text-uppercase fw-semibold" style="font-size: 0.7rem; letter-spacing: 0.5px;">First Name</label>
+                <input asp-for="FirstName" class="form-control executive-input" placeholder="e.g. Julian" />
+                <span asp-validation-for="FirstName" class="text-danger mt-1 d-block" style="font-size: 0.75rem;"></span>
             </div>
 
-            <h3 class="mb-1 text-dark" style="font-size: 1.4rem;">@Model.FullName</h3>
-            <p class="text-muted mb-3" style="font-size: 0.8rem;">Elite Member ID: #@Model.Id</p>
-
-            <div class="mb-4">
-                <span class="pill-badge @statusClass">@statusLabel</span>
+            <div class="col-md-6">
+                <label class="form-label text-muted text-uppercase fw-semibold" style="font-size: 0.7rem; letter-spacing: 0.5px;">Last Name</label>
+                <input asp-for="LastName" class="form-control executive-input" placeholder="e.g. Sterling" />
+                <span asp-validation-for="LastName" class="text-danger mt-1 d-block" style="font-size: 0.75rem;"></span>
             </div>
 
-            <hr class="border-light my-3">
-
-            <div class="text-start px-2">
-                <div class="mb-3">
-                    <label class="text-muted text-uppercase fw-semibold" style="font-size: 0.65rem; letter-spacing: 0.5px;">Email Address</label>
-                    <div class="text-dark fw-medium" style="font-size: 0.9rem;">@Model.Email</div>
-                </div>
-                <div class="mb-3">
-                    <label class="text-muted text-uppercase fw-semibold" style="font-size: 0.65rem; letter-spacing: 0.5px;">Phone Number</label>
-                    <div class="text-dark fw-medium" style="font-size: 0.9rem;">@Model.Phone</div>
-                </div>
-                <div class="mb-3">
-                    <label class="text-muted text-uppercase fw-semibold" style="font-size: 0.65rem; letter-spacing: 0.5px;">KYC Status</label>
-                    <div>
-                        <span class="pill-badge @($"badge-{Model.KycStatus.ToLower()}")">@Model.KycStatus</span>
-                    </div>
-                </div>
-                <div class="mb-3">
-                    <label class="text-muted text-uppercase fw-semibold" style="font-size: 0.65rem; letter-spacing: 0.5px;">Authentication Status</label>
-                    <div>
-                        @if (Model.OtpVerified)
-                        {
-                            <span class="text-success fw-bold" style="font-size: 0.85rem;"><i class="bi bi-shield-check me-1"></i> OTP Checked</span>
-                        }
-                        else
-                        {
-                            <span class="text-danger fw-bold" style="font-size: 0.85rem;"><i class="bi bi-shield-x me-1"></i> OTP Unverified</span>
-                        }
-                    </div>
-                </div>
-                <div class="mb-3">
-                    <label class="text-muted text-uppercase fw-semibold" style="font-size: 0.65rem; letter-spacing: 0.5px;">Member Since</label>
-                    <div class="text-dark fw-medium" style="font-size: 0.9rem;">@Model.CreatedAt.ToString("MMMM dd, yyyy")</div>
-                </div>
+            <div class="col-12">
+                <label class="form-label text-muted text-uppercase fw-semibold" style="font-size: 0.7rem; letter-spacing: 0.5px;">Email Address</label>
+                <input asp-for="Email" class="form-control executive-input" placeholder="j.sterling@executive.com" />
+                <span asp-validation-for="Email" class="text-danger mt-1 d-block" style="font-size: 0.75rem;"></span>
             </div>
 
-            <div class="mt-4">
-                <a asp-action="Edit" asp-route-id="@Model.Id" class="btn btn-gold w-100 py-2">
-                    <i class="bi bi-pencil-square me-1"></i> Edit Profile Settings
-                </a>
+            <div class="col-12">
+                <label class="form-label text-muted text-uppercase fw-semibold" style="font-size: 0.7rem; letter-spacing: 0.5px;">Phone Number</label>
+                <input asp-for="Phone" class="form-control executive-input" placeholder="+1 (555) 000-0000" />
+                <span asp-validation-for="Phone" class="text-danger mt-1 d-block" style="font-size: 0.75rem;"></span>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label text-muted text-uppercase fw-semibold" style="font-size: 0.7rem; letter-spacing: 0.5px;">Security Password</label>
+                <input asp-for="Password" type="password" class="form-control executive-input" placeholder="Min. 6 chars" />
+                <span asp-validation-for="Password" class="text-danger mt-1 d-block" style="font-size: 0.75rem;"></span>
+            </div>
+
+            <div class="col-md-6">
+                <label class="form-label text-muted text-uppercase fw-semibold" style="font-size: 0.7rem; letter-spacing: 0.5px;">Confirm Password</label>
+                <input asp-for="ConfirmPassword" type="password" class="form-control executive-input" placeholder="Re-enter password" />
+                <span asp-validation-for="ConfirmPassword" class="text-danger mt-1 d-block" style="font-size: 0.75rem;"></span>
+            </div>
+
+
+        </div>
+    </div>
+
+    <!-- Access & Permissions Card -->
+    <div class="executive-card shadow-sm p-4 mb-4">
+        <div class="d-flex align-items-center gap-2 mb-4 border-bottom pb-2">
+            <i class="bi bi-shield-lock text-warning fs-5"></i>
+            <h4 class="mb-0 text-white" style="font-size: 1.1rem; font-weight: 700;">Access & Permissions</h4>
+        </div>
+
+        <!-- Permission toggle 1 -->
+        <div class="executive-card p-3 d-flex justify-content-between align-items-center shadow-none mb-3" style="background-color: var(--bg-card2);">
+            <div style="max-width: 75%;">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <i class="bi bi-bar-chart-line text-warning"></i>
+                    <h6 class="mb-0 text-dark" style="font-weight: 700;">Analytics Access</h6>
+                </div>
+                <p class="text-muted mb-0" style="font-size: 0.8rem; line-height: 1.3;">Grant viewing rights to executive dashboard and financial reporting.</p>
+            </div>
+            <div class="form-check form-switch m-0">
+                <input class="form-check-input" type="checkbox" role="switch" asp-for="AnalyticsAccess" id="toggle-analytics">
+            </div>
+        </div>
+
+        <!-- Permission toggle 2 -->
+        <div class="executive-card p-3 d-flex justify-content-between align-items-center shadow-none mb-0" style="background-color: var(--bg-card2);">
+            <div style="max-width: 75%;">
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <i class="bi bi-card-list text-warning"></i>
+                    <h6 class="mb-0 text-dark" style="font-weight: 700;">System Logs</h6>
+                </div>
+                <p class="text-muted mb-0" style="font-size: 0.8rem; line-height: 1.3;">Allow user to audit activity logs and system modification history.</p>
+            </div>
+            <div class="form-check form-switch m-0">
+                <input class="form-check-input" type="checkbox" role="switch" asp-for="SystemLogs" id="toggle-logs">
             </div>
         </div>
     </div>
 
-    <!-- Order History Details -->
-    <div class="col-lg-8">
-        <div class="executive-card accent-top shadow-sm">
-            <h4 class="mb-4 text-dark" style="font-size: 1.15rem;"><i class="bi bi-receipt me-2 text-warning"></i> Transaction & Acquisition Records</h4>
-
-            @if (!Model.Orders.Any())
-            {
-                <div class="p-5 text-center text-muted">
-                    <i class="bi bi-cart-x display-4 mb-3 text-secondary"></i>
-                    <div>This member has not processed any transactions yet.</div>
-                </div>
-            }
-            else
-            {
-                <div class="table-responsive">
-                    <table class="table table-custom m-0">
-                        <thead>
-                            <tr>
-                                <th>Order Ref</th>
-                                <th>Amount</th>
-                                <th>Order Status</th>
-                                <th>Payment Status</th>
-                                <th>Date</th>
-                                <th class="text-end">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @foreach (var order in Model.Orders)
-                            {
-                                var formattedNum = order.OrderNumber.Contains("-")
-                                ? order.OrderNumber.Replace("TIBR-9821-", "TR-").Replace("TIBR-", "TR-")
-                                : order.OrderNumber;
-
-                                <tr>
-                                    <td>
-                                        <span class="fw-bold text-dark">#@formattedNum</span>
-                                    </td>
-                                    <td>
-                                        <span class="item-gold-price">$@order.TotalAmount.ToString("N2")</span>
-                                    </td>
-                                    <td>
-                                        <span class="pill-badge @($"badge-{order.OrderStatus.ToLower()}")">
-                                            @order.OrderStatus
-                                        </span>
-                                    </td>
-                                    <td>
-                                        <span class="pill-badge @($"badge-{order.PaymentStatus.ToLower()}")">
-                                            @order.PaymentStatus
-                                        </span>
-                                    </td>
-                                    <td class="text-muted" style="font-size: 0.85rem;">
-                                        @order.CreatedAt.ToString("yyyy-MM-dd")
-                                    </td>
-                                    <td class="text-end">
-                                        <a asp-controller="Orders" asp-action="Details" asp-route-id="@order.OrderId" class="btn btn-sm btn-outline-gold py-1 px-3" style="font-size: 0.75rem;">
-                                            Manage
-                                        </a>
-                                    </td>
-                                </tr>
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            }
+    <!-- Submit buttons -->
+    <div class="row g-2 mb-4">
+        <div class="col-6">
+            <a asp-action="Index" class="btn btn-outline-gold w-100 py-3" style="font-weight: 700;">CANCEL</a>
+        </div>
+        <div class="col-6">
+            <button type="submit" class="btn btn-gold w-100 py-3" style="font-weight: 700;"><i class="bi bi-plus-lg me-1"></i> CREATE USER</button>
         </div>
     </div>
-</div>
+</form>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

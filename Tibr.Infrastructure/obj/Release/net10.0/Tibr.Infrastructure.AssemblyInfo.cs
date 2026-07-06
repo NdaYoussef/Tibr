@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("Tibr.Infrastructure")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+5ec59e4268226450c0e68a91e93e06e46b8af436")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+3b8b244c461d593c271cb47626ba2b49c64a2981")]
 [assembly: System.Reflection.AssemblyProductAttribute("Tibr.Infrastructure")]
 [assembly: System.Reflection.AssemblyTitleAttribute("Tibr.Infrastructure")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

@@ -54,10 +54,13 @@ namespace Tibr.MVC.Controllers
             var monthly = await _analyticsService.GetMonthlySalesChartAsync();
 
 
-            var sales = IsType(reportType, ReportTypes.Sales, ReportTypes.Revenue)
-                 ? await _analyticsService.GetSalesReportAsync(fromDate, toDate)
-                 : new List<SalesReportDto>();
+            var sales = IsType(reportType, ReportTypes.Sales)
+                ? await _analyticsService.GetSalesReportAsync(fromDate, toDate)
+                : new List<SalesReportDto>();
 
+            var revenue = IsType(reportType, ReportTypes.Revenue)
+                ? await _analyticsService.GetRevenueReportAsync(fromDate, toDate)
+                : new List<RevenueReportDto>();
 
             var products = IsType(reportType, ReportTypes.Products)
                 ? await _analyticsService.GetProductPerformanceReportAsync(fromDate, toDate)
@@ -81,6 +84,7 @@ namespace Tibr.MVC.Controllers
                 Summary = summary.Adapt<ReportsSummaryViewModel>(),
                 MonthlySales = monthly.Adapt<List<MonthlySalesPoint>>(),
                 SalesRows = sales.Adapt<List<SalesReportRow>>(),
+                RevenueRows = revenue.Adapt<List<RevenueReportRow>>(),
                 ProductRows = products.Adapt<List<ProductPerformanceRow>>(),
                 InventoryRows = inventory.Adapt<List<InventoryRow>>(),
                 CustomerRows = customers.Adapt<List<CustomerReportRow>>()

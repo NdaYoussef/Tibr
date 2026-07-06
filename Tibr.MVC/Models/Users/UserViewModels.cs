@@ -98,9 +98,6 @@ namespace Tibr.MVC.Models.Users
         [Display(Name = "Confirm Password")]
         public string ConfirmPassword { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Organizational Role is required.")]
-        [Display(Name = "Organizational Role")]
-        public string Role { get; set; } = "Select Role";
 
         [Display(Name = "Analytics Access")]
         public bool AnalyticsAccess { get; set; } = false;
@@ -141,14 +138,15 @@ namespace Tibr.MVC.Models.Users
         [Display(Name = "KYC Status")]
         public string KycStatus { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "Organizational Role is required.")]
-        [Display(Name = "Organizational Role")]
-        public string Role { get; set; } = "Select Role";
 
         [Display(Name = "Analytics Access")]
         public bool AnalyticsAccess { get; set; } = false;
 
         [Display(Name = "System Logs")]
         public bool SystemLogs { get; set; } = false;
+
+        public string? KycDocumentFront { get; set; }
+        public string? KycDocumentBack { get; set; }
+        public string? KycSelfieImage { get; set; }
     }
 }

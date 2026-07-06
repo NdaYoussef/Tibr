@@ -14,7 +14,7 @@ using Tibr.Infrastructure.Config;
 using Tibr.Infrastructure.Contexts;
 using Tibr.Infrastructure.Seed;
 using Tibr.Infrastructure.Services;
-
+using Tibr.Infrastructure.Services.NotificationServices;
 namespace Tibr.API
 {
     public class Program
@@ -149,6 +149,7 @@ namespace Tibr.API
             app.UseAuthorization();
 
             app.MapControllers();
+            app.MapHub<NotificationHub>("/hubs/notifications");
             app.Run();
         }
     }

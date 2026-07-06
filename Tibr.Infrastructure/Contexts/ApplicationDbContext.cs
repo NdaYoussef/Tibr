@@ -175,6 +175,10 @@ namespace Tibr.Infrastructure.Contexts
                 .HasConversion<string>()
                 .HasMaxLength(20);
 
+            modelBuilder.Entity<Ticket>().HasQueryFilter(t => !t.IsDeleted);
+            modelBuilder.Entity<Support>().HasQueryFilter(s => !s.IsDeleted);
+            modelBuilder.Entity<User>().HasQueryFilter(u => !u.IsDeleted);
+
             #region Investment Module Relationships
 
             modelBuilder.Entity<Wallet>()

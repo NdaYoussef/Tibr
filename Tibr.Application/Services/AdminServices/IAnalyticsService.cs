@@ -15,6 +15,11 @@ namespace Tibr.Application.Services.AdminServices
             DateTime fromDate,
             DateTime toDate);
 
+        Task<List<RevenueReportDto>> GetRevenueReportAsync(
+           DateTime fromDate,
+           DateTime toDate);
+
+
         Task<List<ProductPerformanceDto>> GetProductPerformanceReportAsync(
             DateTime fromDate,
             DateTime toDate);

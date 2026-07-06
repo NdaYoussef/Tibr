@@ -22,6 +22,18 @@ namespace Tibr.Application.Dtos.DashboardDtos
         public string PaymentStatus { get; init; } = string.Empty;
     }
 
+    public class RevenueReportDto
+    {
+        public string ProductName { get; init; } = string.Empty;
+        public string MetalType { get; init; } = string.Empty;
+        public int UnitsSold { get; init; }
+        public decimal TotalRevenue { get; init; }   // sum(SellPrice * Qty) paid orders
+        public decimal TotalCost { get; init; }      // sum(BuyPrice  * Qty) paid orders
+        public decimal NetMargin => TotalRevenue - TotalCost;
+        public decimal MarginPercent => TotalCost == 0 ? 0
+            : Math.Round(NetMargin / TotalCost * 100, 1);
+    }
+
     public class ProductPerformanceDto
     {
         public string ProductName { get; init; } = string.Empty;
