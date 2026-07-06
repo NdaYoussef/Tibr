@@ -121,12 +121,11 @@ public class DepositService : IDepositService
             deposit.Status = DepositStatus.Completed;
             await _depositRepo.UpdateAsync(deposit);
 
+            await EnsureWalletsExistAsync(deposit.UserId);
+
             var cashWallet = _walletRepo
                 .GetAll(w => w.UserId == deposit.UserId && w.WalletType == WalletType.Cash)
-                .FirstOrDefault();
-
-            if (cashWallet is null)
-                return Result.Failure("Cash wallet not found.");
+                .FirstOrDefault()!;
 
             var creditResult = await _walletService.CreditAsync(
                 cashWallet.Id, deposit.Amount, ReferenceType.Deposit, deposit.Id);
@@ -208,12 +207,11 @@ public class DepositService : IDepositService
             deposit.Status = DepositStatus.Completed;
             await _depositRepo.UpdateAsync(deposit);
 
+            await EnsureWalletsExistAsync(deposit.UserId);
+
             var cashWallet = _walletRepo
                 .GetAll(w => w.UserId == deposit.UserId && w.WalletType == WalletType.Cash)
-                .FirstOrDefault();
-
-            if (cashWallet is null)
-                return Result<VerifyStatusResponse>.Failure("Cash wallet not found.");
+                .FirstOrDefault()!;
 
             var creditResult = await _walletService.CreditAsync(
                 cashWallet.Id, deposit.Amount, ReferenceType.Deposit, deposit.Id);
@@ -243,5 +241,17 @@ public class DepositService : IDepositService
             InquiredPaymob = true,
             Message = "Deposit is still pending on Paymob's side.",
         });
+    }
+
+    private async Task EnsureWalletsExistAsync(long userId)
+    {
+        var hasWallets = _walletRepo.GetAll(w => w.UserId == userId).Any();
+        if (hasWallets)
+            return;
+
+        await _walletRepo.AddAsync(new Wallet { UserId = userId, WalletType = WalletType.Cash, Balance = 0, ReservedBalance = 0 });
+        await _walletRepo.AddAsync(new Wallet { UserId = userId, WalletType = WalletType.Gold, Balance = 0, ReservedBalance = 0 });
+        await _walletRepo.AddAsync(new Wallet { UserId = userId, WalletType = WalletType.Silver, Balance = 0, ReservedBalance = 0 });
+        await _walletRepo.SaveChangesAsync();
     }
 }

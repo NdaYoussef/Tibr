@@ -174,13 +174,27 @@ namespace Tibr.Application.Services.AiChatServices
         )
         {
             var balanceResult = await _walletService.GetBalancesAsync(userId);
-            var priceResult = await _priceService.GetCurrentPriceAsync(AssetType.Gold);
+            var goldPriceTask = _priceService.GetCurrentPriceAsync(AssetType.Gold);
+            var silverPriceTask = _priceService.GetCurrentPriceAsync(AssetType.Silver);
             var trades = await _tradeRepo.GetAll(t => t.UserId == userId).ToListAsync();
+
+            await Task.WhenAll(goldPriceTask, silverPriceTask);
+            var goldPriceResult = goldPriceTask.Result;
+            var silverPriceResult = silverPriceTask.Result;
 
             var goldBalance = balanceResult.IsSuccess
                 ? (
                     balanceResult
                         .Data!.FirstOrDefault(b => b.WalletType == WalletType.Gold)
+                        ?.AvailableBalance
+                    ?? 0
+                )
+                : 0;
+
+            var silverBalance = balanceResult.IsSuccess
+                ? (
+                    balanceResult
+                        .Data!.FirstOrDefault(b => b.WalletType == WalletType.Silver)
                         ?.AvailableBalance
                     ?? 0
                 )
@@ -195,40 +209,48 @@ namespace Tibr.Application.Services.AiChatServices
                 )
                 : 0;
 
-            var priceCtx =
-                priceResult.IsSuccess && priceResult.Data is not null
-                    ? $"Current gold price: buy at {priceResult.Data.BuyPrice:N2} EGP/g, "
-                        + $"sell at {priceResult.Data.SellPrice:N2} EGP/g"
-                    : "Price data temporarily unavailable.";
+            var goldPriceCtx =
+                goldPriceResult.IsSuccess && goldPriceResult.Data is not null
+                    ? $"Gold: buy at {goldPriceResult.Data.BuyPrice:N2}, sell at {goldPriceResult.Data.SellPrice:N2} EGP/g"
+                    : "Gold price temporarily unavailable.";
 
-            var buyTrades = trades
-                .Where(t => t.Side == TradeSide.Buy && t.RemainingQuantity > 0)
+            var silverPriceCtx =
+                silverPriceResult.IsSuccess && silverPriceResult.Data is not null
+                    ? $"Silver: buy at {silverPriceResult.Data.BuyPrice:N2}, sell at {silverPriceResult.Data.SellPrice:N2} EGP/g"
+                    : "Silver price temporarily unavailable.";
+
+            var goldBuyTrades = trades
+                .Where(t => t.Side == TradeSide.Buy && t.AssetType == AssetType.Gold && t.RemainingQuantity > 0)
                 .OrderBy(t => t.ExecutedAt)
                 .ToList();
 
-            var tradeText =
-                buyTrades.Count > 0
-                    ? string.Join(
-                        "\n",
-                        buyTrades.Select(
-                            (t, i) =>
-                            {
-                                var currentSellPrice =
-                                    priceResult.IsSuccess && priceResult.Data is not null
-                                        ? priceResult.Data.SellPrice
-                                        : t.ExecutedPrice;
-                                var plPerGram = currentSellPrice - t.ExecutedPrice;
-                                var totalPl = plPerGram * t.RemainingQuantity;
-                                return $"- Trade #{i + 1}: {t.RemainingQuantity:F4}/{t.Quantity:F4}g at {t.ExecutedPrice:N2} EGP/g "
-                                    + $"on {t.ExecutedAt:yyyy-MM-dd}  "
-                                    + $"P/L: {plPerGram:+N2;-N2} EGP/g, total: {totalPl:+N2;-N2} EGP";
-                            }
-                        )
-                    )
-                    : "No buy trades found.";
+            var silverBuyTrades = trades
+                .Where(t => t.Side == TradeSide.Buy && t.AssetType == AssetType.Silver && t.RemainingQuantity > 0)
+                .OrderBy(t => t.ExecutedAt)
+                .ToList();
+
+            string FormatTrades(List<Trade> list, AssetType type, Task<Result<AssetPriceDto?>> priceTask)
+            {
+                if (list.Count == 0) return type == AssetType.Gold ? "No gold buy trades." : "No silver buy trades.";
+                var priceResult = priceTask.Result;
+                return string.Join("\n", list.Select((t, i) =>
+                {
+                    var currentSellPrice = priceResult.IsSuccess && priceResult.Data is not null
+                        ? priceResult.Data.SellPrice
+                        : t.ExecutedPrice;
+                    var plPerGram = currentSellPrice - t.ExecutedPrice;
+                    var totalPl = plPerGram * t.RemainingQuantity;
+                    return $"- {type} Trade #{i + 1}: {t.RemainingQuantity:F4}/{t.Quantity:F4}g at {t.ExecutedPrice:N2} EGP/g "
+                        + $"on {t.ExecutedAt:yyyy-MM-dd}  "
+                        + $"P/L: {plPerGram:+N2;-N2} EGP/g, total: {totalPl:+N2;-N2} EGP";
+                }));
+            }
+
+            var goldTradeText = FormatTrades(goldBuyTrades, AssetType.Gold, goldPriceTask);
+            var silverTradeText = FormatTrades(silverBuyTrades, AssetType.Silver, silverPriceTask);
 
             var holdingsText =
-                $"Gold balance: {goldBalance:F4}g\nCash balance: {cashBalance:N2} EGP";
+                $"Gold balance: {goldBalance:F4}g\nSilver balance: {silverBalance:F4}g\nCash balance: {cashBalance:N2} EGP";
 
             var system =
                 "You are a financial assistant for Tibr. Analyze the user's portfolio "
@@ -239,8 +261,8 @@ namespace Tibr.Application.Services.AiChatServices
             {
                 new(
                     "user",
-                    $"Holdings:\n{holdingsText}\n\nTrades:\n{tradeText}\n\n"
-                        + $"Price context:\n{priceCtx}\n\nQuestion: {userPrompt}"
+                    $"Holdings:\n{holdingsText}\n\nGold trades:\n{goldTradeText}\n\nSilver trades:\n{silverTradeText}\n\n"
+                        + $"Price context:\n{goldPriceCtx}\n{silverPriceCtx}\n\nQuestion: {userPrompt}"
                 ),
             };
 
@@ -516,10 +538,12 @@ namespace Tibr.Application.Services.AiChatServices
             var range = a.MaxPriceLast30Days - a.MinPriceLast30Days;
             if (range > 0 && a.DaysOfData >= 7)
             {
-                var percentile = (a.CurrentPrice - a.MinPriceLast30Days) / range * 100;
+                var rawPct = (a.CurrentPrice - a.MinPriceLast30Days) / range * 100;
+                var clamped = (int)Math.Min(100, Math.Max(0, rawPct));
+                var suffix = (clamped % 100) switch { 11 or 12 or 13 => "th", _ => (clamped % 10) switch { 1 => "st", 2 => "nd", 3 => "rd", _ => "th" } };
                 ctx += language == "ar"
-                    ? $"\nالسعر الحالي عند النسبة المئوية {percentile:F0} من نطاق 30 يوم"
-                    : $"\nCurrent price is at the {percentile:F0}th percentile of the 30-day range";
+                    ? $"\nالسعر الحالي عند النسبة المئوية {clamped:F0} من نطاق 30 يوم"
+                    : $"\nCurrent price is at the {clamped:F0}{suffix} percentile of the 30-day range";
             }
 
             if (a.IsBelowAverage)
