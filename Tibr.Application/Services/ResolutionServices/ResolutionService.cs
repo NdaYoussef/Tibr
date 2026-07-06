@@ -169,13 +169,15 @@ namespace Tibr.Application.Services.ResolutionServices
                 ? order.MaxBudgetEgp.Value / currentPrice
                 : order.Quantity;
 
+            var isBuy = order.OrderType == OrderType.Buy;
             var trade = new Trade
             {
                 OrderId = order.Id,
                 UserId = order.UserId,
                 AssetType = order.AssetType,
-                Side = order.OrderType == OrderType.Buy ? TradeSide.Buy : TradeSide.Sell,
+                Side = isBuy ? TradeSide.Buy : TradeSide.Sell,
                 Quantity = tradeQuantity,
+                RemainingQuantity = isBuy ? tradeQuantity : 0,
                 ExecutedPrice = currentPrice,
                 TotalAmount = totalAmount,
                 ExecutedAt = DateTime.UtcNow,
@@ -183,6 +185,29 @@ namespace Tibr.Application.Services.ResolutionServices
             };
             await _tradeRepo.AddAsync(trade);
             await _tradeRepo.SaveChangesAsync();
+
+            if (!isBuy)
+            {
+                var remainingToDeduct = tradeQuantity;
+                var buyTrades = _tradeRepo
+                    .GetAll(t => t.UserId == order.UserId
+                              && t.AssetType == order.AssetType
+                              && t.Side == TradeSide.Buy
+                              && t.RemainingQuantity > 0)
+                    .OrderBy(t => t.ExecutedPrice)
+                    .ToList();
+
+                foreach (var buyTrade in buyTrades)
+                {
+                    if (remainingToDeduct <= 0) break;
+                    var deduction = Math.Min(buyTrade.RemainingQuantity, remainingToDeduct);
+                    buyTrade.RemainingQuantity -= deduction;
+                    remainingToDeduct -= deduction;
+                    await _tradeRepo.UpdateAsync(buyTrade);
+                }
+
+                await _tradeRepo.SaveChangesAsync();
+            }
 
             var transaction = new Transaction
             {

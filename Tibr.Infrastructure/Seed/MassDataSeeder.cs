@@ -19,7 +19,7 @@ namespace Tibr.Infrastructure.Seed
             _context = context;
         }
 
-        public async Task SeedAllAsync(int userCount = 2000)
+        public async Task SeedAllAsync(int userCount = 500)
         {
             await _context.Database.MigrateAsync();
 
@@ -51,7 +51,17 @@ namespace Tibr.Infrastructure.Seed
 
             var users = userFaker.Generate(userCount);
 
-            // Known test user with predictable credentials
+            // Spread all users evenly over the past 5 months
+            var fiveMonthsAgo = seedTime.AddMonths(-5);
+            var daySpan = (int)(seedTime - fiveMonthsAgo).TotalDays;
+            for (int i = 0; i < users.Count; i++)
+            {
+                var date = fiveMonthsAgo.AddDays((double)i / users.Count * daySpan);
+                users[i].CreatedAt = date;
+                users[i].UpdatedAt = date;
+            }
+
+            // Known test user with predictable credentials (most recent)
             users.Add(new User
             {
                 FirstName = "Eslam",
@@ -62,7 +72,7 @@ namespace Tibr.Infrastructure.Seed
                 Status = "Active",
                 OtpVerified = true,
                 KycStatus = "Verified",
-                CreatedAt = seedTime, UpdatedAt = seedTime, IsDeleted = false
+                CreatedAt = seedTime.AddMonths(-1), UpdatedAt = seedTime.AddMonths(-1), IsDeleted = false
             });
 
             Console.WriteLine("  eslamlegend5@gmail.com / Test@123");
@@ -218,25 +228,30 @@ namespace Tibr.Infrastructure.Seed
                     withdraws.Add(new Withdraw { UserId = user.Id, Amount = Math.Round(f.Random.Decimal(1000m, 10000m), 2), Type = f.PickRandom<WithdrawType>(), Name = $"{user.FirstName} {user.LastName}", Number = f.Finance.Iban(), CreatedAt = userTime, UpdatedAt = userTime, IsDeleted = false });
                 }
 
-                // 21. OrdersInvestments
-                if (f.Random.Bool(0.4f))
+                // 21. OrdersInvestments (skip test user — custom history built later)
+                if (user.Email != "eslamlegend5@gmail.com")
                 {
-                    var type = f.PickRandom<OrderType>();
-                    ordersInvestments.Add(new OrdersInvestment
+                    var numOrders = f.Random.Number(0, 5);
+                    for (int oi = 0; oi < numOrders; oi++)
                     {
-                        UserId = user.Id,
-                        AssetType = f.PickRandom<AssetType>(),
-                        OrderType = type,
-                        ExecutionMode = f.PickRandom<ExecutionMode>(),
-                        Quantity = type == OrderType.Sell ? Math.Round(f.Random.Decimal(1m, 10m), 4) : 0m,
-                        RequestedPrice = Math.Round(f.Random.Decimal(3900m, 4100m), 4),
-                        CurrentPrice = 4050.0000m,
-                        Status = f.PickRandom<OrderStatus>(),
-                        ExecutionType = f.PickRandom<ExecutionType>(),
-                        MaxBudgetEgp = type == OrderType.Buy ? Math.Round(f.Random.Decimal(5000m, 20000m), 2) : null,
-                        ExpiryDate = userTime.AddDays(30),
-                        CreatedAt = userTime, UpdatedAt = userTime, IsDeleted = false
-                    });
+                        var type = f.PickRandom<OrderType>();
+                        var orderDate = f.Date.Between(userTime, seedTime);
+                        ordersInvestments.Add(new OrdersInvestment
+                        {
+                            UserId = user.Id,
+                            AssetType = f.PickRandom<AssetType>(),
+                            OrderType = type,
+                            ExecutionMode = f.PickRandom<ExecutionMode>(),
+                            Quantity = type == OrderType.Sell ? Math.Round(f.Random.Decimal(1m, 10m), 4) : 0m,
+                            RequestedPrice = Math.Round(f.Random.Decimal(3900m, 4100m), 4),
+                            CurrentPrice = 4050.0000m,
+                            Status = f.PickRandom<OrderStatus>(),
+                            ExecutionType = f.PickRandom<ExecutionType>(),
+                            MaxBudgetEgp = type == OrderType.Buy ? Math.Round(f.Random.Decimal(5000m, 20000m), 2) : null,
+                            ExpiryDate = userTime.AddDays(30),
+                            CreatedAt = orderDate, UpdatedAt = orderDate, IsDeleted = false
+                        });
+                    }
                 }
             }
 
@@ -316,13 +331,15 @@ namespace Tibr.Infrastructure.Seed
                 .Select(o =>
                 {
                     var qty = o.Quantity > 0 ? o.Quantity : Math.Round((o.MaxBudgetEgp ?? 10000m) / o.RequestedPrice, 4);
+                    var isBuy = o.OrderType == OrderType.Buy;
                     return new Trade
                     {
                         OrderId = o.Id,
                         UserId = o.UserId,
                         AssetType = o.AssetType,
-                        Side = o.OrderType == OrderType.Buy ? TradeSide.Buy : TradeSide.Sell,
+                        Side = isBuy ? TradeSide.Buy : TradeSide.Sell,
                         Quantity = qty,
+                        RemainingQuantity = isBuy ? qty : 0,
                         ExecutedPrice = o.RequestedPrice,
                         TotalAmount = Math.Round(qty * o.RequestedPrice, 2),
                         ExecutedAt = o.CreatedAt,
@@ -447,6 +464,125 @@ namespace Tibr.Infrastructure.Seed
             }
 
             if (walletTransactions.Count != 0) await _context.BulkInsertAsync(walletTransactions, bulkConfig);
+
+            // ==========================================
+            // TEST USER: 5-month trade history
+            // ==========================================
+            var testUser = users.FirstOrDefault(u => u.Email == "eslamlegend5@gmail.com");
+            if (testUser is not null)
+            {
+                var cashW = userWalletMap[testUser.Id].First(w => w.WalletType == WalletType.Cash);
+                var goldW = userWalletMap[testUser.Id].First(w => w.WalletType == WalletType.Gold);
+
+                cashW.Balance = 100000m;
+                cashW.ReservedBalance = 0m;
+                goldW.Balance = 0m;
+                goldW.ReservedBalance = 0m;
+                await _context.BulkUpdateAsync(new List<Wallet> { cashW, goldW }, bulkConfig);
+
+                // Price curve: gold varied ~3600–4200 over 5 months
+                // Cheapest-first sell logic: sell 4g deducts from 3600 buy first, then 3900
+                var historyEvents = new[]
+                {
+                    new { MonthsAgo = 5, Side = TradeSide.Buy,  Qty = 10m, Price = 3600m },
+                    new { MonthsAgo = 4, Side = TradeSide.Buy,  Qty = 5m,  Price = 3900m },
+                    new { MonthsAgo = 3, Side = TradeSide.Buy,  Qty = 8m,  Price = 4200m },
+                    new { MonthsAgo = 2, Side = TradeSide.Sell, Qty = 4m,  Price = 4000m },
+                    new { MonthsAgo = 1, Side = TradeSide.Buy,  Qty = 3m,  Price = 3800m },
+                };
+
+                // Insert orders first to populate their IDs
+                var testOrders = new List<OrdersInvestment>();
+                foreach (var ev in historyEvents)
+                {
+                    var ts = seedTime.AddMonths(-ev.MonthsAgo);
+                    var total = Math.Round(ev.Qty * ev.Price, 2);
+                    var isBuy = ev.Side == TradeSide.Buy;
+                    testOrders.Add(new OrdersInvestment
+                    {
+                        UserId = testUser.Id,
+                        AssetType = AssetType.Gold,
+                        OrderType = isBuy ? OrderType.Buy : OrderType.Sell,
+                        ExecutionMode = ExecutionMode.Direct,
+                        ExecutionType = ExecutionType.AutoExecute,
+                        Quantity = isBuy ? 0 : ev.Qty,
+                        MaxBudgetEgp = isBuy ? total : null,
+                        RequestedPrice = ev.Price,
+                        CurrentPrice = ev.Price,
+                        Status = OrderStatus.Executed,
+                        CreatedAt = ts, UpdatedAt = ts, IsDeleted = false
+                    });
+                }
+                await _context.BulkInsertAsync(testOrders, bulkConfig);
+
+                // Build and insert trades using populated order IDs
+                var testTrades = new List<Trade>();
+                for (int ei = 0; ei < historyEvents.Length; ei++)
+                {
+                    var ev = historyEvents[ei];
+                    var order = testOrders[ei];
+                    var ts = seedTime.AddMonths(-ev.MonthsAgo);
+                    var total = Math.Round(ev.Qty * ev.Price, 2);
+                    var isBuy = ev.Side == TradeSide.Buy;
+                    testTrades.Add(new Trade
+                    {
+                        OrderId = order.Id,
+                        UserId = testUser.Id,
+                        AssetType = AssetType.Gold,
+                        Side = ev.Side,
+                        Quantity = ev.Qty,
+                        RemainingQuantity = isBuy ? ev.Qty : 0,
+                        ExecutedPrice = ev.Price,
+                        TotalAmount = total,
+                        ExecutedAt = ts,
+                        CreatedAt = ts, UpdatedAt = ts, IsDeleted = false
+                    });
+                }
+                await _context.BulkInsertAsync(testTrades, bulkConfig);
+
+                // Build transactions + wallet txns using populated trade IDs
+                var testTransactions = new List<Transaction>();
+                var testWalletTxns = new List<WalletTransaction>();
+
+                for (int ei = 0; ei < historyEvents.Length; ei++)
+                {
+                    var ev = historyEvents[ei];
+                    var trade = testTrades[ei];
+                    var ts = seedTime.AddMonths(-ev.MonthsAgo);
+                    var total = Math.Round(ev.Qty * ev.Price, 2);
+                    var isBuy = ev.Side == TradeSide.Buy;
+
+                    testTransactions.Add(new Transaction
+                    {
+                        UserId = testUser.Id,
+                        TradeId = trade.Id,
+                        TransactionType = isBuy ? TransactionType.Buy : TransactionType.Sell,
+                        Amount = total,
+                        Status = TransactionStatusEnum.Success,
+                        CreatedAt = ts, UpdatedAt = ts, IsDeleted = false
+                    });
+
+                    if (isBuy)
+                    {
+                        goldW.Balance += ev.Qty;
+                        cashW.Balance -= total;
+                        testWalletTxns.Add(new WalletTransaction { WalletId = cashW.Id, Type = WalletTransactionType.Debit, Amount = total, ReferenceType = ReferenceType.Trade, ReferenceId = trade.Id, CreatedAt = ts, UpdatedAt = ts, IsDeleted = false });
+                        testWalletTxns.Add(new WalletTransaction { WalletId = goldW.Id, Type = WalletTransactionType.Credit, Amount = ev.Qty, ReferenceType = ReferenceType.Trade, ReferenceId = trade.Id, CreatedAt = ts, UpdatedAt = ts, IsDeleted = false });
+                    }
+                    else
+                    {
+                        goldW.Balance -= ev.Qty;
+                        cashW.Balance += total;
+                        testWalletTxns.Add(new WalletTransaction { WalletId = cashW.Id, Type = WalletTransactionType.Credit, Amount = total, ReferenceType = ReferenceType.Trade, ReferenceId = trade.Id, CreatedAt = ts, UpdatedAt = ts, IsDeleted = false });
+                        testWalletTxns.Add(new WalletTransaction { WalletId = goldW.Id, Type = WalletTransactionType.Debit, Amount = ev.Qty, ReferenceType = ReferenceType.Trade, ReferenceId = trade.Id, CreatedAt = ts, UpdatedAt = ts, IsDeleted = false });
+                    }
+                }
+
+                await _context.BulkInsertAsync(testTransactions, bulkConfig);
+                await _context.BulkInsertAsync(testWalletTxns, bulkConfig);
+
+                await _context.BulkUpdateAsync(new List<Wallet> { cashW, goldW }, bulkConfig);
+            }
         }
     }
 }

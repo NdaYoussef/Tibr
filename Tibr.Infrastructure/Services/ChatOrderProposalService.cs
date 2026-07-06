@@ -89,8 +89,8 @@ namespace Tibr.Infrastructure.Services
                 {
                     var trades = await _tradeRepo.GetAll(t => t.UserId == userId && t.AssetType == assetType).ToListAsync();
                     var profitableQty = trades
-                        .Where(t => t.Side == TradeSide.Buy && quotedPrice > t.ExecutedPrice)
-                        .Sum(t => t.Quantity);
+                        .Where(t => t.Side == TradeSide.Buy && t.RemainingQuantity > 0 && quotedPrice > t.ExecutedPrice)
+                        .Sum(t => t.RemainingQuantity);
                     resolvedGrams = profitableQty;
                 }
             }

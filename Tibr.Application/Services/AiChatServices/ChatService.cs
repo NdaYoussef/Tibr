@@ -321,35 +321,34 @@ namespace Tibr.Application.Services.AiChatServices
             if (!string.IsNullOrWhiteSpace(overrideIntent))
             {
                 var lang = requestLanguage ?? "en";
-                if (overrideIntent.ToLowerInvariant() == "planner")
-                {
-                    var (pReply, pSource, pClarification) = await _router.HandlePlannerAsync(
-                        message, userId, lang, history);
-                    return (pReply, overrideIntent, pSource, lang, pClarification);
-                }
+                var normalizedIntent = overrideIntent.ToLowerInvariant();
 
-                if (overrideIntent.ToLowerInvariant() == "plan_update")
+                if (normalizedIntent != "planner")
                 {
-                    var (uReply, uSource, uClarification) = await _router.HandlePlanUpdateAsync(
-                        userId, lang);
-                    return (uReply, overrideIntent, uSource, lang, uClarification);
-                }
+                    if (normalizedIntent == "plan_update")
+                    {
+                        var (uReply, uSource, uClarification) = await _router.HandlePlanUpdateAsync(
+                            userId, lang);
+                        return (uReply, overrideIntent, uSource, lang, uClarification);
+                    }
 
-                var (reply, source) = overrideIntent.ToLowerInvariant() switch
-                {
-                    "faq" => await _router.HandleFaqAsync(message, lang, history),
-                    "facts" => await _router.HandleFactsAsync(message, lang, history),
-                    "price" => await _router.HandlePriceAsync(message, lang, history),
-                    "portfolio_read" => await _router.HandlePortfolioReadAsync(
-                        message, userId, lang, history),
-                    "agentic" => await HandleAgenticAsync(message, userId, conversationId, lang, history),
-                    "conditional_order" => await HandleConditionalOrderAsync(
-                        message, userId, conversationId, lang, history),
-                    _ => _router.HandleOutOfScope(lang),
-                };
-                return (reply, overrideIntent, source, lang, false);
+                    var (reply, source) = normalizedIntent switch
+                    {
+                        "faq" => await _router.HandleFaqAsync(message, lang, history),
+                        "facts" => await _router.HandleFactsAsync(message, lang, history),
+                        "price" => await _router.HandlePriceAsync(message, lang, history),
+                        "portfolio_read" => await _router.HandlePortfolioReadAsync(
+                            message, userId, lang, history),
+                        "agentic" => await HandleAgenticAsync(message, userId, conversationId, lang, history),
+                        "conditional_order" => await HandleConditionalOrderAsync(
+                            message, userId, conversationId, lang, history),
+                        _ => _router.HandleOutOfScope(lang),
+                    };
+
+                    return (reply, overrideIntent, source, lang, false);
+                }
+                // "planner" is the front-end default — fall through to classifier
             }
-
             var classification = await _classifier.ClassifyAsync(message);
             _logger.LogInformation(
                 "Classification: intent={Intent}, confidence={Confidence:P}, reason={Reason}, language={Language}",
