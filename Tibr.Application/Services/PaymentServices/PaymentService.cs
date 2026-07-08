@@ -3,6 +3,7 @@ using Tibr.Application.Dtos.Payment;
 using Tibr.Application.Dtos.Paymob;
 using Tibr.Application.Services.DepositServices;
 using Tibr.Domain.Entities;
+using Tibr.Domain.Enums;
 using Tibr.Domain.IRepositories;
 using Tibr.Domain.ResultPattern;
 
@@ -13,6 +14,10 @@ public class PaymentService
     private readonly IPaymentGateway _gateway;
     private readonly IGenericRepository<Order, long> _orderRepo;
     private readonly IGenericRepository<Payment, long> _paymentRepo;
+    private readonly IGenericRepository<OrderItem, long> _orderItemRepo;
+    private readonly IGenericRepository<Product, long> _productRepo;
+    private readonly IGenericRepository<Wallet, long> _walletRepo;
+    private readonly IGenericRepository<WalletTransaction, long> _walletTxRepo;
     private readonly IDepositService _depositService;
     private readonly ILogger<PaymentService> _logger;
 
@@ -20,6 +25,10 @@ public class PaymentService
         IPaymentGateway gateway,
         IGenericRepository<Order, long> orderRepo,
         IGenericRepository<Payment, long> paymentRepo,
+        IGenericRepository<OrderItem, long> orderItemRepo,
+        IGenericRepository<Product, long> productRepo,
+        IGenericRepository<Wallet, long> walletRepo,
+        IGenericRepository<WalletTransaction, long> walletTxRepo,
         IDepositService depositService,
         ILogger<PaymentService> logger
     )
@@ -27,6 +36,10 @@ public class PaymentService
         _gateway = gateway;
         _orderRepo = orderRepo;
         _paymentRepo = paymentRepo;
+        _orderItemRepo = orderItemRepo;
+        _productRepo = productRepo;
+        _walletRepo = walletRepo;
+        _walletTxRepo = walletTxRepo;
         _depositService = depositService;
         _logger = logger;
     }
@@ -47,6 +60,17 @@ public class PaymentService
 
         if (existingPayments.Any(p => p.Status == "Pending"))
             return Result<string>.Failure("A payment for this order is already in progress.");
+
+        var orderItems = _orderItemRepo.GetAll(oi => oi.OrderId == orderId).ToList();
+        foreach (var item in orderItems)
+        {
+            var product = await _productRepo.GetByIdAsync(item.ProductId);
+            if (product is null)
+                return Result<string>.Failure($"Product with ID {item.ProductId} no longer exists.");
+            if (product.Stock < item.Quantity)
+                return Result<string>.Failure(
+                    $"Insufficient stock for '{product.NameEn}'. Available: {product.Stock}, requested: {item.Quantity}.");
+        }
 
         var payment = new Payment
         {
@@ -338,6 +362,39 @@ public class PaymentService
                     order.Id
                 );
 
+                var orderItems = _orderItemRepo.GetAll(oi => oi.OrderId == order.Id).ToList();
+                foreach (var item in orderItems)
+                {
+                    var product = await _productRepo.GetByIdAsync(item.ProductId);
+                    if (product is null)
+                    {
+                        _logger.LogWarning(
+                            "[PaymentService.HandleOrderCallback] Product {ProductId} not found for stock deduction",
+                            item.ProductId
+                        );
+                        continue;
+                    }
+
+                    if (product.Stock < item.Quantity)
+                    {
+                        _logger.LogWarning(
+                            "[PaymentService.HandleOrderCallback] Insufficient stock for Product {ProductId}: available={Stock}, requested={Quantity}. Refunding to wallet.",
+                            item.ProductId, product.Stock, item.Quantity
+                        );
+                        order.OrderStatus = "Cancelled_OutOfStock";
+                        await _orderRepo.UpdateAsync(order);
+                        await RefundToWalletAsync(order.UserId, order.TotalAmount, order.Id);
+                        break;
+                    }
+
+                    product.Stock -= item.Quantity;
+                    await _productRepo.UpdateAsync(product);
+                    _logger.LogInformation(
+                        "[PaymentService.HandleOrderCallback] Stock deducted for Product {ProductId}: {Quantity} units, remaining={Stock}",
+                        item.ProductId, item.Quantity, product.Stock
+                    );
+                }
+
                 _logger.LogInformation(
                     "[PaymentService.HandleOrderCallback] ✓ Order updated - New PaymentStatus: {PaymentStatus}, OrderStatus: {OrderStatus}",
                     order.PaymentStatus,
@@ -383,5 +440,39 @@ public class PaymentService
             "[PaymentService.HandleOrderCallback] ✓ Database changes saved successfully"
         );
         _logger.LogInformation("[PaymentService.HandleOrderCallback] === END ORDER CALLBACK ===");
+    }
+
+    private async Task RefundToWalletAsync(long userId, decimal amount, long orderId)
+    {
+        var wallet = _walletRepo.GetAll(w => w.UserId == userId && w.WalletType == WalletType.Cash)
+            .FirstOrDefault();
+
+        if (wallet is null)
+        {
+            _logger.LogError(
+                "[PaymentService.RefundToWallet] Cash wallet not found for UserId={UserId}. Refund of {Amount} EGP for OrderId={OrderId} could not be processed.",
+                userId, amount, orderId
+            );
+            return;
+        }
+
+        wallet.Balance += amount;
+        await _walletRepo.UpdateAsync(wallet);
+
+        var tx = new WalletTransaction
+        {
+            WalletId = wallet.Id,
+            Type = WalletTransactionType.Credit,
+            Amount = amount,
+            ReferenceType = ReferenceType.Order,
+            ReferenceId = orderId,
+            CreatedAt = DateTime.UtcNow
+        };
+        await _walletTxRepo.AddAsync(tx);
+
+        _logger.LogInformation(
+            "[PaymentService.RefundToWallet] Refunded {Amount} EGP to Cash wallet for UserId={UserId}, OrderId={OrderId}",
+            amount, userId, orderId
+        );
     }
 }

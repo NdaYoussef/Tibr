@@ -39,4 +39,9 @@ namespace Tibr.Application.Dtos
         public long ProductId { get; set; }
         public int Quantity { get; set; }
     }
+
+    public class WalletCheckoutDto
+    {
+        public List<CreateOrderItemDto> Items { get; set; } = [];
+    }
 }

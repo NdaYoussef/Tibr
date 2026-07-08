@@ -9,6 +9,8 @@ namespace Tibr.Application.Dtos.ProductDto
     {
         public long CategoryId { get; set; }
         public string Name { get; set; } = string.Empty;
+        public string NameAr { get; set; } = string.Empty;
+        public string NameEn { get; set; } = string.Empty;
         public MetalType MetalType { get; set; }
         public decimal Purity { get; set; }
         public decimal Weight { get; set; }

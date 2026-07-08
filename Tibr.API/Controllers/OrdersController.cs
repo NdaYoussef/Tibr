@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 using Tibr.Application.Dtos;
 using Tibr.Application.Services.OrderServices;
 
@@ -84,6 +86,40 @@ namespace Tibr.API.Controllers
             if (result.IsFailure)
                 return NotFound(result.ErrorMessage);
             return NoContent();
+        }
+
+        [HttpPost("wallet-checkout")]
+        [Authorize]
+        public async Task<ActionResult<OrderDto>> WalletCheckout([FromBody] WalletCheckoutDto dto)
+        {
+            var userId = GetUserId();
+            if (userId is null) return Unauthorized();
+
+            var result = await _orderService.CreateFromWalletAsync(userId.Value, dto);
+            if (result.IsFailure)
+                return BadRequest(result.ErrorMessage);
+            return CreatedAtAction(nameof(GetById), new { id = result.Data!.Id }, result.Data);
+        }
+
+        [HttpPost("{id:long}/pay-with-wallet")]
+        [Authorize]
+        public async Task<ActionResult<OrderDto>> PayWithWallet(long id)
+        {
+            var userId = GetUserId();
+            if (userId is null) return Unauthorized();
+
+            var result = await _orderService.PayWithWalletAsync(userId.Value, id);
+            if (result.IsFailure)
+                return BadRequest(result.ErrorMessage);
+            return Ok(result.Data);
+        }
+
+        private long? GetUserId()
+        {
+            var claim = User.FindFirst(ClaimTypes.NameIdentifier);
+            if (claim is null || !long.TryParse(claim.Value, out var userId))
+                return null;
+            return userId;
         }
     }
 }
