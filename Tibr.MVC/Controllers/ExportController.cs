@@ -1,4 +1,4 @@
-﻿using ClosedXML.Excel;
+using ClosedXML.Excel;
 using Microsoft.AspNetCore.Mvc;
 using Tibr.Application.Dtos.DashboardDtos;
 using Tibr.Application.Services.AdminServices;
@@ -22,12 +22,18 @@ namespace Tibr.MVC.Controllers
         // ── GET /Export/Excel?reportType=sales&from=...&to=... ───────
         [HttpGet]
         public async Task<IActionResult> Excel(
-            string reportType = "sales",
+            string reportType = "revenue",
             DateTime? from = null,
             DateTime? to = null)
         {
-            var fromDate = from ?? DateTime.UtcNow.AddMonths(-1);
-            var toDate = to ?? DateTime.UtcNow;
+            var now = DateTime.UtcNow;
+            var fromDate = from.HasValue
+                ? new DateTime(from.Value.Year, from.Value.Month, 1, 0, 0, 0, DateTimeKind.Utc)
+                : new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc).AddMonths(-1);
+
+            var toDate = to.HasValue
+                ? new DateTime(to.Value.Year, to.Value.Month, DateTime.DaysInMonth(to.Value.Year, to.Value.Month), 23, 59, 59, DateTimeKind.Utc)
+                : new DateTime(now.Year, now.Month, DateTime.DaysInMonth(now.Year, now.Month), 23, 59, 59, DateTimeKind.Utc);
 
             using var wb = new XLWorkbook();
 
@@ -72,12 +78,18 @@ namespace Tibr.MVC.Controllers
         // Returns a printable HTML page — browser print dialog handles PDF.
         [HttpGet]
         public async Task<IActionResult> Pdf(
-     string reportType = "sales",
-     DateTime? from = null,
-     DateTime? to = null)
+             string reportType = "revenue",
+             DateTime? from = null,
+             DateTime? to = null)
         {
-            var fromDate = from ?? DateTime.UtcNow.AddMonths(-1);
-            var toDate = to ?? DateTime.UtcNow;
+            var now = DateTime.UtcNow;
+            var fromDate = from.HasValue
+                ? new DateTime(from.Value.Year, from.Value.Month, 1, 0, 0, 0, DateTimeKind.Utc)
+                : new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc).AddMonths(-1);
+
+            var toDate = to.HasValue
+                ? new DateTime(to.Value.Year, to.Value.Month, DateTime.DaysInMonth(to.Value.Year, to.Value.Month), 23, 59, 59, DateTimeKind.Utc)
+                : new DateTime(now.Year, now.Month, DateTime.DaysInMonth(now.Year, now.Month), 23, 59, 59, DateTimeKind.Utc);
 
             var summary = await _analyticsService.GetReportsSummaryAsync(fromDate, toDate);
 

@@ -1,4 +1,4 @@
-﻿using Mapster;
+using Mapster;
 using Microsoft.AspNetCore.Mvc;
 using Tibr.Application.Dtos.DashboardDtos;
 using Tibr.Application.Services.AdminServices;
@@ -38,13 +38,18 @@ namespace Tibr.MVC.Controllers
 
         // ── GET /Dashboard/Reports ────────────────────────────────────
         public async Task<IActionResult> Reports(
-            string reportType = ReportTypes.Sales,
+            string reportType = ReportTypes.Revenue,
             DateTime? from = null,
             DateTime? to = null)
         {
             var now = DateTime.UtcNow;
-            var fromDate = from ?? now.AddMonths(-1);
-            var toDate = to ?? now;
+            var fromDate = from.HasValue
+                ? new DateTime(from.Value.Year, from.Value.Month, 1, 0, 0, 0, DateTimeKind.Utc)
+                : new DateTime(now.Year, now.Month, 1, 0, 0, 0, DateTimeKind.Utc).AddMonths(-1);
+
+            var toDate = to.HasValue
+                ? new DateTime(to.Value.Year, to.Value.Month, DateTime.DaysInMonth(to.Value.Year, to.Value.Month), 23, 59, 59, DateTimeKind.Utc)
+                : new DateTime(now.Year, now.Month, DateTime.DaysInMonth(now.Year, now.Month), 23, 59, 59, DateTimeKind.Utc);
 
             _logger.LogInformation(
                 "Reports requested — type={Type}, from={From}, to={To}",

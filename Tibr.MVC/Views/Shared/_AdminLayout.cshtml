@@ -58,8 +58,8 @@
                 <span class="nav-group-label">Overview</span>
                 <a asp-controller="Dashboard" asp-action="Index"
                        class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Dashboard" && ViewContext.RouteData.Values["action"]?.ToString() == "Index" ? "active" : "")">
-                    <i class="fa-solid fa-gauge-high"></i>
-                    <span>Dashboard</span>
+                     <i class="fa-solid fa-gauge-high"></i>
+                     <span>Dashboard</span>
                 </a>
                 <a asp-controller="Dashboard" asp-action="Reports"
                        class="nav-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Dashboard" && ViewContext.RouteData.Values["action"]?.ToString() == "Reports" ? "active" : "")">

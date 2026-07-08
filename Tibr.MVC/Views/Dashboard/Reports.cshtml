@@ -1,4 +1,4 @@
-﻿@model Tibr.MVC.Models.ReportsViewModel
+@model Tibr.MVC.Models.ReportsViewModel
 @{
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
     ViewData["Title"] = "Reports & Analytics";
@@ -34,17 +34,9 @@
 ══════════════════════════════════════════════ -->
 <div class="report-tabs">
     <a asp-action="Reports"
-           asp-route-reportType="sales"
-           asp-route-from="@Model.FromDate?.ToString("yyyy-MM-dd")"
-           asp-route-to="@Model.ToDate?.ToString("yyyy-MM-dd")"
-           data-report-type="sales"
-           class="report-tab @(Model.ReportType == "sales" ? "active" : "")">
-        <i class="fa-solid fa-chart-line"></i> Sales Report
-    </a>
-    <a asp-action="Reports"
            asp-route-reportType="revenue"
-           asp-route-from="@Model.FromDate?.ToString("yyyy-MM-dd")"
-           asp-route-to="@Model.ToDate?.ToString("yyyy-MM-dd")"
+           asp-route-from="@Model.FromDate?.ToString("yyyy-MM")"
+           asp-route-to="@Model.ToDate?.ToString("yyyy-MM")"
            data-report-type="revenue"
            class="report-tab @(Model.ReportType == "revenue" ? "active" : "")">
         <i class="fa-solid fa-coins"></i> Revenue Report
@@ -75,12 +67,12 @@
 <form asp-action="Reports" method="get" class="report-filter-bar">
     <input type="hidden" name="reportType" value="@Model.ReportType" />
     <div class="filter-group">
-        <label>From Date</label>
-        <input type="date" name="from" value="@Model.FromDate?.ToString("yyyy-MM-dd")" class="filter-input" />
+        <label>From Month</label>
+        <input type="month" name="from" value="@Model.FromDate?.ToString("yyyy-MM")" class="filter-input" />
     </div>
     <div class="filter-group">
-        <label>To Date</label>
-        <input type="date" name="to" value="@Model.ToDate?.ToString("yyyy-MM-dd")" class="filter-input" />
+        <label>To Month</label>
+        <input type="month" name="to" value="@Model.ToDate?.ToString("yyyy-MM")" class="filter-input" />
     </div>
     <button type="submit" class="btn-tibr btn-tibr-gold mt-4">
         <i class="fa-solid fa-filter"></i>
@@ -92,39 +84,6 @@
     </a>
 </form>
 
-<!-- ══════════════════════════════════════════════
-     KPI SUMMARY TILES
-══════════════════════════════════════════════ -->
-<div class="report-kpi-strip">
-    <div class="rk-tile">
-        <i class="fa-solid fa-coins rk-icon gold"></i>
-        <div>
-            <span class="rk-label">Total Revenue</span>
-            <strong class="rk-val">@Model.Summary.TotalRevenue.ToString("N0") EGP</strong>
-        </div>
-    </div>
-    <div class="rk-tile">
-        <i class="fa-solid fa-cart-shopping rk-icon blue"></i>
-        <div>
-            <span class="rk-label">Total Orders</span>
-            <strong class="rk-val">@Model.Summary.TotalOrders.ToString("N0")</strong>
-        </div>
-    </div>
-    <div class="rk-tile">
-        <i class="fa-solid fa-users rk-icon green"></i>
-        <div>
-            <span class="rk-label">Total Customers</span>
-            <strong class="rk-val">@Model.Summary.TotalCustomers.ToString("N0")</strong>
-        </div>
-    </div>
-    <div class="rk-tile">
-        <i class="fa-solid fa-layer-group rk-icon purple"></i>
-        <div>
-            <span class="rk-label">Total Products</span>
-            <strong class="rk-val">@Model.Summary.TotalProducts.ToString("N0")</strong>
-        </div>
-    </div>
-</div>
 
 <!-- ══════════════════════════════════════════════
      HEADER CHART
@@ -149,7 +108,6 @@
         <h3 class="chart-title">
             @(Model.ReportType switch
             {
-                "sales" => "Sales Details",
                 "revenue" => "Revenue Details",
                 "products" => "Product Performance",
                 "customers" => "Customer Data",
@@ -165,45 +123,6 @@
     <div class="table-responsive">
 
         @* ── Sales / Revenue ── *@
-        @* ── Sales ── all orders, order-level view *@
-        @if (Model.ReportType == "sales" && Model.SalesRows.Any())
-        {
-            <table class="tibr-table" id="dataTable">
-                <thead>
-                    <tr>
-                        <th>Order #</th>
-                        <th>Customer</th>
-                        <th>Date</th>
-                        <th>Amount</th>
-                        <th>Payment</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var row in Model.SalesRows)
-                    {
-                        <tr class="table-row-anim">
-                            <td><span class="order-num">@row.OrderNumber</span></td>
-                            <td>@row.CustomerName</td>
-                            <td><span class="date-cell">@row.Date.ToString("dd/MM/yyyy")</span></td>
-                            <td><strong class="price-cell">@row.Amount.ToString("N0") EGP</strong></td>
-                            <td>
-                                <span class="status-badge @(row.PaymentStatus == "Paid" ? "badge-success" : row.PaymentStatus == "Unpaid" ? "badge-danger" : "badge-warning")">
-                                    <span class="status-dot"></span>
-                                    @row.PaymentStatus
-                                </span>
-                            </td>
-                            <td>
-                                <span class="status-badge @(row.OrderStatus == "Delivered" ? "badge-success" : row.OrderStatus == "Cancelled" ? "badge-danger" : row.OrderStatus == "Processing" ? "badge-info" : "badge-warning")">
-                                    <span class="status-dot"></span>
-                                    @row.OrderStatus
-                                </span>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        }
 
         @* ── Revenue ── Paid orders only, grouped by product, with margin *@
         @if (Model.ReportType == "revenue" && Model.RevenueRows.Any())
@@ -509,7 +428,7 @@
             const activeTab = document.querySelector('.report-tab.active');
             const reportType = activeTab?.dataset.reportType
                 ?? new URLSearchParams(window.location.search).get('reportType')
-                ?? 'sales';
+                ?? 'revenue';
  
             const params = new URLSearchParams(window.location.search);
             const from = params.get('from') ?? '';
