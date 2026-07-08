@@ -74,12 +74,12 @@ namespace Tibr.Infrastructure.Seeds
 
         public static async Task SeedProductsAsync(ApplicationDbContext context)
         {
-            var existingCategories = await context.Categories.Select(c => c.Name).ToListAsync();
-            var existingProductNames = await context.Products.Select(p => p.Name).ToListAsync();
+            var existingCategories = await context.Categories.Select(c => c.NameEn).ToListAsync();
+            var existingProductNames = await context.Products.Select(p => p.NameEn).ToListAsync();
 
             var newCategories = ProductCatalog.Categories
-                .Where(c => !existingCategories.Contains(c))
-                .Select(c => new Category { Name = c, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow, IsDeleted = false })
+                .Where(c => !existingCategories.Contains(c.NameEn))
+                .Select(c => new Category { Name = c.NameEn, NameAr = c.NameAr, NameEn = c.NameEn, CreatedAt = DateTime.UtcNow, UpdatedAt = DateTime.UtcNow, IsDeleted = false })
                 .ToList();
 
             if (newCategories.Count != 0)
@@ -88,14 +88,16 @@ namespace Tibr.Infrastructure.Seeds
                 await context.SaveChangesAsync();
             }
 
-            var allCategories = await context.Categories.ToDictionaryAsync(c => c.Name, c => c.Id);
+            var allCategories = await context.Categories.ToDictionaryAsync(c => c.NameEn, c => c.Id);
 
             var newProducts = ProductCatalog.Products
-                .Where(p => !existingProductNames.Contains(p.Name))
+                .Where(p => !existingProductNames.Contains(p.NameEn))
                 .Select(p => new Product
                 {
-                    CategoryId = allCategories[p.Category],
-                    Name = p.Name,
+                    CategoryId = allCategories[p.CategoryEn],
+                    Name = p.NameEn,
+                    NameAr = p.NameAr,
+                    NameEn = p.NameEn,
                     MetalType = p.Metal,
                     Purity = p.Purity,
                     Weight = p.Weight,

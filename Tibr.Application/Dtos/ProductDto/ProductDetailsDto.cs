@@ -8,6 +8,8 @@ namespace Tibr.Application.Dtos.ProductDto
     {
         public long Id { get; set; }
         public string Name { get; set; } = string.Empty;
+        public string NameAr { get; set; } = string.Empty;
+        public string NameEn { get; set; } = string.Empty;
         public string MetalType { get; set; } = string.Empty;
         public decimal Purity { get; set; }
         public decimal Weight { get; set; }
