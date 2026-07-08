@@ -41,9 +41,7 @@ namespace Tibr.API
                     }
                 );
             });
-            builder.Services.AddControllers()
-                .AddJsonOptions(opts =>
-                    opts.JsonSerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));
+            builder.Services.AddControllers();
 
             var configuration = builder.Configuration;
 
