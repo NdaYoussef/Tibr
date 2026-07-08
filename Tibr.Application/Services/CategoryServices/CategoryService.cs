@@ -30,6 +30,8 @@ namespace Tibr.Application.Services.CategoryServices
                     {
                         Id = c.Id,
                         Name = c.Name,
+                        NameAr = c.NameAr,
+                        NameEn = c.NameEn,
                         ProductCount = c.Products.Count(p => !p.IsDeleted)
                     })
                     .ToListAsync();
@@ -68,10 +70,10 @@ namespace Tibr.Application.Services.CategoryServices
             try
             {
                 // Business rule — no duplicate category names
-                var exists = await _categoryRepository.GetByNameAsync(dto.Name);
+                var exists = await _categoryRepository.GetByNameAsync(dto.NameAr, dto.NameEn);
                 if (exists)
                     return Result<CategoryDto>.Failure(
-                        $"Category '{dto.Name}' already exists");
+                        $"Category with name '{dto.NameAr}' or '{dto.NameEn}' already exists");
 
                 var category = dto.Adapt<Category>();
 
@@ -97,10 +99,11 @@ namespace Tibr.Application.Services.CategoryServices
                 if (category is null)
                     return Result<CategoryDto>.Failure("Category not found");
 
-                var exists = await _categoryRepository.GetByNameAsync(dto.Name);
-                if (exists && category.Name.ToLower() != dto.Name.ToLower())
+                var exists = await _categoryRepository.GetByNameAsync(dto.NameAr, dto.NameEn);
+                if (exists && category.NameAr.ToLower() != dto.NameAr.ToLower()
+                           && category.NameEn.ToLower() != dto.NameEn.ToLower())
                     return Result<CategoryDto>.Failure(
-                        $"Category name '{dto.Name}' already taken");
+                        $"Category name '{dto.NameAr}' or '{dto.NameEn}' already taken");
 
                 dto.Adapt(category);
                 category.UpdatedAt = DateTime.UtcNow;

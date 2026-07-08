@@ -5,6 +5,7 @@ using System.Collections;
 using Tibr.Application.Dtos;
 using Tibr.Application.InfrastructureContracts;
 using Tibr.Domain.Entities;
+using Tibr.Domain.Enums;
 using Tibr.Domain.IRepositories;
 using Tibr.Domain.ResultPattern;
 
@@ -134,6 +135,168 @@ namespace Tibr.Application.Services.OrderServices
             var createdOrder = await _orderQueryService.GetByIdWithDetailsAsync(order.Id);
 
             return Result<OrderDto>.Success(createdOrder.Adapt<OrderDto>()!);
+        }
+
+        public async Task<Result<OrderDto>> CreateFromWalletAsync(long userId, WalletCheckoutDto dto)
+        {
+            if (dto.Items is null || dto.Items.Count == 0)
+                return Result<OrderDto>.Failure("Order must have at least one item.");
+
+            var productIds = dto.Items.Select(i => i.ProductId).Distinct().ToList();
+            var products = await _context.Set<Product>()
+                .Where(p => productIds.Contains(p.Id) && !p.IsDeleted)
+                .ToListAsync();
+
+            if (products.Count != productIds.Count)
+            {
+                var missing = productIds.Except(products.Select(p => p.Id));
+                return Result<OrderDto>.Failure($"Products not found: {string.Join(", ", missing)}");
+            }
+
+            var productMap = products.ToDictionary(p => p.Id);
+
+            foreach (var item in dto.Items)
+            {
+                var product = productMap[item.ProductId];
+                if (product.Stock < item.Quantity)
+                    return Result<OrderDto>.Failure(
+                        $"Insufficient stock for '{product.NameEn}'. Available: {product.Stock}, requested: {item.Quantity}.");
+            }
+
+            decimal total = dto.Items.Sum(i => i.Quantity * productMap[i.ProductId].SellPrice);
+
+            var wallet = await _context.Set<Wallet>()
+                .FirstOrDefaultAsync(w => w.UserId == userId && w.WalletType == WalletType.Cash && !w.IsDeleted);
+
+            if (wallet is null)
+                return Result<OrderDto>.Failure("Cash wallet not found.");
+
+            var available = wallet.Balance - wallet.ReservedBalance;
+            if (available < total)
+                return Result<OrderDto>.Failure(
+                    $"Insufficient wallet balance. Available: {available:F2} EGP, required: {total:F2} EGP.");
+
+            await using var transaction = await _context.Database.BeginTransactionAsync();
+
+            wallet.Balance -= total;
+            _context.Set<Wallet>().Update(wallet);
+
+            var walletTx = new WalletTransaction
+            {
+                WalletId = wallet.Id,
+                Type = WalletTransactionType.Debit,
+                Amount = total,
+                ReferenceType = ReferenceType.Order,
+                ReferenceId = 0,
+                CreatedAt = DateTime.UtcNow
+            };
+            await _context.Set<WalletTransaction>().AddAsync(walletTx);
+
+            var order = new Order
+            {
+                UserId = userId,
+                OrderNumber = $"ORD-{Guid.NewGuid()}",
+                TotalAmount = total,
+                PaymentStatus = "Paid",
+                OrderStatus = "Processing",
+                CreatedAt = DateTime.UtcNow
+            };
+            await _context.Set<Order>().AddAsync(order);
+            await _context.SaveChangesAsync();
+
+            walletTx.ReferenceId = order.Id;
+            _context.Set<WalletTransaction>().Update(walletTx);
+
+            foreach (var item in dto.Items)
+            {
+                var product = productMap[item.ProductId];
+                product.Stock -= item.Quantity;
+                _context.Set<Product>().Update(product);
+
+                var orderItem = new OrderItem
+                {
+                    OrderId = order.Id,
+                    ProductId = item.ProductId,
+                    Quantity = item.Quantity,
+                    Price = product.SellPrice,
+                    CreatedAt = DateTime.UtcNow
+                };
+                await _context.Set<OrderItem>().AddAsync(orderItem);
+            }
+
+            await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            var result = await GetByIdAsync(order.Id);
+            return result;
+        }
+
+        public async Task<Result<OrderDto>> PayWithWalletAsync(long userId, long orderId)
+        {
+            var order = await _context.Set<Order>()
+                .Where(o => o.Id == orderId && o.UserId == userId && !o.IsDeleted)
+                .Include(o => o.OrderItems)
+                    .ThenInclude(oi => oi.Product)
+                .FirstOrDefaultAsync();
+
+            if (order is null)
+                return Result<OrderDto>.Failure("Order not found.");
+
+            if (order.PaymentStatus == "Paid")
+                return Result<OrderDto>.Failure("Order is already paid.");
+
+            decimal total = order.TotalAmount;
+
+            var wallet = await _context.Set<Wallet>()
+                .FirstOrDefaultAsync(w => w.UserId == userId && w.WalletType == WalletType.Cash && !w.IsDeleted);
+
+            if (wallet is null)
+                return Result<OrderDto>.Failure("Cash wallet not found.");
+
+            var available = wallet.Balance - wallet.ReservedBalance;
+            if (available < total)
+                return Result<OrderDto>.Failure(
+                    $"Insufficient wallet balance. Available: {available:F2} EGP, required: {total:F2} EGP.");
+
+            foreach (var item in order.OrderItems)
+            {
+                if (item.Product.Stock < item.Quantity)
+                    return Result<OrderDto>.Failure(
+                        $"Insufficient stock for '{item.Product.NameEn}'. Available: {item.Product.Stock}, requested: {item.Quantity}.");
+            }
+
+            await using var transaction = await _context.Database.BeginTransactionAsync();
+
+            wallet.Balance -= total;
+            _context.Set<Wallet>().Update(wallet);
+
+            var walletTx = new WalletTransaction
+            {
+                WalletId = wallet.Id,
+                Type = WalletTransactionType.Debit,
+                Amount = total,
+                ReferenceType = ReferenceType.Order,
+                ReferenceId = order.Id,
+                CreatedAt = DateTime.UtcNow
+            };
+            await _context.Set<WalletTransaction>().AddAsync(walletTx);
+
+            foreach (var item in order.OrderItems)
+            {
+                item.Product.Stock -= item.Quantity;
+                _context.Set<Product>().Update(item.Product);
+            }
+
+            order.PaymentStatus = "Paid";
+            order.OrderStatus = "Processing";
+            order.UpdatedAt = DateTime.UtcNow;
+            _context.Set<Order>().Update(order);
+
+            await _context.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            var result = await GetByIdAsync(order.Id);
+            return result;
         }
 
         public async Task<Result<OrderDto>> UpdateAsync(long id, UpdateOrderDto updateDto)

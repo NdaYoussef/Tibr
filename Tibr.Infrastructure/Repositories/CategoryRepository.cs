@@ -20,11 +20,12 @@ namespace Tibr.Infrastructure.Repositories
         {
            return _context.Categories.Where(e => !e.IsDeleted).AsNoTracking();
         }
-        public async Task<bool> GetByNameAsync(string name)
+        public async Task<bool> GetByNameAsync(string nameAr, string nameEn)
         {
             return await _context.Categories
-                .AnyAsync(c => c.Name.ToLower() == name.ToLower()
-                            && !c.IsDeleted);
+                .AnyAsync(c => !c.IsDeleted &&
+                    (c.NameAr.ToLower() == nameAr.ToLower() ||
+                     c.NameEn.ToLower() == nameEn.ToLower()));
         }
     }
 

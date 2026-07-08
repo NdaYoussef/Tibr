@@ -5,3 +5,4 @@ vs/
 Tibr.API/appsettings.json
 Tibr.API/appsettings.Development.json
 Tibr.MVC/appsettings.json
+.plans/

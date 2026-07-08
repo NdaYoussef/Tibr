@@ -8,6 +8,6 @@ namespace Tibr.Domain.IRepositories
     public interface ICategoryRepository : IGenericRepository<Category, long>
     {
         IQueryable<Category> GetAll();
-        Task<bool>GetByNameAsync(string name);
+        Task<bool>GetByNameAsync(string nameAr, string nameEn);
     }
 }

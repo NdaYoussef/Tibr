@@ -131,11 +131,12 @@ namespace Tibr.Application.Services.ProductServices
         {
             try
             {
-                var nameToCheck = dto.Name.Trim();
+                var nameArToCheck = dto.NameAr.Trim();
+                var nameEnToCheck = dto.NameEn.Trim();
                 var isDuplicate = await _productRepository.GetAll()
                    .AnyAsync(p =>
                        !p.IsDeleted &&
-                       p.Name == nameToCheck &&
+                       (p.NameAr == nameArToCheck || p.NameEn == nameEnToCheck) &&
                        p.MetalType == dto.MetalType &&
                        p.Weight == dto.Weight &&
                        p.Purity == dto.Purity);
@@ -172,13 +173,14 @@ namespace Tibr.Application.Services.ProductServices
                 if (product == null || product.IsDeleted)
                     return Result<ProductDetailsDto>.Failure("Product not found");
 
-                var nameToCheck = dto.Name.Trim();
+                var nameArToCheck = dto.NameAr.Trim();
+                var nameEnToCheck = dto.NameEn.Trim();
 
                 var isDuplicate = await _productRepository.GetAll()
                    .AnyAsync(p =>
                        !p.IsDeleted &&
                        p.Id != id &&
-                       p.Name == nameToCheck &&
+                       (p.NameAr == nameArToCheck || p.NameEn == nameEnToCheck) &&
                        p.MetalType == dto.MetalType &&
                        p.Weight == dto.Weight &&
                        p.Purity == dto.Purity);
@@ -286,6 +288,8 @@ namespace Tibr.Application.Services.ProductServices
                 var keyword = filterParams.SearchKeyword.ToLower();
                 query = query.Where(p =>
                     p.Name.ToLower().Contains(keyword) ||
+                    p.NameAr.ToLower().Contains(keyword) ||
+                    p.NameEn.ToLower().Contains(keyword) ||
                     p.MetalType.ToString().ToLower().Contains(keyword));
             }
 

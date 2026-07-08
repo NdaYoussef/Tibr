@@ -95,7 +95,9 @@ namespace Tibr.Infrastructure.Seed
             // 3. Categories
             var categories = ProductCatalog.Categories.Select(c => new Category
             {
-                Name = c,
+                Name = c.NameEn,
+                NameAr = c.NameAr,
+                NameEn = c.NameEn,
                 CreatedAt = seedTime,
                 UpdatedAt = seedTime,
                 IsDeleted = false
@@ -125,11 +127,13 @@ namespace Tibr.Infrastructure.Seed
             // ==========================================
 
             // 4. Products
-            var catMap = categories.ToDictionary(c => c.Name, c => c.Id);
+            var catMap = categories.ToDictionary(c => c.NameEn, c => c.Id);
             var products = ProductCatalog.Products.Select(p => new Product
             {
-                CategoryId = catMap[p.Category],
-                Name = p.Name,
+                CategoryId = catMap[p.CategoryEn],
+                Name = p.NameEn,
+                NameAr = p.NameAr,
+                NameEn = p.NameEn,
                 MetalType = p.Metal,
                 Purity = p.Purity,
                 Weight = p.Weight,
