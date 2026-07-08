@@ -10,6 +10,7 @@ namespace Tibr.Application.Dtos
         public string PaymentStatus { get; set; } = string.Empty;
         public string OrderStatus { get; set; } = string.Empty;
         public DateTime CreatedAt { get; set; }
+        public long? PaymentId { get; set; }
         public List<OrderItemDto> Items { get; set; } = [];
     }
 

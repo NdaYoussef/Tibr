@@ -19,6 +19,7 @@ namespace Tibr.Application.Services.ResolutionServices
         private readonly IGenericRepository<Reservation, long> _reservationRepo;
         private readonly IGenericRepository<User, long> _userRepo;
         private readonly IAssetPriceService _assetPriceService;
+        private readonly IWalletService _walletService;
         private readonly IEmailService _emailService;
         private readonly ILogger<ResolutionService> _logger;
 
@@ -32,6 +33,7 @@ namespace Tibr.Application.Services.ResolutionServices
             IGenericRepository<Reservation, long> reservationRepo,
             IGenericRepository<User, long> userRepo,
             IAssetPriceService assetPriceService,
+            IWalletService walletService,
             IEmailService emailService,
             ILogger<ResolutionService> logger)
         {
@@ -44,6 +46,7 @@ namespace Tibr.Application.Services.ResolutionServices
             _reservationRepo = reservationRepo;
             _userRepo = userRepo;
             _assetPriceService = assetPriceService;
+            _walletService = walletService;
             _emailService = emailService;
             _logger = logger;
         }
@@ -299,15 +302,7 @@ namespace Tibr.Application.Services.ResolutionServices
             var reservation = _reservationRepo.GetAll(r => r.OrderId == order.Id && r.Status == ReservationStatus.Active).FirstOrDefault();
             if (reservation is not null)
             {
-                var wallet = await _walletRepo.GetByIdAsync(reservation.WalletId);
-                if (wallet is not null)
-                {
-                    wallet.ReservedBalance -= reservation.Amount;
-                    await _walletRepo.UpdateAsync(wallet);
-                }
-
-                reservation.Status = ReservationStatus.Released;
-                await _reservationRepo.UpdateAsync(reservation);
+                await _walletService.ReleaseReservationAsync(reservation.Id);
             }
 
             await _orderRepo.SaveChangesAsync();

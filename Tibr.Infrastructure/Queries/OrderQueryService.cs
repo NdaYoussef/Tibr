@@ -19,6 +19,7 @@ namespace Tibr.Infrastructure.Queries
             return await _context
                 .Orders.Where(o => !o.IsDeleted && o.Id == id)
                 .Include(o => o.User)
+                .Include(o => o.Payments)
                 .Include(o => o.OrderItems)
                     .ThenInclude(oi => oi.Product)
                 .FirstOrDefaultAsync();
@@ -29,6 +30,7 @@ namespace Tibr.Infrastructure.Queries
             return await _context
                 .Orders.Where(o => !o.IsDeleted)
                 .Include(o => o.User)
+                .Include(o => o.Payments)
                 .Include(o => o.OrderItems)
                     .ThenInclude(oi => oi.Product)
                 .ToListAsync();
@@ -39,6 +41,7 @@ namespace Tibr.Infrastructure.Queries
             return await _context
                 .Orders.Where(o => !o.IsDeleted && o.UserId == userId)
                 .Include(o => o.User)
+                .Include(o => o.Payments)
                 .Include(o => o.OrderItems)
                     .ThenInclude(oi => oi.Product)
                 .ToListAsync();

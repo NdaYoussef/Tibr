@@ -13,6 +13,16 @@ namespace Tibr.Application.Services.OrderServices
 {
     public class OrderService : IOrderService
     {
+        static OrderService()
+        {
+            TypeAdapterConfig<Order, OrderDto>.NewConfig()
+                .Map(dest => dest.PaymentId,
+                    src => src.Payments
+                        .OrderByDescending(p => p.CreatedAt)
+                        .Select(p => p.Id)
+                        .Cast<long?>()
+                        .FirstOrDefault());
+        }
         private readonly IGenericRepository<Order, long> _orderRepository;
         private readonly IGenericRepository<OrderItem, long> _orderItemRepository;
         private readonly IGenericRepository<Product, long> _productRepository;
@@ -39,6 +49,7 @@ namespace Tibr.Application.Services.OrderServices
             var order = await _context.Set<Order>()
                 .Where(o => !o.IsDeleted && o.Id == id)
                 .Include(o => o.User)
+                .Include(o => o.Payments)
                 .Include(o => o.OrderItems)
                     .ThenInclude(oi => oi.Product)
                 .FirstOrDefaultAsync();
@@ -59,6 +70,9 @@ namespace Tibr.Application.Services.OrderServices
                 PaymentStatus = order.PaymentStatus.ToString(),
                 OrderStatus = order.OrderStatus.ToString(),
                 CreatedAt = order.CreatedAt,
+                PaymentId = order.Payments?
+                    .OrderByDescending(p => p.CreatedAt)
+                    .FirstOrDefault()?.Id,
 
                 Items = order.OrderItems?.Select(oi => new OrderItemDto
                 {
