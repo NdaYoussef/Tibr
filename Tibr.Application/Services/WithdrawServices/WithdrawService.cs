@@ -29,16 +29,17 @@ public class WithdrawService : IWithdrawService
         if (string.IsNullOrWhiteSpace(dto.Number))
             return Result.Failure("Account/phone number is required.");
 
-        var user = await _context.Set<Wallet>()
-            .FirstOrDefaultAsync(x => x.Id == userId && x.WalletType == WalletType.Cash);
+        var wallet = await _context.Set<Wallet>()
+            .FirstOrDefaultAsync(x => x.UserId == userId && x.WalletType == WalletType.Cash);
 
-        if (user == null)
-            return Result.Failure("User not found.");
+        if (wallet == null)
+            return Result.Failure("Cash wallet not found.");
 
-        if (user.Balance < dto.Amount)
+        var available = wallet.Balance - wallet.ReservedBalance;
+        if (available < dto.Amount)
             return Result.Failure("Insufficient balance.");
 
-        user.ReservedBalance += dto.Amount;
+        wallet.ReservedBalance += dto.Amount;
 
         var withdraw = new Withdraw
         {
@@ -53,7 +54,7 @@ public class WithdrawService : IWithdrawService
 
         await _withdrawRepo.AddAsync(withdraw);
 
-        _context.Set<Wallet>().Update(user);
+        _context.Set<Wallet>().Update(wallet);
 
         await _withdrawRepo.SaveChangesAsync();
 
@@ -90,7 +91,7 @@ public class WithdrawService : IWithdrawService
             return Result.Failure("Only pending requests can be updated.");
 
         var wallet = await _context.Set<Wallet>()
-            .FirstOrDefaultAsync(x => x.Id == withdraw.UserId && x.WalletType == WalletType.Cash);
+            .FirstOrDefaultAsync(x => x.UserId == withdraw.UserId && x.WalletType == WalletType.Cash);
 
         if (wallet is null)
             return Result.Failure("User wallet not found.");
